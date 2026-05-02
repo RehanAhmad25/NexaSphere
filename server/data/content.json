@@ -1,0 +1,17 @@
+{
+  "events": [
+    {
+      "id": "kss-153",
+      "name": "KSS #153 — Knowledge Sharing Session",
+      "shortName": "KSS #153",
+      "date": "March 14, 2025",
+      "description": "NexaSphere's inaugural Knowledge Sharing Session focused on the impact of AI.",
+      "status": "completed",
+      "icon": "🧠",
+      "tags": ["AI", "Learning", "Community"],
+      "createdAt": "2025-03-14T00:00:00.000Z",
+      "updatedAt": "2025-03-14T00:00:00.000Z"
+    }
+  ],
+  "activityEvents": {}
+}
