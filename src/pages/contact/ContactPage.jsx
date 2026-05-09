@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { MapPin, Mail, CheckCircle, ClipboardList, Linkedin, MessageSquare, Phone } from 'lucide-react';
 import glbajajLogo from '../../assets/images/logos/glbajaj-logo.png';
 import './ContactPage.css';
 
@@ -110,7 +111,7 @@ function MapSection() {
   return (
     <div ref={ref} className="pop-in map-section">
       <div className="map-header">
-        <span className="map-find-us">📍 FIND US</span>
+        <span className="map-find-us"><MapPin size={14} style={{display:'inline', verticalAlign:'-2px'}} /> FIND US</span>
         <h3 className="map-title">GL Bajaj Group of Institutions</h3>
         <p style={{ color: 'var(--t2)', fontSize: '0.9rem' }}>
           Mathura – Delhi Highway (NH-2), Near Crossing Republic, Mathura, UP 281406
@@ -127,7 +128,7 @@ function MapSection() {
             flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             gap: 12, zIndex: 2, background: 'var(--card)',
           }}>
-            <div style={{ fontSize: '2rem', animation: 'float 2s ease-in-out infinite' }}>📍</div>
+            <div style={{ animation: 'float 2s ease-in-out infinite' }}><MapPin size={32} color="var(--c1)" /></div>
             <div style={{ fontFamily: 'Space Mono,monospace', fontSize: '.6rem', color: 'var(--t3)', letterSpacing: '.2em' }}>LOADING MAP...</div>
             <div style={{ width: 120, height: 2, borderRadius: 2, background: 'var(--bdr)', overflow: 'hidden', position: 'relative' }}>
               <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '60%', background: 'linear-gradient(90deg,var(--c1),var(--c2))', animation: 'shimmerBar 1.2s ease-in-out infinite' }} />
@@ -156,9 +157,9 @@ function MapSection() {
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-outline btn-sm"
-          style={{ display: 'inline-flex' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          🗺️ Open in Google Maps
+          <MapPin size={16} /> Open in Google Maps
         </a>
       </div>
     </div>
@@ -185,7 +186,7 @@ function MessageCTA() {
       <div className="corner-br" />
 
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ fontSize: '2.2rem', marginBottom: 12 }}>✉️</div>
+        <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Mail size={36} color="var(--c1)" /></div>
         <h3 className="map-title" style={{ fontSize: 'clamp(1rem,2.5vw,1.3rem)' }}>Drop Us a Message</h3>
         <p style={{ color: 'var(--t2)', fontSize: '.88rem', lineHeight: 1.6 }}>
           For collaborations, queries, or just to say hi —<br />we respond to every message.
@@ -205,16 +206,16 @@ function MessageCTA() {
         <a
           href={`mailto:${EMAIL}?subject=${subject}&body=${body}`}
           className="btn btn-primary btn-ripple"
-          style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
+          style={{ flex: 1, minWidth: 0, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
         >
-          📧 Open Email App
+          <Mail size={16} /> Open Email App
         </a>
         <button
           className="btn btn-outline btn-ripple"
           onClick={handleCopy}
-          style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
+          style={{ flex: 1, minWidth: 0, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
         >
-          {copied ? '✅ Copied!' : '📋 Copy Email'}
+          {copied ? <><CheckCircle size={16} /> Copied!</> : <><ClipboardList size={16} /> Copy Email</>}
         </button>
       </div>
 
@@ -249,9 +250,9 @@ export default function ContactPage({ onBack }) {
 
       <div className="container" style={{ paddingBottom: 80 }}>
         <div className="contact-cards-grid cin-container">
-          <ContactCard icon="📧" label="Email" delay={0} value={EMAIL} href={`mailto:${EMAIL}`} color="var(--c1)" />
-          <ContactCard icon="🔗" label="LinkedIn" delay={0.08} value="NexaSphere · GL Bajaj" href={LINKEDIN} color="var(--c2)" />
-          <ContactCard icon="💬" label="WhatsApp Community" delay={0.16} value="Join our active community group" href={WHATSAPP} color="var(--c5)" />
+          <ContactCard icon={<Mail size={24} />} label="Email" delay={0} value={EMAIL} href={`mailto:${EMAIL}`} color="var(--c1)" />
+          <ContactCard icon={<Linkedin size={24} />} label="LinkedIn" delay={0.08} value="NexaSphere · GL Bajaj" href={LINKEDIN} color="var(--c2)" />
+          <ContactCard icon={<MessageSquare size={24} />} label="WhatsApp Community" delay={0.16} value="Join our active community group" href={WHATSAPP} color="var(--c5)" />
         </div>
 
         <MapSection />
@@ -278,9 +279,9 @@ export default function ContactPage({ onBack }) {
           </p>
           <a
             href="tel:+915652400400"
-            style={{ display: 'block', marginTop: 10, color: 'var(--c1)', fontSize: '.85rem', fontWeight: 600 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: 10, color: 'var(--c1)', fontSize: '.85rem', fontWeight: 600 }}
           >
-            📞 +91-565-2400400
+            <Phone size={14} /> +91-565-2400400
           </a>
         </div>
       </div>

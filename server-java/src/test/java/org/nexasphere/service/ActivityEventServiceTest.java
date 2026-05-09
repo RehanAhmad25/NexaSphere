@@ -9,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.nexasphere.model.entity.ActivityEvent;
 import org.nexasphere.model.events.ActivityEventCreatedEvent;
 import org.nexasphere.repository.ActivityEventRepository;
-import org.nexasphere.service.AdminEventPublisher;
 import org.nexasphere.service.crud.ActivityEventService;
 import org.nexasphere.util.Sanitizer;
 import org.springframework.web.server.ResponseStatusException;

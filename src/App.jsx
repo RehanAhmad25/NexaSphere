@@ -7,7 +7,6 @@ import './styles/components.css';
 import './styles/aurora.css';
 import './styles/motion.css';
 
-import ParticleBackground from './shared/ParticleBackground';
 import GeometricGridBackground from './shared/GeometricGridBackground';
 import ScrollProgress from './shared/ScrollProgress';
 import Navbar from './shared/Navbar';
@@ -85,59 +84,49 @@ export default function App() {
 
   return (
     <>
-      <Navbar activeTab={activeTab} onTabChange={handleTabChange} onToggleTheme={toggleTheme} theme={theme} />
+      <Cursor theme={theme} />
+      <ScrollProgress theme={theme} />
+      
+      <Navbar 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        theme={theme} 
+        onToggleTheme={toggleTheme} 
+      />
 
       {!cinDone && <CinematicOpening theme={theme} onDone={() => setCinDone(true)} />}
-      
+
       {cinDone && (
         <>
-          <Chatbot />
-          <ScrollProgress />
-          <Cursor />
-          <Wipe on={wipeOn} ph={wipePh} />
-          <AmbientOrbs theme={theme} />
           <GeometricGridBackground theme={theme} />
-          <ParticleBackground theme={theme} />
+          <Chatbot />
         </>
       )}
 
-      <main className="app-main" style={{ paddingTop: navHeight }}>
-        {page?.type === 'section' && (
-          <SectionContent page={page} eventsData={eventsData} actions={actions} />
-        )}
-
-        {page?.type === 'activity' && currentActivity && (
-          <PageIn k={`a-${page.activityKey}`}>
+      <main className="app-main">
+        {page?.type === 'activity' && (
+          <PageIn k={`activity-${page.activityKey}`}>
             <ActivityDetailPage 
               activity={currentActivity} 
-              onBack={() => performTransition(() => setPage({ type: 'section', section: 'Activities' }))} 
-              onSelectEvent={actions.onEvent} 
+              onBack={actions.onBackMain} 
+              onEventClick={actions.onEvent} 
+              onKSSClick={actions.onKSSClick}
             />
           </PageIn>
         )}
 
-        {page?.type === 'event' && page.event && currentActivity && (
-          <PageIn k={`e-${page.event?.id}`}>
-            <EventContent page={page} currentActivity={currentActivity} onBack={actions.onBackActivity} />
+        {page?.type === 'event' && (
+          <PageIn k={`event-${page.event?.id}`}>
+            <EventDetailPage event={page.event} onBack={page.activityKey ? actions.onBackActivity : actions.onBackMain} />
           </PageIn>
         )}
 
-        {page?.type === 'apply' && (
-          <PageIn k="pg-apply">
-            <RecruitmentPage onBack={actions.onBackHome} />
-          </PageIn>
-        )}
-
-        {page?.type === 'join' && (
-          <PageIn k="pg-join">
-            <MembershipPage onBack={actions.onBackHome} />
-          </PageIn>
-        )}
-
-        {(!page) && (
-          <PageIn k="main">
+        {page?.type === 'section' && page.section !== 'Home' ? (
+          <SectionContent page={page} eventsData={eventsData} actions={actions} />
+        ) : (
+          (!page || page.section === 'Home') && (
             <MainContent actions={actions} theme={theme} handleTabChange={handleTabChange} eventsData={eventsData} />
-          </PageIn>
+          )
         )}
       </main>
 

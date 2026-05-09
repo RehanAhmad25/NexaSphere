@@ -23,14 +23,17 @@ export function useAppNavigation(setPage, setActiveTab, mobile) {
     setActiveTab(tab);
     if (tab === 'Home') {
       performTransition(() => setPage(null));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
     } else {
       const id = `section-${tab.toLowerCase()}`;
       const element = document.getElementById(id);
-      if (!element) return;
-      const navHeight = mobile ? NAV_HEIGHTS.MOBILE : NAV_HEIGHTS.DESKTOP;
-      const targetY = element.offsetTop - navHeight;
-      window.scrollTo({ top: targetY, behavior: 'smooth' });
+      if (element) {
+        const navHeight = mobile ? NAV_HEIGHTS.MOBILE : NAV_HEIGHTS.DESKTOP;
+        const targetY = element.offsetTop - navHeight;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      } else {
+        performTransition(() => setPage({ type: 'section', section: tab }));
+      }
     }
   }, [setActiveTab, setPage, mobile, performTransition]);
 

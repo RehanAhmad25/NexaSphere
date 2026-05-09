@@ -231,7 +231,6 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
   return (
     <section className="hero-section" id="section-home">
       <div className="hero-overlay" />
-      <Atmosphere isLight={isLight} />
 
       <div className="hero-content">
         <Logo3D ready={ready} />

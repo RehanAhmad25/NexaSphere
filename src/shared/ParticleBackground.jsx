@@ -200,7 +200,16 @@ export default function ParticleBackground({ theme = 'dark' }) {
     <canvas
       ref={canvasRef}
       className="particle-canvas"
-      style={{ opacity: theme === 'light' ? 1.0 : 0.55 }}
+      style={{ 
+        opacity: theme === 'light' ? 1.0 : 0.55,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        pointerEvents: 'none'
+      }}
     />
   );
 }
