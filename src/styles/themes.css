@@ -26,6 +26,10 @@
   
   --nh:  64px;
   --nhm: 88px;
+
+  --trans-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 :root,
