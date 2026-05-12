@@ -180,7 +180,7 @@ function ActivityCard({ a, idx, onNavigate }) {
           left: 0,
           right: 0,
           height: "3px",
-          background: details.color || "var(--c1)",
+          background: a.color || "var(--c1)",
           borderRadius: "var(--r3) var(--r3) 0 0",
         }}
       />
@@ -191,7 +191,7 @@ function ActivityCard({ a, idx, onNavigate }) {
           fontSize: "2.4rem",
           marginBottom: "14px",
           display: "inline-block",
-          color: details.color || "var(--c1)",
+          color: a.color || "var(--c1)",
         }}
       >
         <DynamicIcon name={a.icon} size={34} />
@@ -201,7 +201,7 @@ function ActivityCard({ a, idx, onNavigate }) {
           fontFamily: "'Orbitron', monospace",
           fontSize: ".8rem",
           fontWeight: 700,
-          color: details.color || "var(--c1)",
+          color: a.color || "var(--c1)",
           marginBottom: "10px",
           letterSpacing: ".06em",
           textTransform: "uppercase",
@@ -236,20 +236,20 @@ function ActivityCard({ a, idx, onNavigate }) {
                 fontSize: ".62rem",
                 padding: "3px 9px",
                 borderRadius: "20px",
-                background: `${details.color}18`,
-                color: details.color,
-                border: `1px solid ${details.color}35`,
+                background: a.color ? `${a.color}18` : `var(--c1-18)`,
+                color: a.color || "var(--c1)",
+                border: `1px solid ${a.color ? a.color + '35' : 'var(--c1-35)'}`,
                 fontFamily: "'Space Mono', monospace",
                 fontWeight: 600,
                 transition: "transform .2s, background .2s",
               }}
               onMouseEnter={(e) => {
                 e.target.style.transform = "translateY(-2px)";
-                e.target.style.background = `${details.color}30`;
+                if (a.color) e.target.style.background = `${a.color}30`;
               }}
               onMouseLeave={(e) => {
                 e.target.style.transform = "";
-                e.target.style.background = `${details.color}18`;
+                if (a.color) e.target.style.background = `${a.color}18`;
               }}
             >
               {s}
@@ -272,7 +272,7 @@ function ActivityCard({ a, idx, onNavigate }) {
                 gap: "8px",
               }}
             >
-              <span style={{ color: details.color, fontWeight: 700 }}>→</span>{" "}
+              <span style={{ color: a.color || "var(--c1)", fontWeight: 700 }}>→</span>{" "}
               {h}
             </li>
           ))}
@@ -286,7 +286,7 @@ function ActivityCard({ a, idx, onNavigate }) {
           gap: "6px",
           fontSize: ".72rem",
           fontWeight: 700,
-          color: details.color || "var(--c1)",
+          color: a.color || "var(--c1)",
           textTransform: "uppercase",
           letterSpacing: ".1em",
           opacity: 0.7,
@@ -312,8 +312,8 @@ function ActivityCard({ a, idx, onNavigate }) {
           left: 0,
           width: "16px",
           height: "16px",
-          borderTop: `1.5px solid ${details.color || "var(--c1)"}`,
-          borderLeft: `1.5px solid ${details.color || "var(--c1)"}`,
+          borderTop: `1.5px solid ${a.color || "var(--c1)"}`,
+          borderLeft: `1.5px solid ${a.color || "var(--c1)"}`,
           opacity: 0.5,
         }}
       />
@@ -324,8 +324,8 @@ function ActivityCard({ a, idx, onNavigate }) {
           right: 0,
           width: "16px",
           height: "16px",
-          borderBottom: `1.5px solid ${details.color || "var(--c1)"}`,
-          borderRight: `1.5px solid ${details.color || "var(--c1)"}`,
+          borderBottom: `1.5px solid ${a.color || "var(--c1)"}`,
+          borderRight: `1.5px solid ${a.color || "var(--c1)"}`,
           opacity: 0.5,
         }}
       />

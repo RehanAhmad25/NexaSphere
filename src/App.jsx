@@ -196,8 +196,8 @@ function Cursor() {
 }
 
 export default function App() {
-  // Skip intro for returning visitors; set flag on first completion
-  const [cinDone,  setCinDone]  = useState(() => !!localStorage.getItem('ns_intro_seen'));
+  // Play intro on every refresh as requested
+  const [cinDone,  setCinDone]  = useState(false);
   const [activeTab,setActiveTab]= useState('Home');
   const [mobile,   setMobile]   = useState(window.innerWidth<=768);
   const [wipeOn,   setWipeOn]   = useState(false);
@@ -403,7 +403,7 @@ export default function App() {
       <Chatbot /> 
 
       {!cinDone && <CinematicOpening theme={theme} onDone={() => {
-        localStorage.setItem('ns_intro_seen', '1');
+        // localStorage.setItem('ns_intro_seen', '1');
         setCinDone(true);
       }}/>}
 

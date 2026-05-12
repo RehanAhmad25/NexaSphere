@@ -124,10 +124,7 @@ export default function TeamSection({ onApply }) {
         </div>
       </div>
 
-      {sel && createPortal(
-        <TeamMemberModal member={sel} onClose={()=>setSel(null)}/>,
-        document.body
-      )}
+      {sel && <TeamMemberModal member={sel} onClose={()=>setSel(null)}/>}
     </section>
   );
 }

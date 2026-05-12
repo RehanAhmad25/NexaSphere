@@ -40,6 +40,8 @@ function ActivityCard({ a, idx, onNav }) {
     setTimeout(() => onNav('activity', a.title), 160);
   };
 
+  const color = a.color || 'var(--c1)';
+
   return (
     <div
       ref={ref}
@@ -54,19 +56,19 @@ function ActivityCard({ a, idx, onNav }) {
       onMouseLeave={hasContent ? onLeave : undefined}
       onClick={click}
     >
-      <div className="card-accent-line"/>
-      <div className="card-num">{String(idx + 1).padStart(2, '0')}</div>
-      <div className="activity-icon"><DynamicIcon name={a.icon} size={42} /></div>
-      <div className="activity-title">{a.title}</div>
+      <div className="card-accent-line" style={{ background: color }}/>
+      <div className="card-num" style={{ color: `${color}80` }}>{String(idx + 1).padStart(2, '0')}</div>
+      <div className="activity-icon" style={{ color: color }}><DynamicIcon name={a.icon} size={42} /></div>
+      <div className="activity-title" style={{ color: color }}>{a.title}</div>
       <p className="activity-desc">{a.description}</p>
       {hasContent ? (
-        <div className="activity-cta"><span>Explore</span><span>→</span></div>
+        <div className="activity-cta" style={{ color: color }}><span>Explore</span><span>→</span></div>
       ) : (
         <div className="activity-cta" style={{ opacity: 0.45, cursor: 'default' }}>
           <span>Coming Soon</span>
         </div>
       )}
-      <div className="corner-tl"/><div className="corner-br"/>
+      <div className="corner-tl" style={{ borderColor: color }}/><div className="corner-br" style={{ borderColor: color }}/>
     </div>
   );
 }
