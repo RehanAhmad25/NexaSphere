@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import nexasphereLogo from '../assets/images/logos/nexasphere-logo.png';
+import { BRAND_LOGO_ICON } from './brandAssets';
 
 const SHARDS = [
   { clip:'polygon(0 0,42% 0,28% 38%,0 22%)',           ox:'20%', oy:'10%', idx:0,  d:0   },
@@ -39,7 +39,7 @@ function IntroContent({ phase, count, tagline, accent, accent2, muted, grad, bg,
       {!isL && (
         <div style={{
           position:'absolute', inset:0, pointerEvents:'none',
-          backgroundImage:`linear-gradient(rgba(204,17,17,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(204,17,17,.025) 1px,transparent 1px)`,
+          backgroundImage:`linear-gradient(rgba(230,57,70,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(230,57,70,.025) 1px,transparent 1px)`,
           backgroundSize:'50px 50px',
         }}/>
       )}
@@ -64,12 +64,12 @@ function IntroContent({ phase, count, tagline, accent, accent2, muted, grad, bg,
         }}/>
       ))}
       <div style={{ marginBottom:'20px', opacity:phase>=1?1:0, animation:phase>=1?'cinLogoIn .75s cubic-bezier(.34,1.56,.64,1) both':'none' }}>
-        <img src={nexasphereLogo} alt="NexaSphere" style={{
+        <img src={BRAND_LOGO_ICON} alt="NexaSphere" style={{
           width:'96px', height:'96px', objectFit:'contain',
           mixBlendMode: isL ? 'multiply' : 'screen',
           filter: isL
-            ? 'saturate(1.5) contrast(1.2) drop-shadow(0 4px 16px rgba(204,17,17,.5)) brightness(1.05)'
-            : 'brightness(1.8) saturate(1.5) drop-shadow(0 0 22px rgba(204,17,17,.8)) drop-shadow(0 0 44px rgba(136,0,0,.5))',
+            ? 'saturate(1.5) contrast(1.2) drop-shadow(0 4px 16px rgba(230,57,70,.5)) brightness(1.05)'
+            : 'brightness(1.8) saturate(1.5) drop-shadow(0 0 40px rgba(230,57,70,.6)) drop-shadow(0 0 60px rgba(183,28,28,.4))',
           animation: phase>=1 ? 'float 3s ease-in-out infinite' : 'none',
         }}/>
       </div>
@@ -154,12 +154,12 @@ export default function CinematicOpening({ onDone, theme = 'dark' }) {
   }, []);
 
   const bg      = isL ? '#FFFFFF' : '#0A0A0A';
-  const accent  = isL ? '#CC1111' : '#CC1111';
-  const accent2 = isL ? '#880000' : '#880000';
+  const accent  = '#E63946';
+  const accent2 = '#B71C1C';
   const muted   = isL ? '#7A7A7A' : '#BEBEBE';
   const grad    = isL
-    ? 'linear-gradient(135deg,#CC1111 0%,#880000 50%,#EE2222 100%)'
-    : 'linear-gradient(135deg,#EE2222 0%,#CC1111 50%,#FF4444 100%)';
+    ? 'linear-gradient(135deg,#E63946 0%,#B71C1C 50%,#FF5A5F 100%)'
+    : 'linear-gradient(135deg,#FF5A5F 0%,#E63946 50%,#B71C1C 100%)';
 
   if (gone) return null;
 

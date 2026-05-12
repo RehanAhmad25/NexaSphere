@@ -188,9 +188,7 @@ function MultiSelectChips({ options, values, onToggle }) {
               fontSize: '.82rem',
             }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              {active ? <DynamicIcon name="CheckCircle" size={13} /> : null}{opt}
-            </span>
+            {active ? '✓' : ''}{opt}
           </button>
         );
       })}
@@ -384,14 +382,14 @@ export default function MembershipPage({ onBack }) {
             gap: 10,
           }}>
             {[
-              { icon: 'ShieldCheck', label: 'Cybersecurity' },
-              { icon: 'Brain', label: 'AI / Machine Learning' },
-              { icon: 'Globe', label: 'Web Development' },
-              { icon: 'Cloud', label: 'Cloud & AWS' },
-              { icon: 'Smartphone', label: 'Android Development' },
-              { icon: 'Megaphone', label: 'Management & Events' },
-              { icon: 'Briefcase', label: 'Career & Placement' },
-              { icon: 'Palette', label: 'Design & Media' },
+              { icon: '🔐', label: 'Cybersecurity' },
+              { icon: '🤖', label: 'AI / Machine Learning' },
+              { icon: '🌐', label: 'Web Development' },
+              { icon: '☁️', label: 'Cloud & AWS' },
+              { icon: '📱', label: 'Android Development' },
+              { icon: '📢', label: 'Management & Events' },
+              { icon: '💼', label: 'Career & Placement' },
+              { icon: '🎨', label: 'Design & Media' },
             ].map(d => (
               <div key={d.label} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -438,7 +436,7 @@ export default function MembershipPage({ onBack }) {
             padding: '12px 16px',
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           }}>
-            <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name="Link" size={18} /></span>
+            <span style={{ fontSize: '1.1rem' }}>🔗</span>
             <span style={{ fontSize: '.88rem', color: 'var(--t2)', flex: 1 }}>
               Before filling the form, please follow our official LinkedIn page:
             </span>
@@ -736,7 +734,7 @@ export default function MembershipPage({ onBack }) {
                   </div>
                   <div style={{ color:'var(--t2)', fontSize:'.9rem' }}>
                     {done
-                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thank you for joining NexaSphere — GL Bajaj Group of Institutions <DynamicIcon name="Rocket" size={14} /></span>
+                      ? 'Thank you for joining NexaSphere — GL Bajaj Group of Institutions 🚀'
                       : current.subtitle}
                   </div>
                 </div>
@@ -801,12 +799,12 @@ export default function MembershipPage({ onBack }) {
                   padding:22, position:'relative', overflow:'hidden', textAlign:'center',
                 }}>
                   <div className="corner-tl"/><div className="corner-br"/>
-                  <div style={{ display:'flex', justifyContent:'center', color:'var(--c1)', marginBottom:14 }}><DynamicIcon name="Rocket" size={38} /></div>
+                  <div style={{ fontSize:'2.4rem', marginBottom:14 }}>🚀</div>
                   <div style={{ fontFamily:'Orbitron,monospace', fontSize:'1rem', color:'var(--t1)', fontWeight:700, marginBottom:12 }}>
                     Thank you for filling the NexaSphere Membership Form!
                   </div>
                   <p style={{ color:'var(--t2)', lineHeight:1.8, maxWidth:540, margin:'0 auto' }}>
-                    Your form has been successfully submitted.
+                    Your form has been successfully submitted. 🎉
                     <br/><br/>
                     Now request to join the NexaSphere WhatsApp group using the link below — and
                     <b style={{ color:'var(--t1)' }}> mention that you have already filled the NexaSphere form</b>.
@@ -844,12 +842,8 @@ export default function MembershipPage({ onBack }) {
                   borderRadius:'var(--r2)', padding:'14px 16px',
                   fontSize:'.88rem', color:'var(--t3)', lineHeight:1.7, textAlign:'center',
                 }}>
-                  <span style={{ display:'inline-flex', alignItems:'center', gap:6, justifyContent:'center', flexWrap:'wrap' }}>
-                    <DynamicIcon name="Pin" size={14} /> Also make sure to follow the official NexaSphere LinkedIn page for updates.
-                  </span><br/>
-                  <b style={{ color:'var(--t2)', display:'inline-flex', alignItems:'center', gap:6, justifyContent:'center', flexWrap:'wrap' }}>
-                    <DynamicIcon name="Rocket" size={14} /> Stay connected and keep building — NexaSphere Team
-                  </b>
+                  📌 Also make sure to follow the official NexaSphere LinkedIn page for updates.<br/>
+                  <b style={{ color:'var(--t2)' }}>Stay connected and keep building 🚀 — NexaSphere Team</b>
                 </div>
               </div>
             ) : (

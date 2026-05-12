@@ -95,3 +95,31 @@
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.08);
 }
+
+/* ── Event Cards ── */
+.event-card {
+  background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(20,20,20,0.95) 100%);
+  border-left: 4px solid var(--brand-red-primary, #E63946);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+[data-theme="light"] .event-card {
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.event-card:hover { box-shadow: 0 8px 24px rgba(230,57,70,0.15); }
+.event-card.upcoming { border-left-color: #E63946; box-shadow: 0 4px 16px rgba(230,57,70,0.2); }
+.event-card.completed { border-left-color: #6B6B6B; opacity: 0.85; }
+
+/* ── Events Header ── */
+.events-header {
+  background: linear-gradient(135deg, #E63946 0%, #B71C1C 50%, #0A0A0A 100%);
+  padding: 80px 0;
+  text-align: center;
+  color: #fff;
+}
+[data-theme="light"] .events-header {
+  background: linear-gradient(135deg, #FFE8E8 0%, #FFD0D0 50%, #FFFFFF 100%);
+  color: var(--t1);
+}

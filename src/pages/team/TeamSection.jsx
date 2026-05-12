@@ -61,14 +61,28 @@ export default function TeamSection({ onApply }) {
   useEffect(() => {
     const elements = document.querySelectorAll('#section-team .pop-flip, #section-team .pop-in, #section-team .pop-word');
     const obs = new IntersectionObserver(entries=>{
-      entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('fired');obs.unobserve(e.target);}});
+      entries.forEach(e=>{
+        if(e.isIntersecting && !e.target.classList.contains('fired')){
+          e.target.classList.add('fired');
+          e.target.addEventListener('animationend', () => {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'none';
+          }, { once: true });
+          obs.unobserve(e.target);
+        }
+      });
     },{threshold:0, rootMargin:'0px 0px -10px 0px'});
     elements.forEach(el=>obs.observe(el));
-    
     const fallback = setTimeout(() => {
       elements.forEach(el => {
         const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight + 100) el.classList.add('fired');
+        if (rect.top < window.innerHeight + 100 && !el.classList.contains('fired')){
+          el.classList.add('fired');
+          el.addEventListener('animationend', () => {
+            el.style.opacity = '1';
+            el.style.transform = 'none';
+          }, { once: true });
+        }
       });
     }, 120);
     return()=>{obs.disconnect(); clearTimeout(fallback);};
@@ -77,7 +91,7 @@ export default function TeamSection({ onApply }) {
   return (
     <section className="section" id="section-team">
       <div className="container">
-        <div className="ns-reveal">
+        <div>
           <span className="cin-section-label pop-in">GL Bajaj Group of Institutions · Mathura</span>
           <h2 className="section-title pop-word">Core Team</h2>
           <p className="section-subtitle pop-in" style={{animationDelay:'.1s'}}>The Minds Behind NexaSphere</p>

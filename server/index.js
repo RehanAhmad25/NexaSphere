@@ -6,9 +6,8 @@ import { google } from 'googleapis';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-import { adminAuthMiddleware } from './middleware/adminAuthMiddleware.js';
-
+import crypto from 'crypto';
+import { sendWelcomeVerificationEmail } from './services/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -679,6 +678,16 @@ async function handleForm(formType, req, res) {
     } catch (sheetErr) {
       if (!savedToSupabase) throw sheetErr;
     }
+
+    // NEW: Send a welcome email to the user
+    try {
+      const verifyUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/verify?email=${encodeURIComponent(body.collegeEmail)}`;
+      await sendWelcomeVerificationEmail(body.collegeEmail, body.fullName, verifyUrl);
+    } catch (emailErr) {
+      console.error('[Form Handler] Failed to send welcome email:', emailErr);
+      // We don't fail the whole request if email fails, but we log it.
+    }
+
     return res.json({ ok: true });
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Submission failed' });

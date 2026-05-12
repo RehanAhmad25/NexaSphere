@@ -1,10 +1,20 @@
 import { useEffect } from 'react';
 import { events as fallbackEvents } from '../../data/eventsData';
+import { DynamicIcon } from '../../shared/Icons';
 
 export default function EventsSection({ onEventClick, events = fallbackEvents }) {
   useEffect(()=>{
     const obs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('fired');obs.unobserve(e.target);}});
+      entries.forEach(e=>{
+        if(e.isIntersecting && !e.target.classList.contains('fired')){
+          e.target.classList.add('fired');
+          e.target.addEventListener('animationend', () => {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'none';
+          }, { once: true });
+          obs.unobserve(e.target);
+        }
+      });
     },{threshold:.1});
     document.querySelectorAll('#section-events .pop-in,#section-events .pop-left,#section-events .pop-right,#section-events .pop-word').forEach(el=>obs.observe(el));
     return()=>obs.disconnect();
@@ -13,7 +23,7 @@ export default function EventsSection({ onEventClick, events = fallbackEvents })
   return (
     <section className="section" id="section-events">
       <div className="container">
-        <div className="ns-reveal">
+        <div>
           <h2 className="section-title pop-word">Our Events</h2>
           <p className="section-subtitle pop-in" style={{animationDelay:'.1s'}}>Where Ideas Come to Life</p>
         </div>
@@ -42,8 +52,8 @@ export default function EventsSection({ onEventClick, events = fallbackEvents })
                     e.currentTarget.style.transform = '';
                   } : undefined}
                 >
-                  <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px'}}>
-                    <span style={{fontSize:'1.4rem'}}>{ev.icon}</span>
+                  <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'7px'}}>
+                    <span style={{display:'flex',color:'var(--c1)'}}><DynamicIcon name={ev.icon || 'Calendar'} size={30} /></span>
                     <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
                     {isKSS && (
                       <span style={{
@@ -54,10 +64,18 @@ export default function EventsSection({ onEventClick, events = fallbackEvents })
                       }}>View Details →</span>
                     )}
                   </div>
-                  <div className="timeline-event-date">📅 {ev.date}</div>
+                  <div className="timeline-event-date" style={{display:'flex',alignItems:'center',gap:'6px'}}>
+                    <DynamicIcon name="Calendar" size={14} /> {ev.date}
+                  </div>
                   <p className="timeline-event-desc">{ev.description}</p>
                   <div style={{display:'flex',alignItems:'center',gap:'7px',flexWrap:'wrap'}}>
-                    <span className={`timeline-badge ${ev.status}`}>{ev.status==='completed'?'✅ Completed':'🔜 Upcoming'}</span>
+                    <span className={`timeline-badge ${ev.status}`}>
+                      {ev.status === 'completed' ? (
+                        <><DynamicIcon name="CheckCircle" size={14} style={{marginRight:'4px'}} /> Completed</>
+                      ) : (
+                        <><DynamicIcon name="Calendar" size={14} style={{marginRight:'4px'}} /> Upcoming</>
+                      )}
+                    </span>
                     {ev.tags?.map(t=>(
                       <span key={t} style={{fontSize:'.68rem',padding:'2px 8px',borderRadius:'10px',background:'var(--c2a)',color:'var(--c2)',border:'1px solid var(--c2b)',fontWeight:600}}>{t}</span>
                     ))}
@@ -70,7 +88,7 @@ export default function EventsSection({ onEventClick, events = fallbackEvents })
             <div className="timeline-item">
               <div className="timeline-dot upcoming"/>
               <div className="timeline-card pop-in" style={{textAlign:'center',color:'var(--t3)'}}>
-                <span style={{fontSize:'1.3rem'}}>🚀</span>
+                <DynamicIcon name="Rocket" size={24} style={{color:'var(--c1)',marginBottom:'8px'}} />
                 <p style={{marginTop:'6px',fontSize:'.84rem'}}>More events are being planned. Watch this space!</p>
               </div>
             </div>

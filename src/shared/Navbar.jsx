@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import nexasphereAppLogo from '../assets/images/logos/nexasphere-app-logo.png';
+import { BRAND_LOGO_FULL, BRAND_LOGO_ICON } from './brandAssets';
 
 const TABS = ['Home', 'Activities', 'Events', 'About', 'Team', 'Contact'];
 
@@ -52,7 +52,7 @@ export default function Navbar({ activeTab, onTabChange, onToggleTheme, theme, o
   if (mobile) return (
     <nav className="ns-navbar-mobile">
       <div className="ns-mobile-top">
-        <img src={nexasphereAppLogo} alt="NexaSphere" className="ns-mobile-logo-ns"/>
+        <img src={BRAND_LOGO_ICON} alt="NexaSphere" className="ns-mobile-logo-ns"/>
         <span className="ns-mobile-brand"><span>NexaSphere</span></span>
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
@@ -76,7 +76,7 @@ export default function Navbar({ activeTab, onTabChange, onToggleTheme, theme, o
     <nav className={`ns-navbar${scrolled ? ' scrolled' : ''}`}>
       <div className="container">
         <div className="ns-nav-logos">
-          <img src={nexasphereAppLogo} alt="NexaSphere" className="ns-nav-logo-ns"/>
+          <img src={BRAND_LOGO_FULL} alt="NexaSphere" className="ns-nav-logo-ns ns-nav-logo-icon"/>
           <div className="ns-nav-divider"/>
           <span className="ns-nav-brand">NexaSphere</span>
         </div>

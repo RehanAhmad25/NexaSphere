@@ -98,15 +98,23 @@ export function useNsReveal(deps = []) {
       if (!els.length) return;
       const obs = new IntersectionObserver(
         entries => entries.forEach(e => {
-          if (e.isIntersecting) { e.target.classList.add('ns-visible'); obs.unobserve(e.target); }
+          if (e.isIntersecting && !e.target.classList.contains('ns-visible')) {
+            e.target.classList.add('ns-visible');
+            e.target.addEventListener('transitionend', () => {
+              e.target.style.opacity = '1';
+              e.target.style.transform = 'none';
+            }, { once: true });
+            obs.unobserve(e.target);
+          }
         }),
         { threshold:0.05, rootMargin:'0px 0px -20px 0px' }
       );
-      
       els.forEach(el => {
         const r = el.getBoundingClientRect();
         if (r.top < window.innerHeight + 80) {
           el.classList.add('ns-visible');
+          el.style.opacity = '1';
+          el.style.transform = 'none';
         } else {
           obs.observe(el);
         }

@@ -19,7 +19,7 @@
 @keyframes popRight   { from{opacity:0;transform:translateX(72px) scale(.95)} to{opacity:1;transform:none} }
 @keyframes scaleReveal{ from{opacity:0;transform:scale(.82) translateY(20px)} to{opacity:1;transform:none} }
 @keyframes cardFlip   { from{opacity:0;transform:perspective(800px) rotateX(-32deg) translateY(36px)} to{opacity:1;transform:none} }
-@keyframes wordReveal { from{opacity:0;transform:translateY(28px);filter:blur(10px)} to{opacity:1;transform:none;filter:blur(0)} }
+@keyframes wordReveal { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:none;filter:blur(0)} }
 @keyframes numPop     { 0%{opacity:0;transform:scale(.5) translateY(18px)} 70%{transform:scale(1.12) translateY(-3px)} 100%{opacity:1;transform:none} }
 
 @keyframes cinLetterIn  { from{opacity:0;transform:translateY(-52px) rotateX(90deg) scale(.5)} to{opacity:1;transform:none} }
@@ -104,7 +104,7 @@
   66%     { transform:translate(-20px,15px) scale(0.9);  opacity:.05; }
 }
 
-.pop-in,.pop-left,.pop-right,.pop-scale,.pop-flip,.pop-word,.pop-num { opacity:0; }
+.pop-in,.pop-left,.pop-right,.pop-scale,.pop-flip,.pop-word,.pop-num { opacity:0; will-change:transform,opacity; }
 .pop-in.fired    { animation:popIn       .72s cubic-bezier(.22,1,.36,1) forwards; }
 .pop-left.fired  { animation:popLeft     .72s cubic-bezier(.22,1,.36,1) forwards; }
 .pop-right.fired { animation:popRight    .72s cubic-bezier(.22,1,.36,1) forwards; }

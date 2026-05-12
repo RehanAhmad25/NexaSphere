@@ -61,6 +61,7 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  will-change: transform, opacity;
 }
 [data-theme="light"] .section-title {
   background: linear-gradient(135deg, #E63946 0%, #B71C1C 60%, #C41E3A 100%);

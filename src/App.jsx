@@ -269,7 +269,14 @@ export default function App() {
     
     const obs=new IntersectionObserver(entries=>{
       entries.forEach(e=>{
-        if(e.isIntersecting){e.target.classList.add('fired');obs.unobserve(e.target);}
+        if(e.isIntersecting && !e.target.classList.contains('fired')){
+          e.target.classList.add('fired');
+          e.target.addEventListener('animationend', () => {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'none';
+          }, { once: true });
+          obs.unobserve(e.target);
+        }
       });
     },{threshold:.09,rootMargin:'0px 0px -36px 0px'});
     document.querySelectorAll('.pop-in,.pop-left,.pop-right,.pop-scale,.pop-flip,.pop-word,.pop-num').forEach(el=>obs.observe(el));
@@ -421,6 +428,7 @@ export default function App() {
              {page.type === 'activity' && cur && <ActivityDetailPage activity={cur} onBack={onBackMain} onSelectEvent={onEvent}/>}
              {page.type === 'apply' && <RecruitmentPage onBack={onBackHome}/>}
              {page.type === 'join' && <MembershipPage onBack={onBackHome}/>}
+             {page.type === 'event' && page.event && <EventDetailPage event={page.event} onBack={page.activityKey ? onBackAct : onBackMain}/>}
              {/* 404 fallback for unknown page types */}
              {page.type && !['section','activity','event','apply','join'].includes(page.type) && <NotFoundPage onGoHome={onBackHome}/>}
            </PageIn>

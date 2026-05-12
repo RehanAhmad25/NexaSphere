@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import nexasphereLogo from '../../assets/images/logos/nexasphere-logo.png';
-import { IconArrowRight, IconSpark } from '../../shared/Icons';
+import { BRAND_LOGO_ICON } from '../../shared/brandAssets';
+import { IconArrowRight, IconSpark, DynamicIcon } from '../../shared/Icons';
 
 /* â”€â”€ Ripple Button â”€â”€ */
 function RippleBtn({ cls, children, href, onClick }) {
@@ -76,7 +76,7 @@ function Logo3D({ ready, isLight }) {
       style={{
         transformStyle:'preserve-3d',
         transition:'transform .14s ease',
-        opacity:ready?1:0,
+        opacity: 1,
         transform:ready?'scale(1)':'scale(.3) rotateY(180deg)',
         transitionProperty:'opacity,transform',
         transitionDuration:'1s',
@@ -84,7 +84,7 @@ function Logo3D({ ready, isLight }) {
       }}
     >
       <OrbitRings isLight={isLight}/>
-      <img src={nexasphereLogo} alt="NexaSphere" className="hero-logo-img"/>
+      <img src={BRAND_LOGO_ICON} alt="NexaSphere" className="hero-logo-img"/>
       <div style={{position:'absolute',bottom:'-8px',left:'50%',transform:'translateX(-50%)',width:'90px',height:'14px',borderRadius:'50%',background:`radial-gradient(ellipse,${isLight?'rgba(204,17,17,.22)':'rgba(204,17,17,.32)'},transparent 70%)`,filter:'blur(5px)',animation:'float 5s ease-in-out infinite'}}/>
     </div>
   );
@@ -92,7 +92,7 @@ function Logo3D({ ready, isLight }) {
 
 /* â”€â”€ Stats bar â”€â”€ */
 function StatsBar({ vis, isLight }) {
-  const items = [{v:'12',l:'Members',i:'ðŸ‘¥'},{v:'8',l:'Activities',i:'âš¡'},{v:'1',l:'Events Done',i:'ðŸ“…'},{v:'âˆž',l:'Ideas',i:'ðŸ’¡'}];
+  const items = [{v:'12',l:'Members',i:'Users'},{v:'8',l:'Activities',i:'Activity'},{v:'1',l:'Events Done',i:'Calendar'},{v:'∞',l:'Ideas',i:'Lightbulb'}];
   return (
     <div style={{
       display:'flex',maxWidth:'500px',margin:'40px auto 0',
@@ -111,7 +111,9 @@ function StatsBar({ vis, isLight }) {
           onMouseEnter={e=>e.currentTarget.style.background=isLight?'rgba(26,26,26,.06)':'rgba(204,17,17,.09)'}
           onMouseLeave={e=>e.currentTarget.style.background='transparent'}  
         >
-          <div style={{fontSize:'.9rem',marginBottom:'2px'}}>{s.i}</div>
+          <div style={{fontSize:'.9rem',marginBottom:'2px', color: 'var(--c1)' }}>
+            <DynamicIcon name={s.i} size={18} />
+          </div>
           <div style={{
             fontFamily:'Orbitron,monospace',fontSize:'clamp(1.1rem,3vw,1.75rem)',fontWeight:900,
             backgroundImage:isLight?'linear-gradient(135deg,#CC1111,#880000)':'linear-gradient(135deg,#EE2222,#CC1111)',
@@ -168,11 +170,24 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
         position:'absolute',inset:0,zIndex:0,
         pointerEvents:'none',
         background: isLight
-          ? 'linear-gradient(120deg,rgba(245,240,236,0.88) 0%,rgba(237,229,219,0.88) 100%)'
-          : 'linear-gradient(120deg,rgba(10,10,10,0.88) 0%,rgba(20,10,10,0.88) 100%)',
-        backdropFilter:'blur(8px) saturate(120%)',
-        WebkitBackdropFilter:'blur(8px) saturate(120%)',
+          ? '#FFFFFF'
+          : '#0A0A0A',
         transition:'background 1.2s cubic-bezier(.4,0,.2,1)',
+      }} />
+      {/* Logo glow — subtle radial red only around center */}
+      <div style={{
+        position:'absolute',
+        top:'50%', left:'50%',
+        transform:'translate(-50%,-58%)',
+        width:'480px', height:'480px',
+        borderRadius:'50%',
+        background: isLight
+          ? 'radial-gradient(circle, rgba(230,57,70,0.10) 0%, transparent 65%)'
+          : 'radial-gradient(circle, rgba(230,57,70,0.18) 0%, transparent 65%)',
+        pointerEvents:'none',
+        zIndex:0,
+        filter:'blur(32px)',
+        animation:'cinGlow 4s ease-in-out infinite',
       }} />
       <Atmosphere isLight={isLight}/>
 
@@ -182,7 +197,7 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
 
         <p className="hero-tagline" style={{
           animationName:'letterDrop',animationDuration:'.75s',animationDelay:'.5s',
-          animationFillMode:'both',animationTimingFunction:'cubic-bezier(.22,1,.36,1)',opacity:0,
+          animationFillMode:'forwards',animationTimingFunction:'cubic-bezier(.22,1,.36,1)',opacity:1,
         }}>
           GL Bajaj&apos;s Student-Driven Tech Ecosystem
           <span style={{animation:'blink 1s step-end infinite',color:'var(--c1)',marginLeft:'2px'}}>_</span>
@@ -190,7 +205,7 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
 
         <div className="hero-buttons" style={{
           animationName:'letterDrop',animationDuration:'.75s',animationDelay:'.75s',
-          animationFillMode:'both',animationTimingFunction:'cubic-bezier(.22,1,.36,1)',opacity:0,
+          animationFillMode:'forwards',animationTimingFunction:'cubic-bezier(.22,1,.36,1)',opacity:1,
           flexDirection:'column',alignItems:'center',gap:'10px',
         }}>
           <div style={{display:'flex',gap:'12px',flexWrap:'wrap',justifyContent:'center'}}>

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { activities } from '../../data/activitiesData';
 import { activityPages } from '../../data/activities/index';
+import { DynamicIcon } from '../../shared/Icons';
 
 /* Anti-gravity delays — same pattern as team cards */
 const AG_DELAYS = [0, -2.1, -4.2, -1.0, -3.3, -5.5, -0.7, -6.1];
@@ -55,7 +56,7 @@ function ActivityCard({ a, idx, onNav }) {
     >
       <div className="card-accent-line"/>
       <div className="card-num">{String(idx + 1).padStart(2, '0')}</div>
-      <div className="activity-icon">{a.icon}</div>
+      <div className="activity-icon"><DynamicIcon name={a.icon} size={42} /></div>
       <div className="activity-title">{a.title}</div>
       <p className="activity-desc">{a.description}</p>
       {hasContent ? (
@@ -74,7 +75,14 @@ export default function ActivitiesSection({ onNavigate }) {
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('fired'); obs.unobserve(e.target); }
+        if (e.isIntersecting && !e.target.classList.contains('fired')) {
+          e.target.classList.add('fired');
+          e.target.addEventListener('animationend', () => {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'none';
+          }, { once: true });
+          obs.unobserve(e.target);
+        }
       });
     }, { threshold: .08 });
     document.querySelectorAll('#section-activities .pop-word, #section-activities .pop-in')

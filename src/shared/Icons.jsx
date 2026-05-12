@@ -2,7 +2,7 @@ import React from 'react';
 import {
   ArrowUp, ArrowRight, ArrowLeft, Activity, Code2, Lightbulb, Code, BarChart3, Brain, Wrench,
   ChevronRight, Flame, Crown, Mail, MapPin, Phone, Users, Calendar, BookOpen,
-  Target, Zap, Cpu, Share2, Home, Settings, Menu, X, Search, AlertCircle, CheckCircle
+  Target, Zap, Cpu, Share2, Home, Settings, Menu, X, Search, AlertCircle, CheckCircle, AlertTriangle, Rocket, Pin, Mic2, Timer, Heart, Star, ExternalLink, Globe, Cloud, Smartphone, Megaphone, Briefcase, Link
 } from 'lucide-react';
 
 function baseProps(props) {
@@ -105,6 +105,23 @@ export const ICON_MAP = {
   Search,
   AlertCircle,
   CheckCircle,
+  AlertTriangle,
+  Rocket,
+  Pin,
+  Mic2,
+  Timer,
+  Heart,
+  Star,
+  ExternalLink,
+  Globe,
+  Cloud,
+  Smartphone,
+  Megaphone,
+  Briefcase,
+  Link,
+  ShieldCheck: IconShieldCheck,
+  Bolt: IconBolt,
+  Spark: IconSpark
 };
 
 // Dynamic icon component wrapper
@@ -112,7 +129,7 @@ export function DynamicIcon({ name, size = 24, ...props }) {
   const IconComponent = ICON_MAP[name];
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found in ICON_MAP`);
-    return null;
+    return null; // Ensure no text is returned
   }
   return <IconComponent size={size} {...props} />;
 }
