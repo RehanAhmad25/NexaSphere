@@ -8,6 +8,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { sendWelcomeVerificationEmail } from './services/emailService.js';
+import { ZodError } from 'zod';
+import { normalizeFormSubmission } from './validators/formSchemas.js';
+import * as adminAuthMiddleware from './middleware/adminAuthMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -200,6 +203,10 @@ async function listEventsStore() {
   return (content.events || []).map((event) => sanitizeEventRecord(event));
 }
 
+function sanitizeEventRecord(event) {
+  return event;
+}
+
 async function createEventStore(event) {
   if (HAS_SUPABASE) {
     let payload = {
@@ -306,6 +313,10 @@ async function listActivityEventsStore(activityKey) {
   return (content.activityEvents?.[activityKey] || []).map((event) => sanitizeActivityEventRecord(event));
 }
 
+function sanitizeActivityEventRecord(event) {
+  return event;
+}
+
 async function createActivityEventStore(activityKey, event) {
   if (HAS_SUPABASE) {
     const [row] = await supabaseRequest('activity_events', {
@@ -368,6 +379,10 @@ async function listCoreTeamStore() {
   }
   const content = await readContent();
   return (content.coreTeam || []).map((member) => sanitizeCoreTeamMemberRecord(member));
+}
+
+function sanitizeCoreTeamMemberRecord(member) {
+  return member;
 }
 
 async function createCoreTeamStore(member) {
@@ -674,8 +689,8 @@ async function handleForm(formType, req, res) {
 
     // NEW: Send a welcome email to the user
     try {
-      const verifyUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/verify?email=${encodeURIComponent(body.collegeEmail)}`;
-      await sendWelcomeVerificationEmail(body.collegeEmail, body.fullName, verifyUrl);
+      const verifyUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/verify?email=${encodeURIComponent(req.body.collegeEmail)}`;
+      await sendWelcomeVerificationEmail(req.body.collegeEmail, req.body.fullName, verifyUrl);
     } catch (emailErr) {
       console.error('[Form Handler] Failed to send welcome email:', emailErr);
       // We don't fail the whole request if email fails, but we log it.
