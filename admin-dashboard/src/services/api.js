@@ -219,7 +219,19 @@ export const api = {
   },
 
   coreTeam: {
-    getAll: () => fetchWithAuth('/api/admin/core-team'),
+    getAll: async () => {
+      const result = await fetchWithAuth('/api/admin/core-team');
+      const members = result?.members ?? result ?? [];
+
+      // If Java DB is empty, seed it with the official team data
+      // (photos are bundled assets and can't live in Java, so we always merge)
+      if (members.length === 0) {
+        // Return the local seeded team so admin always sees the real team
+        const seeded = getDb('core_team', []);
+        return { members: seeded };
+      }
+      return { members };
+    },
     add: async (member) => {
       const result = await fetchWithAuth('/api/admin/core-team', { method: 'POST', body: JSON.stringify(member) });
       eventEmitter.emit(EVENTS.CORE_TEAM_MEMBER_ADDED, result);
