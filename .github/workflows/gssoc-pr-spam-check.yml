@@ -1,0 +1,130 @@
+name: GSSoC — PR Spam Check
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+
+jobs:
+  spam-check:
+    name: Validate PR Links Issue & Assignment
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+      issues: read
+
+    steps:
+      - name: Check PR for linked issue and contributor assignment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            const prAuthor = pr.user.login;
+            const prBody = pr.body || '';
+            const { owner, repo } = context.repo;
+
+            // Skip admins/maintainers — they don't need issue assignment
+            const adminUsers = ['Ayushh-Sharmaa'];
+            if (adminUsers.includes(prAuthor)) {
+              console.log(`Author ${prAuthor} is an admin — skipping spam check.`);
+              return;
+            }
+
+            // ─── 1. Extract linked issue number from PR body ────────────────────
+            // Supports: closes #123, fixes #123, resolves #123 (case-insensitive)
+            const linkedIssuePattern = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s*#(\d+)/gi;
+            const matches = [...prBody.matchAll(linkedIssuePattern)];
+            const linkedIssueNumbers = [...new Set(matches.map(m => parseInt(m[1])))];
+
+            console.log(`PR #${prNumber} by @${prAuthor}`);
+            console.log(`Linked issues found: ${linkedIssueNumbers.length > 0 ? linkedIssueNumbers.join(', ') : 'NONE'}`);
+
+            // Labels
+            const SPAM_LABEL = 'gssoc:spam';
+            const NO_ISSUE_LABEL = 'gssoc:no-linked-issue';
+            const NOT_ASSIGNED_LABEL = 'gssoc:not-assigned';
+            const DO_NOT_MERGE_LABEL = 'do-not-merge';
+
+            // Helper: ensure label exists on repo
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({ owner, repo, name, color, description });
+                  console.log(`Created label: ${name}`);
+                }
+              }
+            }
+
+            // Helper: add labels to PR
+            async function addLabels(labels) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels });
+            }
+
+            // Helper: remove a label if present
+            async function removeLabel(name) {
+              try {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name });
+              } catch (_) {}
+            }
+
+            // ─── 2. Ensure all spam-related labels exist ─────────────────────────
+            await ensureLabel(SPAM_LABEL,        'ee0701', 'GSSoC: Spam PR — does not meet contribution standards');
+            await ensureLabel(NO_ISSUE_LABEL,    'ffa500', 'GSSoC: PR has no linked issue');
+            await ensureLabel(NOT_ASSIGNED_LABEL,'ffa500', 'GSSoC: Contributor not assigned to the linked issue');
+            await ensureLabel(DO_NOT_MERGE_LABEL,'b60205', 'This PR should not be merged yet');
+
+            // ─── 3. No linked issue found → label as spam ────────────────────────
+            if (linkedIssueNumbers.length === 0) {
+              await ensureLabel(NO_ISSUE_LABEL, 'ffa500', 'GSSoC: PR has no linked issue');
+              await addLabels([NO_ISSUE_LABEL, SPAM_LABEL, DO_NOT_MERGE_LABEL]);
+
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: prNumber,
+                body: `## ⚠️ GSSoC Contribution Check Failed\n\nHey @${prAuthor}! 👋\n\nThis PR has been flagged as **potentially spam** because it doesn't reference any linked issue.\n\n**Please update your PR description** to include one of:\n- \`Closes #ISSUE_NUMBER\`\n- \`Fixes #ISSUE_NUMBER\`\n- \`Resolves #ISSUE_NUMBER\`\n\nMake sure you are **assigned to that issue** before submitting a PR.\n\n> PRs without a linked issue will **not be scored** in GSSoC.\n\nIf you believe this is a mistake, please comment below and a maintainer will review it. 🙏`,
+              });
+
+              console.log(`❌ PR #${prNumber} flagged: No linked issue found.`);
+              return;
+            }
+
+            // ─── 4. Check if PR author is assigned to the linked issue ───────────
+            let authorIsAssigned = false;
+
+            for (const issueNumber of linkedIssueNumbers) {
+              try {
+                const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
+                const assignees = issue.assignees.map(a => a.login.toLowerCase());
+                if (assignees.includes(prAuthor.toLowerCase())) {
+                  authorIsAssigned = true;
+                  console.log(`✅ @${prAuthor} is assigned to issue #${issueNumber}`);
+                  break;
+                } else {
+                  console.log(`⚠️  @${prAuthor} is NOT assigned to issue #${issueNumber}. Assignees: ${assignees.join(', ') || 'none'}`);
+                }
+              } catch (e) {
+                console.log(`Could not fetch issue #${issueNumber}: ${e.message}`);
+              }
+            }
+
+            if (!authorIsAssigned) {
+              await addLabels([NOT_ASSIGNED_LABEL, SPAM_LABEL, DO_NOT_MERGE_LABEL]);
+
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: prNumber,
+                body: `## ⚠️ GSSoC Contribution Check Failed\n\nHey @${prAuthor}! 👋\n\nThis PR has been flagged because you are **not assigned** to the linked issue(s): ${linkedIssueNumbers.map(n => `#${n}`).join(', ')}.\n\n**Steps to fix this:**\n1. Comment on the issue asking to be assigned: *"Can I work on this? Please assign me."*\n2. Wait for a maintainer to assign you.\n3. Only then submit your PR.\n\n> GSSoC rules require contributors to be **assigned before submitting a PR**.\n\nIf you believe this is a mistake, please ping @Ayushh-Sharmaa in a comment. 🙏`,
+              });
+
+              console.log(`❌ PR #${prNumber} flagged: @${prAuthor} not assigned to linked issue(s).`);
+              return;
+            }
+
+            // ─── 5. Valid PR — remove any spam labels if previously added ────────
+            await removeLabel(SPAM_LABEL);
+            await removeLabel(NO_ISSUE_LABEL);
+            await removeLabel(NOT_ASSIGNED_LABEL);
+            await removeLabel(DO_NOT_MERGE_LABEL);
+            console.log(`✅ PR #${prNumber} passed spam check.`);

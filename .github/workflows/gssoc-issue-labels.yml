@@ -1,0 +1,56 @@
+name: GSSoC — Issue Level Auto-Label
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+jobs:
+  label-issue:
+    name: Apply GSSoC Labels on Issue
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Ensure GSSoC issue labels exist and apply if needed
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const { owner, repo } = context.repo;
+
+            // Labels to ensure exist
+            const labelDefs = [
+              { name: 'level:beginner',     color: '0075ca', description: 'Suitable for beginners (10 pts)' },
+              { name: 'level:intermediate', color: 'e4e669', description: 'Requires intermediate experience (25 pts)' },
+              { name: 'level:advanced',     color: 'e11d48', description: 'Requires advanced expertise (45 pts)' },
+              { name: 'level:critical',     color: '7c3aed', description: 'Critical/complex issue (60 pts)' },
+              { name: "GSSoC'26",           color: '0e8a16', description: 'Part of GirlScript Summer of Code 2026' },
+            ];
+
+            for (const label of labelDefs) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: label.name });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({ owner, repo, ...label });
+                  console.log(`Created label: ${label.name}`);
+                }
+              }
+            }
+
+            // Auto-add GSSoC'26 label to every issue if missing
+            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner, repo, issue_number: issueNumber,
+            });
+            const labelNames = currentLabels.map(l => l.name);
+
+            if (!labelNames.includes("GSSoC'26")) {
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: issueNumber,
+                labels: ["GSSoC'26"],
+              });
+              console.log(`Added GSSoC'26 label to issue #${issueNumber}`);
+            }

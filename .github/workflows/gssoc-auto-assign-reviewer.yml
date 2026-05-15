@@ -1,0 +1,41 @@
+name: GSSoC — Auto-Assign Reviewer
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  assign-reviewer:
+    name: Assign Project Admin as Reviewer
+    runs-on: ubuntu-latest
+    # Skip bot-created PRs (e.g. Dependabot)
+    if: github.event.pull_request.user.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Request review from Ayushh-Sharmaa
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const reviewer = 'Ayushh-Sharmaa';
+
+            // Don't request review if the PR author IS the admin (you can't review your own PR)
+            if (pr.user.login === reviewer) {
+              console.log(`PR author is ${reviewer} — skipping self-review request.`);
+              return;
+            }
+
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers: [reviewer],
+              });
+              console.log(`✅ Requested review from ${reviewer} on PR #${pr.number}`);
+            } catch (error) {
+              console.error(`Failed to request review: ${error.message}`);
+            }
