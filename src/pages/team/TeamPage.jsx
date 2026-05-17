@@ -49,6 +49,7 @@ function MemberCard({ member, idx, onClick }) {
         src={imgError ? 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(member.name) + '&backgroundColor=CC1111&textColor=ffffff' : member.photo} 
         alt={member.name} 
         className="team-card-photo"
+        loading="lazy"
         onError={() => setImgError(true)}
       />
       </div>

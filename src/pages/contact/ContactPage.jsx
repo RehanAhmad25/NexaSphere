@@ -487,7 +487,7 @@ export default function ContactPage({ onBack }) {
           borderRadius: 'var(--r3)', position: 'relative',
         }}>
           <div className="corner-tl"/><div className="corner-br"/>
-          <img src={glbajajLogo} alt="GL Bajaj" style={{
+          <img src={glbajajLogo} alt="GL Bajaj" loading="lazy" style={{
             height: 38, margin: '0 auto 12px',
             background: 'rgba(255,255,255,.88)',
             padding: '3px 8px', borderRadius: 6,

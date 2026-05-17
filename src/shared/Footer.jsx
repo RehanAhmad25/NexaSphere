@@ -10,10 +10,10 @@ export default function Footer({ onAdmin, onProjects }) {
         <div className="ns-footer-inner">
           <div className="ns-footer-divider"/>
           <div className="ns-footer-logos">
-            <img src={BRAND_LOGO_ICON} alt="NexaSphere" className="ns-footer-logo-ns ns-footer-logo-mobile"/>
-            <img src={BRAND_LOGO_FULL} alt="NexaSphere" className="ns-nav-logo-ns ns-nav-logo-icon"/>
+            <img src={BRAND_LOGO_ICON} alt="NexaSphere" className="ns-footer-logo-ns ns-footer-logo-mobile" loading="lazy"/>
+            <img src={BRAND_LOGO_FULL} alt="NexaSphere" className="ns-nav-logo-ns ns-nav-logo-icon" loading="lazy"/>
             <div style={{width:1,height:24,background:'var(--bdr2)'}}/>
-            <img src={GL_BAJAJ_LOGO} alt="GL Bajaj" className="ns-footer-logo-gl"/>
+            <img src={GL_BAJAJ_LOGO} alt="GL Bajaj" className="ns-footer-logo-gl" loading="lazy"/>
           </div>
           <p className="ns-footer-text">© {new Date().getFullYear()} <span>NexaSphere</span> — GL Bajaj Group of Institutions, Mathura</p>
           <p className="ns-footer-text">

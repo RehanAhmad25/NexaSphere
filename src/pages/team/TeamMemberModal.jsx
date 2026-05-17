@@ -66,7 +66,7 @@ function ModalContent({ member, onClose }) {
         <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
 
         {/* Photo */}
-        <img src={member.photo} alt={member.name} className="modal-photo" />
+        <img src={member.photo} alt={member.name} className="modal-photo" loading="lazy" />
 
         {/* Name & Role */}
         <div className="modal-name">{member.name}</div>

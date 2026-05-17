@@ -1,15 +1,17 @@
 name: GSSoC — Auto-Assign Reviewer
 
+# Uses pull_request_target so the write token works for fork PRs.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, ready_for_review]
 
 jobs:
   assign-reviewer:
     name: Assign Project Admin as Reviewer
     runs-on: ubuntu-latest
-    # Skip bot-created PRs (e.g. Dependabot)
-    if: github.event.pull_request.user.login != 'github-actions[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+    if: >
+      github.event.pull_request.user.login != 'github-actions[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       pull-requests: write
 
@@ -19,10 +21,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const pr = context.payload.pull_request;
+            const pr       = context.payload.pull_request;
             const reviewer = 'Ayushh-Sharmaa';
 
-            // Don't request review if the PR author IS the admin (you can't review your own PR)
+            // Can't review your own PR
             if (pr.user.login === reviewer) {
               console.log(`PR author is ${reviewer} — skipping self-review request.`);
               return;
@@ -31,11 +33,11 @@ jobs:
             try {
               await github.rest.pulls.requestReviewers({
                 owner: context.repo.owner,
-                repo: context.repo.repo,
+                repo:  context.repo.repo,
                 pull_number: pr.number,
                 reviewers: [reviewer],
               });
-              console.log(`✅ Requested review from ${reviewer} on PR #${pr.number}`);
+              console.log(`✅ Requested review from @${reviewer} on PR #${pr.number}`);
             } catch (error) {
               console.error(`Failed to request review: ${error.message}`);
             }

@@ -41,7 +41,7 @@ function MemberCard({ member, idx, onClick }) {
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') click(); }}
     >
       <div className="team-card-photo-wrap">
-        <img src={member.photo} alt={member.name} className="team-card-photo" />
+        <img src={member.photo} alt={member.name} className="team-card-photo" loading="lazy" />
       </div>
       <div className="team-card-name">{member.name}</div>
       <div className="team-card-role">{member.role}</div>

@@ -1,191 +1,108 @@
-name: GSSoC — Auto Level Label on Merge
+name: GSSoC — Auto Label on Merge
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Runs when a PR is MERGED (not just closed).
+# • Applies gssoc:approved (if not spam/invalid)
+# • Confirms or corrects the difficulty level label
+# • Adds mentor:Ayushh-Sharmaa attribution
+# ─────────────────────────────────────────────────────────────────────────────
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
 
 jobs:
-  auto-label-level:
-    name: Apply GSSoC Level Label on PR Merge
+  label-on-merge:
+    name: Apply GSSoC Labels on PR Merge
     runs-on: ubuntu-latest
-    # Only run when the PR is actually merged (not just closed)
     if: github.event.pull_request.merged == true
     permissions:
       pull-requests: write
       issues: write
 
     steps:
-      - name: Ensure all GSSoC labels exist
+      - name: Apply gssoc:approved
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
+            const pr    = context.payload.pull_request;
+            const prNum = pr.number;
 
-            const labels = [
-              // Difficulty
+            // Ensure all labels exist
+            const allLabels = [
               { name: 'level:beginner',      color: '0075ca', description: 'GSSoC: Beginner level contribution (10 pts)' },
               { name: 'level:intermediate',  color: 'e4e669', description: 'GSSoC: Intermediate level contribution (25 pts)' },
               { name: 'level:advanced',      color: 'e11d48', description: 'GSSoC: Advanced level contribution (45 pts)' },
               { name: 'level:critical',      color: '7c3aed', description: 'GSSoC: Critical level contribution (60 pts)' },
-              // Quality
               { name: 'quality:clean',       color: '22c55e', description: 'GSSoC: Clean, well-written code' },
-              { name: 'quality:exceptional', color: 'f59e0b', description: 'GSSoC: Exceptional quality contribution (+bonus pts)' },
-              // Type bonuses
+              { name: 'quality:exceptional', color: 'f59e0b', description: 'GSSoC: Exceptional quality (+bonus pts)' },
               { name: 'type:docs',           color: '0ea5e9', description: 'GSSoC: Documentation contribution' },
               { name: 'type:testing',        color: '0ea5e9', description: 'GSSoC: Testing contribution' },
               { name: 'type:accessibility',  color: '0ea5e9', description: 'GSSoC: Accessibility improvement' },
               { name: 'type:performance',    color: '0ea5e9', description: 'GSSoC: Performance improvement' },
-              { name: 'type:security',       color: '0ea5e9', description: 'GSSoC: Security contribution' },
-              { name: 'type:design',         color: '0ea5e9', description: 'GSSoC: Design contribution' },
-              { name: 'type:refactor',       color: '0ea5e9', description: 'GSSoC: Code refactoring' },
-              { name: 'type:devops',         color: '0ea5e9', description: 'GSSoC: DevOps/CI/CD contribution' },
+              { name: 'type:security',       color: 'b91c1c', description: 'GSSoC: Security-related contribution' },
+              { name: 'type:design',         color: 'a855f7', description: 'GSSoC: Design / UI contribution' },
+              { name: 'type:refactor',       color: '64748b', description: 'GSSoC: Code refactoring' },
+              { name: 'type:devops',         color: 'f97316', description: 'GSSoC: DevOps / CI-CD contribution' },
               { name: 'type:bug',            color: 'd73a4a', description: 'GSSoC: Bug fix' },
               { name: 'type:feature',        color: '84cc16', description: 'GSSoC: New feature' },
-              // Validation
-              { name: 'gssoc:approved',      color: '0e8a16', description: 'GSSoC: Approved and scored PR' },
+              { name: 'gssoc:approved',      color: '0e8a16', description: 'GSSoC: Approved and scored contribution' },
               { name: 'gssoc:invalid',       color: 'ee0701', description: 'GSSoC: Invalid contribution' },
               { name: 'gssoc:spam',          color: 'ee0701', description: 'GSSoC: Spam contribution' },
               { name: 'gssoc:ai-slop',       color: 'b60205', description: 'GSSoC: AI-generated low-quality contribution' },
+              { name: 'mentor:Ayushh-Sharmaa', color: '6f42c1', description: 'GSSoC: Mentor attribution for @Ayushh-Sharmaa' },
+              { name: "GSSoC'26",            color: '0e8a16', description: "Part of GirlScript Summer of Code 2026" },
             ];
 
-            for (const label of labels) {
+            for (const label of allLabels) {
               try {
                 await github.rest.issues.getLabel({ owner, repo, name: label.name });
               } catch (e) {
-                if (e.status === 404) {
-                  await github.rest.issues.createLabel({ owner, repo, ...label });
-                  console.log(`✅ Created label: ${label.name}`);
-                }
+                if (e.status === 404) await github.rest.issues.createLabel({ owner, repo, ...label });
               }
             }
-            console.log('All GSSoC labels ensured.');
 
-      - name: Auto-assign approved label
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            const prNumber = pr.number;
-            const { owner, repo } = context.repo;
-
-            // Get current labels on the PR
-            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
-              owner, repo, issue_number: prNumber,
+            // Get current labels
+            const { data: current } = await github.rest.issues.listLabelsOnIssue({
+              owner, repo, issue_number: prNum,
             });
-            const labelNames = currentLabels.map(l => l.name);
+            const labelNames = current.map(l => l.name);
 
-            // ─── Always apply gssoc:approved on valid merged PRs ─────────────────
-            const spamLabels = ['gssoc:spam', 'gssoc:invalid', 'gssoc:ai-slop', 'do-not-merge'];
-            const isSpam = spamLabels.some(l => labelNames.includes(l));
+            // ── Apply gssoc:approved unless spam/invalid ──────────────────────
+            const badLabels = ['gssoc:spam', 'gssoc:invalid', 'gssoc:ai-slop', 'do-not-merge'];
+            const isSpam    = badLabels.some(l => labelNames.includes(l));
 
-            if (!isSpam) {
-              if (!labelNames.includes('gssoc:approved')) {
-                await github.rest.issues.addLabels({
-                  owner, repo, issue_number: prNumber,
-                  labels: ['gssoc:approved'],
-                });
-                console.log(`✅ Applied gssoc:approved to PR #${prNumber}`);
-              }
-            } else {
-              console.log(`⚠️  PR #${prNumber} is spam/invalid — skipping gssoc:approved.`);
+            if (!isSpam && !labelNames.includes('gssoc:approved')) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: prNum, labels: ['gssoc:approved'] });
+              console.log(`✅ Applied gssoc:approved to PR #${prNum}`);
+            } else if (isSpam) {
+              console.log(`⚠️  Skipping gssoc:approved — PR #${prNum} is spam/invalid.`);
             }
 
-      - name: Auto-assign level label
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            const prNumber = pr.number;
-            const { owner, repo } = context.repo;
-
-            // Get current labels on the PR
-            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
-              owner, repo, issue_number: prNumber,
-            });
-            const labelNames = currentLabels.map(l => l.name);
-
-            // Avoid overriding if a level is already assigned
-            const hasLevel = labelNames.some(l => l.startsWith('level:'));
-
+            // ── Ensure a level label is present ──────────────────────────────
+            const hasLevel = labelNames.some(n => n.startsWith('level:'));
             if (!hasLevel) {
-              const additions = pr.additions || 0;
-              const deletions = pr.deletions || 0;
+              const additions    = pr.additions    || 0;
+              const deletions    = pr.deletions    || 0;
+              const changedFiles = pr.changed_files || 0;
               const totalChanges = additions + deletions;
 
-              let levelLabel = '';
-              if (totalChanges < 50) {
-                levelLabel = 'level:beginner';
-              } else if (totalChanges < 200) {
-                levelLabel = 'level:intermediate';
-              } else if (totalChanges < 500) {
-                levelLabel = 'level:advanced';
-              } else {
-                levelLabel = 'level:critical';
-              }
+              let level = 'level:beginner';
+              if      (totalChanges > 500 || changedFiles > 15) level = 'level:critical';
+              else if (totalChanges > 200 || changedFiles > 8)  level = 'level:advanced';
+              else if (totalChanges > 50  || changedFiles > 3)  level = 'level:intermediate';
 
+              await github.rest.issues.addLabels({ owner, repo, issue_number: prNum, labels: [level] });
+              console.log(`📊 Applied ${level} to PR #${prNum}`);
+            }
+
+            // ── Ensure mentor:Ayushh-Sharmaa is present ───────────────────────
+            if (!labelNames.includes('mentor:Ayushh-Sharmaa')) {
               await github.rest.issues.addLabels({
-                owner, repo, issue_number: prNumber,
-                labels: [levelLabel],
+                owner, repo, issue_number: prNum, labels: ['mentor:Ayushh-Sharmaa'],
               });
-              console.log(`✅ Applied ${levelLabel} to PR #${prNumber} (Changes: ${totalChanges})`);
-            } else {
-              console.log(`PR #${prNumber} already has a level assigned.`);
+              console.log(`🎓 Applied mentor:Ayushh-Sharmaa to PR #${prNum}`);
             }
 
-      - name: Add mentor attribution label
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            const prNumber = pr.number;
-            const { owner, repo } = context.repo;
-
-            // Get the review(s) on this PR
-            const { data: reviews } = await github.rest.pulls.listReviews({
-              owner, repo, pull_number: prNumber,
-            });
-
-            if (reviews.length === 0) {
-              console.log(`No reviews found on PR #${prNumber}`);
-              return;
-            }
-
-            // Pick the first approved/non-pending reviewer that is not the author
-            const prAuthor = pr.user.login.toLowerCase();
-            const reviewer = reviews.find(r =>
-              r.user.login.toLowerCase() !== prAuthor && r.state !== 'PENDING'
-            );
-
-            if (!reviewer) {
-              console.log('No eligible reviewer found for mentor attribution.');
-              return;
-            }
-
-            const mentorUsername = reviewer.user.login;
-            const mentorLabel = `mentor:${mentorUsername}`;
-            const { owner: o, repo: r } = context.repo;
-
-            // Ensure mentor label exists
-            try {
-              await github.rest.issues.getLabel({ owner: o, repo: r, name: mentorLabel });
-            } catch (e) {
-              if (e.status === 404) {
-                await github.rest.issues.createLabel({
-                  owner: o, repo: r,
-                  name: mentorLabel,
-                  color: '6f42c1',
-                  description: `GSSoC: Mentor attribution for @${mentorUsername}`,
-                });
-              }
-            }
-
-            await github.rest.issues.addLabels({
-              owner: o, repo: r,
-              issue_number: prNumber,
-              labels: [mentorLabel],
-            });
-            console.log(`🎓 Added mentor attribution: ${mentorLabel}`);
+            console.log(`✅ Merge labelling complete for PR #${prNum}`);

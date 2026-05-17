@@ -163,3 +163,6 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
   #back-to-top { bottom: 18px; left: 18px; }
 }
 
+button, a, input, select, [role="button"] {
+    cursor: none !important;
+}
