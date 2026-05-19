@@ -3,7 +3,7 @@ import { Mail, Heart } from 'lucide-react';
 
 const NEXASPHERE_EMAIL = 'nexasphere@glbajajgroup.org';
 
-export default function Footer({ onAdmin, onProjects }) {
+export default function Footer({ onAdmin, onProjects, onRoadmaps }) {
   return (
     <footer className="ns-footer">
       <div className="container">
@@ -23,7 +23,7 @@ export default function Footer({ onAdmin, onProjects }) {
             </a>
           </p>
           <p className="ns-footer-text ns-footer-built">
-            Built with <Heart size={12} fill="currentColor" style={{ display: 'inline', verticalAlign: '-1px' }} /> by the NexaSphere Core Team · <span onClick={onProjects} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Projects Gallery</span> · <span onClick={onAdmin} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Admin Dashboard</span>
+            Built with <Heart size={12} fill="currentColor" style={{ display: 'inline', verticalAlign: '-1px' }} /> by the NexaSphere Core Team · <span onClick={onProjects} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Projects Gallery</span> · <span onClick={onRoadmaps} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Learning Roadmaps</span> · <span onClick={onAdmin} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Admin Dashboard</span>
           </p>
         </div>
       </div>

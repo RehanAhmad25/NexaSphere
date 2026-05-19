@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BRAND_LOGO_FULL, BRAND_LOGO_ICON } from './brandAssets';
 import NotificationBell from '../components/NotificationBell';
 
-const TABS = ['Home', 'Activities', 'Events', 'Projects', 'About', 'Team', 'Contact'];
+const TABS = ['Home', 'Activities', 'Events', 'Projects', 'Roadmaps', 'About', 'Team', 'Contact'];
 
 function ThemeToggle({ theme, onToggle }) {
   return (
