@@ -21,6 +21,9 @@ import ActivityDetailPage  from './pages/activities/ActivityDetailPage';
 import EventDetailPage     from './pages/events/EventDetailPage';
 import CinematicOpening    from './shared/CinematicOpening';
 import Chatbot             from './shared/Chatbot';
+import DashboardPage       from './pages/dashboard/DashboardPage';
+import GamificationDashboard from './components/gamification/GamificationDashboard';
+
 import {
   AmbientOrbs, SectionDivider, PageFlash, BannerOrbs,
   useNsReveal, useHeroParallax,
@@ -40,7 +43,7 @@ import { events as fallbackEvents } from './data/eventsData';
 import nexasphereLogo      from './assets/images/logos/nexasphere-logo.png';
 
 const MNH = 88, DNH = 64;
-const TABS = ['Home','Activities','Events','About','Team','Contact'];
+const TABS = ['Home', 'Activities', 'Events', 'About', 'Team', 'Contact', 'Dashboard', 'Gamification'];
 
 /* ── Page wipe transition ── */
 function Wipe({ on, ph }) {
@@ -77,13 +80,9 @@ function Cursor() {
   const trailRef= useRef(null);
   const glowRef = useRef(null);
   const stateRef= useRef({
-    
     mx:0, my:0,
-    
     ox:0, oy:0,
-    
     floatY:0, floatPhase:0,
-    
     hovering:false,
     clicking:false,
     raf:null
@@ -98,25 +97,20 @@ function Cursor() {
     const onMove = e => { s.mx = e.clientX; s.my = e.clientY; };
     const onDown = () => { s.clicking = true; };
     const onUp   = () => { s.clicking = false; };
-
-    
     const onOver = e => {
       s.hovering = !!(e.target.closest('button,a,[role="button"],[tabindex]'));
     };
 
     const tick = () => {
-      
       s.ox += (s.mx - s.ox) * 1.00;
       s.oy += (s.my - s.oy) * 1.00;
-
       
       s.floatPhase += 0.022;
-         s.floatY = Math.sin(s.floatPhase) * 2
-         + Math.sin(s.floatPhase * 1.7) * 1
-         + Math.sin(s.floatPhase * 0.5) * 1;
+      s.floatY = Math.sin(s.floatPhase) * 2
+        + Math.sin(s.floatPhase * 1.7) * 1
+        + Math.sin(s.floatPhase * 0.5) * 1;
 
       const fy = s.oy + s.floatY;
-
       const scale = s.clicking ? 0.7 : s.hovering ? 1.55 : 1;
       const opacity = s.hovering ? 0.95 : 0.82;
 
@@ -157,7 +151,6 @@ function Cursor() {
 
   return (
     <>
-      
       <div ref={glowRef} style={{
         position:'fixed', pointerEvents:'none', zIndex:10000,
         width:'320px', height:'320px', borderRadius:'50%',
@@ -166,7 +159,6 @@ function Cursor() {
         transition:'opacity .3s',
       }}/>
 
-      
       <div ref={trailRef} style={{
         position:'fixed', pointerEvents:'none', zIndex:10002,
         width:'28px', height:'28px', borderRadius:'50%',
@@ -176,7 +168,6 @@ function Cursor() {
         transition:'opacity .25s',
       }}/>
 
-      
       <div ref={orbRef} style={{
         position:'fixed', pointerEvents:'none', zIndex:100000,
         width:'18px', height:'18px', borderRadius:'50%',
@@ -184,7 +175,6 @@ function Cursor() {
         boxShadow:'0 0 10px rgba(204,17,17,.9), 0 0 24px rgba(204,17,17,.5), 0 0 50px rgba(136,0,0,.3)',
         transition:'transform .08s cubic-bezier(.34,1.56,.64,1), opacity .2s',
       }}>
-        
         <div style={{
           position:'absolute', top:'20%', left:'22%',
           width:'5px', height:'5px', borderRadius:'50%',
@@ -197,7 +187,6 @@ function Cursor() {
 }
 
 export default function App() {
-  // Play intro on every refresh as requested
   const [cinDone,  setCinDone]  = useState(false);
   const [activeTab,setActiveTab]= useState('Home');
   const [mobile,   setMobile]   = useState(window.innerWidth<=768);
@@ -212,7 +201,6 @@ export default function App() {
     localStorage.setItem('ns-theme',theme);
   },[theme]);
 
-  
   const toggleTheme = useCallback(() => {
     setTheme(t => t === 'dark' ? 'light' : 'dark');
   }, []);
@@ -242,7 +230,6 @@ export default function App() {
     return()=>window.removeEventListener('scroll',fn);
   },[]);
 
-  
   useEffect(()=>{
     if(page)return;
     const nh=mobile?MNH:DNH;
@@ -257,14 +244,12 @@ export default function App() {
     return()=>window.removeEventListener('scroll',fn);
   },[mobile,page]);
 
-  
   useEffect(()=>{
     const fn=()=>setMobile(window.innerWidth<=768);
     window.addEventListener('resize',fn,{passive:true});
     return()=>window.removeEventListener('resize',fn);
   },[]);
 
-  
   useEffect(()=>{
     if(!cinDone)return;
     
@@ -282,7 +267,6 @@ export default function App() {
     },{threshold:.09,rootMargin:'0px 0px -36px 0px'});
     document.querySelectorAll('.pop-in,.pop-left,.pop-right,.pop-scale,.pop-flip,.pop-word,.pop-num').forEach(el=>obs.observe(el));
 
-    
     const btns=document.querySelectorAll('.mag-btn');
     const onMove=e=>{
       btns.forEach(btn=>{
@@ -293,7 +277,6 @@ export default function App() {
         btn.style.transform=d<88?`translate(${dx*(88-d)/88*.32}px,${dy*(88-d)/88*.32}px)`:'';
       });
 
-      
       document.querySelectorAll('.activity-card').forEach(card=>{
         const rect=card.getBoundingClientRect();
         const cx=rect.left+rect.width/2;
@@ -322,7 +305,6 @@ export default function App() {
   useGlobalMouseParallax();
   useMagneticCards();
 
-  
   const nav=useCallback((fn)=>{
     setWipeOn(true);setWipePh('out');
     setTimeout(()=>{
@@ -335,8 +317,15 @@ export default function App() {
   },[]);
 
   const onTab=useCallback(tab=>{
-    
-    if(['Activities','Events','About','Team','Contact'].includes(tab)){
+    if (tab === 'Dashboard') {
+      nav(()=>{setPage({type:'section',section:'Dashboard'});setActiveTab(tab);});
+      return;
+    }
+    if (tab === 'Gamification') {
+      nav(()=>{setPage({type:'gamification'});setActiveTab(tab);});
+      return;
+    }
+    if (['Activities', 'Events', 'About', 'Team', 'Contact'].includes(tab)){
       nav(()=>{setPage({type:'section',section:tab});setActiveTab(tab);});
       return;
     }
@@ -359,7 +348,6 @@ export default function App() {
   },[nav]);
 
   const onKSSClick=useCallback(ev=>{
-    
     nav(()=>setPage({type:'event',activityKey:'Insight Session',event:ev}));
   },[nav]);
 
@@ -397,16 +385,11 @@ export default function App() {
   const nh=mobile?MNH:DNH;
   const cur=page?.activityKey?activityPages[page.activityKey]:null;
 
-  
   return (
     <>
-      {/* Move Chatbot to the very top to bypass all other logic */}
       <Chatbot /> 
 
-      {!cinDone && <CinematicOpening theme={theme} onDone={() => {
-        // localStorage.setItem('ns_intro_seen', '1');
-        setCinDone(true);
-      }}/>}
+      {!cinDone && <CinematicOpening theme={theme} onDone={() => setCinDone(true)}/>}
 
       {cinDone && <ScrollProgress />}
       <Cursor/>
@@ -418,7 +401,6 @@ export default function App() {
       {cinDone && <Navbar activeTab={activeTab} onTabChange={onTab} onToggleTheme={toggleTheme} theme={theme} onApply={openApply} onJoin={openJoin}/>}
 
       <main style={{paddingTop:nh, position:'relative', zIndex:1}}>
-        {/* If page is null, show home sections. Otherwise show the specific page. */}
         {page ? (
            <PageIn k={page.type + (page.section || page.activityKey)}>
              {page.section === 'Activities' && <ActivitiesPage onNavigate={onNavigate} onBack={onBackHome}/>}
@@ -426,13 +408,14 @@ export default function App() {
              {page.section === 'About' && <AboutPage onBack={onBackHome}/>}
              {page.section === 'Team' && <TeamPage onBack={onBackHome} onApply={openApply}/>}
              {page.section === 'Contact' && <ContactPage onBack={onBackHome}/>}
+             {page.section === 'Dashboard' && <DashboardPage onBack={onBackHome}/>}
+             {page.type === 'gamification' && <GamificationDashboard />}
              {page.type === 'activity' && cur && <ActivityDetailPage activity={cur} onBack={onBackMain} onSelectEvent={onEvent}/>}
              {page.type === 'apply' && <RecruitmentPage onBack={onBackHome}/>}
              {page.type === 'join' && <MembershipPage onBack={onBackHome}/>}
              {page.type === 'admin' && <AdminPage onBack={onBackHome} />}
              {page.type === 'event' && page.event && <EventDetailPage event={page.event} onBack={page.activityKey ? onBackAct : onBackMain}/>}
-             {/* 404 fallback for unknown page types */}
-             {page.type && !['section','activity','event','apply','join'].includes(page.type) && <NotFoundPage onGoHome={onBackHome}/>}
+             {page.type && !['section','activity','event','apply','join','gamification','admin'].includes(page.type) && <NotFoundPage onGoHome={onBackHome}/>}
            </PageIn>
         ) : (
           cinDone && (

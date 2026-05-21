@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BRAND_LOGO_FULL, BRAND_LOGO_ICON } from './brandAssets';
 
-const TABS = ['Home', 'Activities', 'Events', 'About', 'Team', 'Contact'];
+const TABS = ['Home', 'Activities', 'Events', 'About', 'Team', 'Contact', 'Dashboard', 'Gamification'];
 
 function ThemeToggle({ theme, onToggle }) {
   return (
@@ -105,4 +105,3 @@ export default function Navbar({ activeTab, onTabChange, onToggleTheme, theme, o
     </nav>
   );
 }
-
