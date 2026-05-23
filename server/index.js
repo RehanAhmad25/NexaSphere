@@ -17,9 +17,10 @@ const __dirname = path.dirname(__filename);
 const CONTENT_FILE = path.join(__dirname, 'data', 'content.json');
 
 const app = express();
+const adminEvents = new EventEmitter();
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean) : true,
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean) : true,
   credentials: false,
 }));
 app.use(express.json({ limit: '512kb' }));
@@ -514,9 +515,9 @@ app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamM
 app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
 app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
 
-async function handleForm(formType, req, res) {
-  try {
-    const payload = normalizeFormSubmission(formType, req.body || {});
+app.get('/api/admin/core-team', adminAuth, coreTeamController.adminListCoreTeamMembers);
+app.post('/api/admin/core-team', adminAuth, coreTeamController.adminAddCoreTeamMember);
+app.delete('/api/admin/core-team/:id', adminAuth, coreTeamController.adminDeleteCoreTeamMember);
 
     const savedToSupabase = await appendToSupabaseForms(formType, payload);
     try {
