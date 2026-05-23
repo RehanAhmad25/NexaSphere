@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/admin/core-team")
+@Tag(name = "Core Team Management", description = "Endpoints for managing the core team members")
 @SuppressWarnings("null")
 public class CoreTeamController {
 
