@@ -16,6 +16,7 @@
     "e2e:debug": "playwright test --debug"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.5.2",
     "@sentry/react": "^7.84.0",
     "@sentry/tracing": "^7.84.0",
     "framer-motion": "^12.38.0",
