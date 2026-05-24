@@ -127,27 +127,50 @@ function StatsBar({ vis, isLight }) {
   );
 }
 
-/* â”€â”€ Particles / atmosphere â”€â”€ */
 function Atmosphere({ isLight }) {
-  if (isLight) return (
-    <div style={{position:'absolute',inset:0,zIndex:0,pointerEvents:'none',
-      backgroundImage:`radial-gradient(circle at 60% 38%,rgba(194,119,10,.05) 0%,transparent 55%),radial-gradient(circle at 30% 68%,rgba(109,40,217,.04) 0%,transparent 48%)`}}/>
-  );
   return (
     <>
-      
+      {/* Binary data streams — visible in both themes */}
       <div style={{position:'absolute',inset:0,overflow:'hidden',zIndex:0,pointerEvents:'none'}}>
         {Array.from({length:9},(_,i)=>(
-          <div key={i} style={{position:'absolute',left:`${6+i*11}%`,top:0,fontFamily:"'Space Mono',monospace",fontSize:'8px',color:'var(--c1)',lineHeight:1.9,userSelect:'none',animation:`dataStream ${4.2+i*.65}s linear infinite`,animationDelay:`${-i*1.3}s`,opacity:.06}}>
+          <div key={i} style={{
+            position:'absolute',left:`${6+i*11}%`,top:0,
+            fontFamily:"'Space Mono',monospace",fontSize:'8px',
+            color: isLight ? 'rgba(180,20,20,0.45)' : 'var(--c1)',
+            lineHeight:1.9,userSelect:'none',
+            animation:`dataStream ${4.2+i*.65}s linear infinite`,
+            animationDelay:`${-i*1.3}s`,
+            opacity: isLight ? 0.5 : 0.06,
+          }}>
             {Array.from({length:28},()=>Math.random()>.5?'1':'0').join('\n')}
           </div>
         ))}
       </div>
-      
+
+      {/* Scanline */}
       <div style={{position:'absolute',inset:0,overflow:'hidden',zIndex:1,pointerEvents:'none'}}>
-        <div style={{position:'absolute',left:0,right:0,height:'1px',background:'linear-gradient(90deg,transparent,rgba(204,17,17,.38),rgba(136,0,0,.38),transparent)',animation:'scanline 8s linear infinite'}}/>
-        <div style={{position:'absolute',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(204,17,17,.005) 2px,rgba(204,17,17,.005) 4px)'}}/>
+        <div style={{
+          position:'absolute',left:0,right:0,height:'1px',
+          background: isLight
+            ? 'linear-gradient(90deg,transparent,rgba(204,17,17,.25),rgba(136,0,0,.25),transparent)'
+            : 'linear-gradient(90deg,transparent,rgba(204,17,17,.38),rgba(136,0,0,.38),transparent)',
+          animation:'scanline 8s linear infinite',
+        }}/>
+        <div style={{
+          position:'absolute',inset:0,
+          backgroundImage: isLight
+            ? 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(204,17,17,.003) 2px,rgba(204,17,17,.003) 4px)'
+            : 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(204,17,17,.005) 2px,rgba(204,17,17,.005) 4px)',
+        }}/>
       </div>
+
+      {/* Light mode atmosphere gradient */}
+      {isLight && (
+        <div style={{
+          position:'absolute',inset:0,zIndex:0,pointerEvents:'none',
+          backgroundImage:`radial-gradient(circle at 60% 38%,rgba(194,119,10,.05) 0%,transparent 55%),radial-gradient(circle at 30% 68%,rgba(109,40,217,.04) 0%,transparent 48%)`,
+        }}/>
+      )}
     </>
   );
 }
@@ -170,8 +193,8 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
         position:'absolute',inset:0,zIndex:0,
         pointerEvents:'none',
         background: isLight
-          ? '#FFFFFF'
-          : '#0A0A0A',
+        ? 'transparent'
+        : '#0A0A0A',
         transition:'background 1.2s cubic-bezier(.4,0,.2,1)',
       }} />
       {/* Logo glow — subtle radial red only around center */}

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { teamMembers } from '../../data/teamData';
 import TeamMemberModal from './TeamMemberModal';
 import { IconArrowRight, IconSpark } from '../../shared/Icons';
+import SafeImage from '../../shared/SafeImage';
 
 function MemberCard({ member, idx, onClick }) {
   const ref = useRef(null);
@@ -41,7 +42,7 @@ function MemberCard({ member, idx, onClick }) {
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') click(); }}
     >
       <div className="team-card-photo-wrap">
-        <img src={member.photo} alt={member.name} className="team-card-photo" loading="lazy" />
+        <SafeImage src={member.photo} alt={member.name} className="team-card-photo" loading="lazy" fallbackType="avatar" />
       </div>
       <div className="team-card-name">{member.name}</div>
       <div className="team-card-role">{member.role}</div>

@@ -15,6 +15,8 @@ import analyticsRouter from './routes/analytics.js';
 import { initializeSocketIO, emitToRoom, getRoom } from './config/socket.js';
 import adminStreamRouter from './routes/adminStream.js';
 import { broadcastSSEEvent } from './services/sseService.js';
+import rateLimit from 'express-rate-limit';
+
 import { portfolioRepository } from './repositories/portfolioRepository.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -85,6 +87,27 @@ function requiredEnv(name) {
   if (!v) throw new Error(`Missing environment variable: ${name}`);
   return v;
 }
+
+function requiredStrongPassword(name) {
+  const value = String(process.env[name] || '').trim();
+  if (!value) {
+    throw new Error(`Missing environment variable: ${name}`);
+  }
+  const hasLower = /[a-z]/.test(value);
+  const hasUpper = /[A-Z]/.test(value);
+  const hasNumber = /\d/.test(value);
+  const hasSymbol = /[^A-Za-z0-9]/.test(value);
+
+  if (value.length < 12 || !hasLower || !hasUpper || !hasNumber || !hasSymbol) {
+    throw new Error(
+      `${name} must be at least 12 characters and include uppercase, lowercase, number, and symbol`
+    );
+  }
+
+  return value;
+}
+
+const ADMIN_EVENT_PASSWORD = requiredStrongPassword('ADMIN_EVENT_PASSWORD');
 
 function normalizePrivateKey(k) {
   return k.includes('\\n') ? k.replace(/\\n/g, '\n') : k;
@@ -186,8 +209,7 @@ function normalizePhone(value) {
 }
 
 async function canManageActivityEvent({ name, email, phone, password }) {
-  const expectedPassword = process.env.ADMIN_EVENT_PASSWORD || 'Admin@123';
-  if (String(password || '') !== expectedPassword) return false;
+  if (String(password || '') !== ADMIN_EVENT_PASSWORD) return false;
   const n = String(name || '').trim().toLowerCase();
   const e = String(email || '').trim().toLowerCase();
   const p = normalizePhone(phone);
@@ -645,7 +667,13 @@ app.delete('/api/admin/events/:id', adminAuth, async (req, res) => {
 
 app.get('/api/content/core-team', async (req, res) => {
   try {
-    return res.json(await listCoreTeamStore());
+    const fullTeam = await listCoreTeamStore();
+    // Strip out PII (email, whatsapp) for the unauthenticated public endpoint
+    const publicTeam = fullTeam.map(member => {
+      const { email, whatsapp, ...safeData } = member;
+      return safeData;
+    });
+    return res.json(publicTeam);
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Failed to load core team' });
   }
@@ -717,6 +745,7 @@ app.get('/api/admin/membership', adminAuth, async (req, res) => {
     return res.json({ responses: [] });
   }
 
+
   try {
     const response = await fetch(scriptUrl, {
       method: 'POST',
@@ -779,16 +808,28 @@ async function handleForm(formType, req, res) {
   }
 }
 
-app.post('/api/forms/membership', (req, res) => handleForm('membership', req, res));
-app.post('/api/forms/recruitment', (req, res) => handleForm('recruitment', req, res));
-app.post('/api/core-team/apply', (req, res) => handleForm('core_team', req, res));
+const formRateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: { error: 'Too many form submissions from this IP, please try again after 10 minutes' }
+});
 
+app.post('/api/forms/membership', formRateLimiter, (req, res) => handleForm('membership', req, res));
+app.post('/api/forms/recruitment', formRateLimiter, (req, res) => handleForm('recruitment', req, res));
+app.post('/api/core-team/apply', formRateLimiter, (req, res) => handleForm('core_team', req, res));
 // Real-time notification subscriber channels
 const pushSubscriptions = new Set();
 app.post('/api/notifications/subscribe', (req, res) => {
   try {
     const { subscription } = req.body;
-    if (subscription) pushSubscriptions.add(JSON.stringify(subscription));
+        if (subscription) {
+      pushSubscriptions.add(JSON.stringify(subscription));
+      // Prevent memory leak by capping maximum subscriptions to 10,000
+      if (pushSubscriptions.size > 10000) {
+        const oldest = pushSubscriptions.values().next().value;
+        pushSubscriptions.delete(oldest);
+      }
+    }
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -854,7 +895,6 @@ app.put('/api/portfolio', async (req, res) => {
 });
 
 
->>>>>>> upstream/main
 const port = Number(process.env.PORT || 8787);
 if (!process.env.VERCEL) {
   const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();

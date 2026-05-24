@@ -74,6 +74,8 @@ const getDb = (key, defaultVal) => {
 };
 const setDb = (key, val) => localStorage.setItem(`ns_db_${key}`, JSON.stringify(val));
 
+let isLoggingOut = false;
+
 async function fetchWithAuth(url, options = {}) {
   const isOffline = auth.isOfflineMode();
 
@@ -89,7 +91,11 @@ async function fetchWithAuth(url, options = {}) {
       });
 
       if (res.status === 401) {
-        eventEmitter.emit(EVENTS.AUTH_TOKEN_EXPIRED);
+        if (!isLoggingOut) {
+          isLoggingOut = true;
+          eventEmitter.emit(EVENTS.AUTH_TOKEN_EXPIRED);
+          setTimeout(() => { isLoggingOut = false; }, 3000);
+        }
         throw new Error('Session expired');
       }
       if (res.status === 204) return null;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import SafeImage from '../../shared/SafeImage';
 
 // ── Copy Popup ──
 function CopyPopup({ value, onClose }) {
@@ -66,7 +67,7 @@ function ModalContent({ member, onClose }) {
         <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
 
         {/* Photo */}
-        <img src={member.photo} alt={member.name} className="modal-photo" loading="lazy" />
+        <SafeImage src={member.photo} alt={member.name} className="modal-photo" loading="lazy" fallbackType="avatar" />
 
         {/* Name & Role */}
         <div className="modal-name">{member.name}</div>

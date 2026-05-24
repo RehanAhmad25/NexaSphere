@@ -5,19 +5,24 @@
 
 import express from 'express';
 import { addSSEClient, setupSSEHeaders, getConnectedSSEClientsCount } from '../services/sseService.js';
+import { adminAuthMiddleware } from '../middleware/adminAuthMiddleware.js';
 import logger from '../utils/logger.js';
 
 const router = express.Router();
+const requireAdmin = adminAuthMiddleware.requireAdmin;
 
 /**
  * SSE stream endpoint - real-time updates for admin
  * GET /api/admin/stream
+ * Requires valid admin session token
  */
-router.get('/stream', setupSSEHeaders, (req, res) => {
-  const adminId = req.adminSession?.username || 'anonymous';
-  logger.info('Admin connected to SSE stream', { adminId });
+router.get('/stream', requireAdmin, setupSSEHeaders, (req, res) => {
+  const adminId = req.adminSession?.username;
+  if (!adminId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
-  // Add client to broadcast list
+  logger.info('Admin connected to SSE stream', { adminId });
   addSSEClient(res);
 });
 
@@ -25,7 +30,7 @@ router.get('/stream', setupSSEHeaders, (req, res) => {
  * Get connected clients count
  * GET /api/admin/stream/info
  */
-router.get('/stream/info', (req, res) => {
+router.get('/stream/info', requireAdmin, (req, res) => {
   try {
     res.json({
       success: true,

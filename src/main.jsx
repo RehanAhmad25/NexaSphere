@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
+import GlobalErrorBoundary from './components/GlobalErrorBoundary.jsx';
 import { registerSW } from 'virtual:pwa-register';
 
 // Apply saved theme before React renders — prevents flash of wrong theme
@@ -12,7 +13,9 @@ registerSW({ immediate: true });
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <GlobalErrorBoundary>
+      <App />
+    </GlobalErrorBoundary>
   </StrictMode>
 );
 

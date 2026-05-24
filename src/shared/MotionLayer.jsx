@@ -16,11 +16,11 @@ const ORBS_DARK = [
   { w:280, h:280, top:'12%', left:'65%', bg:'rgba(255,45,120,.12)',  dur:'22s', delay:'-3s',  lo:'.08', hi:'.16' },
 ];
 const ORBS_LIGHT = [
-  { w:600, h:600, top:'5%',  left:'2%',  bg:'rgba(194,119,10,.14)', dur:'18s', delay:'0s',   lo:'.08', hi:'.16' },
-  { w:500, h:500, top:'50%', left:'72%', bg:'rgba(91,33,182,.12)',  dur:'24s', delay:'-8s',  lo:'.07', hi:'.14' },
-  { w:420, h:420, top:'28%', left:'52%', bg:'rgba(157,23,77,.10)',  dur:'20s', delay:'-5s',  lo:'.06', hi:'.12' },
-  { w:340, h:340, top:'78%', left:'18%', bg:'rgba(6,95,70,.08)',    dur:'28s', delay:'-13s', lo:'.05', hi:'.10' },
-  { w:280, h:280, top:'12%', left:'65%', bg:'rgba(232,99,122,.09)', dur:'22s', delay:'-3s',  lo:'.05', hi:'.10' },
+  { w:700, h:700, top:'5%',  left:'2%',  bg:'rgba(230,57,70,.55)',   dur:'18s', delay:'0s',   lo:'.45', hi:'.65' },
+  { w:600, h:600, top:'50%', left:'72%', bg:'rgba(107,48,212,.50)',  dur:'24s', delay:'-8s',  lo:'.40', hi:'.60' },
+  { w:500, h:500, top:'28%', left:'52%', bg:'rgba(26,108,245,.48)',  dur:'20s', delay:'-5s',  lo:'.38', hi:'.58' },
+  { w:400, h:400, top:'78%', left:'18%', bg:'rgba(183,28,28,.45)',   dur:'28s', delay:'-13s', lo:'.35', hi:'.55' },
+  { w:350, h:350, top:'12%', left:'65%', bg:'rgba(189,92,255,.50)',  dur:'22s', delay:'-3s',  lo:'.40', hi:'.60' },
 ];
 
 export function AmbientOrbs({ theme = 'dark' }) {

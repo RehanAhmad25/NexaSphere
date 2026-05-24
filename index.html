@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
   <head>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('ns-theme');
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.setAttribute('data-theme', stored);
+          } else {
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var defaultTheme = prefersDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', defaultTheme);
+            localStorage.setItem('ns-theme', defaultTheme);
+          }
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NexaSphere — Connecting GL Bajaj Tech Ecosystem</title>

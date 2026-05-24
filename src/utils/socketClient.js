@@ -4,6 +4,7 @@
  */
 
 import io from 'socket.io-client';
+import { captureHandledException } from './errorTracking';
 
 let socket = null;
 let eventHandlers = {};
@@ -22,22 +23,15 @@ export function initializeSocket(serverUrl = window.location.origin) {
 
   // Global event handlers
   socket.on('connect', () => {
-    if (!import.meta.env.PROD) {
-      console.log('Connected to Socket.IO server');
-    }
     identifyUser();
   });
 
-  socket.on('disconnect', (reason) => {
-    if (!import.meta.env.PROD) {
-      console.log('Disconnected from Socket.IO server:', reason);
-    }
+  socket.on('disconnect', (_reason) => {
+    // Disconnect handled silently; reconnection is automatic
   });
 
   socket.on('error', (error) => {
-    if (!import.meta.env.PROD) {
-      console.error('Socket.IO error:', error);
-    }
+    captureHandledException(error, 'Socket.IO error:');
   });
 
   // Setup custom event listeners
@@ -91,9 +85,6 @@ function setupEventListeners() {
 
   // Registration confirmed
   socket.on('registration-confirmed', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Registration confirmed:', data);
-    }
     if (eventHandlers.registrationConfirmed) {
       eventHandlers.registrationConfirmed(data);
     }
@@ -101,9 +92,6 @@ function setupEventListeners() {
 
   // Waitlist promotion
   socket.on('waitlist-promotion', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Waitlist promotion:', data);
-    }
     if (eventHandlers.waitlistPromotion) {
       eventHandlers.waitlistPromotion(data);
     }
@@ -111,9 +99,6 @@ function setupEventListeners() {
 
   // Event reminder
   socket.on('event-reminder', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Event reminder:', data);
-    }
     if (eventHandlers.eventReminder) {
       eventHandlers.eventReminder(data);
     }
@@ -121,9 +106,6 @@ function setupEventListeners() {
 
   // Attendance marked
   socket.on('attendance-marked', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Attendance marked:', data);
-    }
     if (eventHandlers.attendanceMarked) {
       eventHandlers.attendanceMarked(data);
     }
@@ -131,27 +113,18 @@ function setupEventListeners() {
 
   // Admin notifications
   socket.on('admin:new-registration', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Admin - new registration:', data);
-    }
     if (eventHandlers.adminNewRegistration) {
       eventHandlers.adminNewRegistration(data);
     }
   });
 
   socket.on('admin:waitlist-promotion', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Admin - waitlist promotion:', data);
-    }
     if (eventHandlers.adminWaitlistPromotion) {
       eventHandlers.adminWaitlistPromotion(data);
     }
   });
 
   socket.on('admin:attendance-marked', (data) => {
-    if (!import.meta.env.PROD) {
-      console.log('Admin - attendance marked:', data);
-    }
     if (eventHandlers.adminAttendanceMarked) {
       eventHandlers.adminAttendanceMarked(data);
     }

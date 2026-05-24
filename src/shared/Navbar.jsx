@@ -138,7 +138,7 @@ export default function Navbar({ activeTab, onTabChange, onToggleTheme, theme, o
           ))}
         </ul>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifySelf: 'end' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <NotificationBell />
           <BookmarkToggle onToggle={onToggleBookmarks} />
           <div className="ns-nav-ctas">

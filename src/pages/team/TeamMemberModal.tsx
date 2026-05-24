@@ -1,6 +1,7 @@
 import { useEffect, useState, ReactNode, MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import * as LucideIcons from 'lucide-react';
+import SafeImage from '../../shared/SafeImage';
 import type { CoreTeamMember } from '../../types/api';
 
 export interface TeamMemberModalProps {
@@ -87,7 +88,7 @@ function ModalContent({ member, onClose }: { member: CoreTeamMember; onClose: ()
         />
 
         <div style={{ position: 'relative', width: '108px', height: '108px', margin: '0 auto 16px' }}>
-          <img src={member.photo} alt={member.name} className="modal-photo" />
+          <SafeImage src={member.photo} alt={member.name} className="modal-photo" fallbackType="avatar" />
           <div className="modal-photo-ring" />
         </div>
 

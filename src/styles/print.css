@@ -1,0 +1,39 @@
+/* ATS-Friendly Print Styles for Resume Export */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: Arial, sans-serif !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Prevent elements from breaking awkwardly across pages */
+  .resume-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 24px;
+  }
+
+  .resume-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  /* Hide interactive/UI elements during print if any leak through */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure links look normal, not clickable buttons */
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+}

@@ -40,6 +40,7 @@
 var SPREADSHEET_ID = '';          // e.g. '1bUtbaHwA7_ooqE4pNn3B74uE3hRQi1e7...'
 
 var SHEET_TAB_NAME = 'Membership'; // Tab name inside the sheet
+const TURNSTILE_SECRET_KEY = 'your_cloudflare_secret_key_here';
 
 var HEADER_ROW = [
   'Timestamp',
@@ -194,4 +195,28 @@ function _respond(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function verifyTurnstileToken(token) {
+  if (!token) return false;
+
+  const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+  const payload = {
+    "secret": TURNSTILE_SECRET_KEY,
+    "response": token
+  };
+
+  const options = {
+    "method": "post",
+    "payload": payload
+  };
+
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const json = JSON.parse(response.getContentText());
+    return json.success === true;
+  } catch (e) {
+    console.error("Turnstile verification failed: " + e.toString());
+    return false;
+  }
 }

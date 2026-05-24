@@ -26,7 +26,7 @@ except redis.exceptions.ConnectionError:
 except Exception as e:
     logger.warning("Redis unavailable, using local cache")
 
-@router.get("/recommend/events/{user_id}", tags=["Recommendations"])
+@router.get("/recommend/events/{user_id}", tags=["Recommendations"], summary="Get Event Recommendations", description="Get top 5 recommended events for a specific user based on hybrid content and collaborative filtering.")
 async def recommend_events(user_id: str):
     cache_key = f"recs:events:{user_id}"
     

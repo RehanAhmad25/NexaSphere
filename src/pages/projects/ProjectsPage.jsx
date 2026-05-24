@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Code, ExternalLink, X, Tag, Users } from 'lucide-react';
 import { projectsData } from '../../data/projectsData';
+import SafeImage from '../../shared/SafeImage';
 import '../../styles/projects.css';
 
 const CATEGORIES = ['All', 'Web App', 'Mobile', 'Machine Learning', 'Cybersecurity', 'UI/UX Design'];
@@ -84,7 +85,7 @@ export default function ProjectsPage({ onBack }) {
               aria-label={`View details for ${project.title}`}
             >
               <div className="project-card-image">
-                <img src={project.image} alt={project.title} loading="lazy" />
+                <SafeImage src={project.image} alt={project.title} loading="lazy" fallbackType="project" />
                 <div className="project-card-overlay">
                   <span className="view-details-text">View Details</span>
                 </div>
@@ -133,7 +134,7 @@ export default function ProjectsPage({ onBack }) {
                 <X size={20} />
               </button>
 
-              <img src={selectedProject.image} alt={selectedProject.title} className="project-modal-image" />
+              <SafeImage src={selectedProject.image} alt={selectedProject.title} className="project-modal-image" fallbackType="project" />
               
               <div className="project-modal-header">
                 <span className="project-category">{selectedProject.category}</span>
@@ -157,7 +158,7 @@ export default function ProjectsPage({ onBack }) {
                   <div className="project-team-list">
                     {selectedProject.team.map((member, idx) => (
                       <div key={idx} className="team-member">
-                        <img src={member.photo} alt={member.name} className="team-member-photo" />
+                        <SafeImage src={member.photo} alt={member.name} className="team-member-photo" fallbackType="avatar" />
                         <div className="team-member-info">
                           <span className="team-member-name">{member.name}</span>
                           <span className="team-member-role">{member.role}</span>

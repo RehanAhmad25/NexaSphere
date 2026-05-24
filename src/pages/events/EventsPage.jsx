@@ -1,11 +1,14 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { events as fallbackEvents } from '../../data/eventsData';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
 import { DynamicIcon } from '../../shared/Icons';
 import BookmarkButton from '../../components/common/BookmarkButton';
+import CalendarView from '../../components/events/CalendarView';
 
 export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
+
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(entries => {
@@ -44,81 +47,118 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
         </p>
       </div>
 
+      <div className="container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'flex', background: 'var(--card)', borderRadius: '30px', padding: '4px', border: '1px solid var(--bdr)', backdropFilter: 'blur(10px)' }}>
+          <button 
+            onClick={() => setViewMode('list')}
+            style={{ 
+              padding: '8px 24px', 
+              borderRadius: '26px', 
+              border: 'none', 
+              background: viewMode === 'list' ? 'var(--c1a)' : 'transparent',
+              color: viewMode === 'list' ? 'var(--c1)' : 'var(--t2)',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all .2s'
+            }}>
+            List View
+          </button>
+          <button 
+            onClick={() => setViewMode('calendar')}
+            style={{ 
+              padding: '8px 24px', 
+              borderRadius: '26px', 
+              border: 'none', 
+              background: viewMode === 'calendar' ? 'var(--c1a)' : 'transparent',
+              color: viewMode === 'calendar' ? 'var(--c1)' : 'var(--t2)',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all .2s'
+            }}>
+            Calendar View
+          </button>
+        </div>
+      </div>
+
       <div className="container">
-        <div className="events-timeline ns-reveal">
-          {events.map((ev, i) => {
-            const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
-            return (
-              <div className="timeline-item" key={ev.id}>
-                <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
-                <div
-                  className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
-                  style={{
-                    animationDelay: `${i * .11}s`,
-                    cursor: isKSS ? 'none' : 'default',
-                    transition: 'all .28s ease',
-                    position: 'relative'
-                  }}
-                  onClick={isKSS ? () => onEventClick(ev) : undefined}
-                  onMouseEnter={isKSS ? e => {
-                    e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                  } : undefined}
-                  onMouseLeave={isKSS ? e => {
-                    e.currentTarget.style.borderColor = '';
-                    e.currentTarget.style.boxShadow = '';
-                    e.currentTarget.style.transform = '';
-                  } : undefined}
-                >
-                  <BookmarkButton
-                    item={{ id: `event-${ev.id}`, type: 'Event', title: ev.name, date: ev.date }}
-                    style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 20 }}
-                  />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
-                    <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                    <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
-                    {isKSS && (
-                      <span style={{
-                        marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
-                        borderRadius: '10px', background: 'rgba(168,85,247,.12)',
-                        color: '#a855f7', border: '1px solid rgba(168,85,247,.3)',
-                        fontFamily: "'Space Mono', monospace", whiteSpace: 'nowrap',
-                      }}>View Details →</span>
-                    )}
-                  </div>
-                  <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <DynamicIcon name="Calendar" size={14} /> {ev.date}
-                  </div>
-                  <p className="timeline-event-desc">{ev.description}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                    <span className={`timeline-badge ${ev.status}`}>
-                      {ev.status === 'completed' ? (
-                        <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
-                      ) : (
-                        <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
+        {viewMode === 'list' ? (
+          <div className="events-timeline ns-reveal">
+            {events.map((ev, i) => {
+              const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
+              return (
+                <div className="timeline-item" key={ev.id}>
+                  <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
+                  <div
+                    className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
+                    style={{
+                      animationDelay: `${i * .11}s`,
+                      cursor: isKSS ? 'none' : 'default',
+                      transition: 'all .28s ease',
+                      position: 'relative'
+                    }}
+                    onClick={isKSS ? () => onEventClick(ev) : undefined}
+                    onMouseEnter={isKSS ? e => {
+                      e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                    } : undefined}
+                    onMouseLeave={isKSS ? e => {
+                      e.currentTarget.style.borderColor = '';
+                      e.currentTarget.style.boxShadow = '';
+                      e.currentTarget.style.transform = '';
+                    } : undefined}
+                  >
+                    <BookmarkButton
+                      item={{ id: `event-${ev.id}`, type: 'Event', title: ev.name, date: ev.date }}
+                      style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 20 }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
+                      <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
+                      <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
+                      {isKSS && (
+                        <span style={{
+                          marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
+                          borderRadius: '10px', background: 'rgba(168,85,247,.12)',
+                          color: '#a855f7', border: '1px solid rgba(168,85,247,.3)',
+                          fontFamily: "'Space Mono', monospace", whiteSpace: 'nowrap',
+                        }}>View Details →</span>
                       )}
-                    </span>
-                    {ev.tags?.map(t => (
-                      <span key={t} style={{
-                        fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
-                        background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
-                      }}>{t}</span>
-                    ))}
+                    </div>
+                    <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <DynamicIcon name="Calendar" size={14} /> {ev.date}
+                    </div>
+                    <p className="timeline-event-desc">{ev.description}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                      <span className={`timeline-badge ${ev.status}`}>
+                        {ev.status === 'completed' ? (
+                          <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
+                        ) : (
+                          <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
+                        )}
+                      </span>
+                      {ev.tags?.map(t => (
+                        <span key={t} style={{
+                          fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
+                          background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
+                        }}>{t}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          <div className="timeline-item">
-            <div className="timeline-dot upcoming" />
-            <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${events.length * .11}s` }}>
-              <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
-              <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
+            <div className="timeline-item">
+              <div className="timeline-dot upcoming" />
+              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${events.length * .11}s` }}>
+                <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
+                <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <CalendarView events={events} onEventClick={onEventClick} />
+        )}
       </div>
 
       <Footer />

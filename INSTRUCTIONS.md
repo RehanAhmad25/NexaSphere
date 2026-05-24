@@ -87,5 +87,66 @@ NexaSphere is built using a **Modular Micro-Architecture** to ensure scalability
 
 ---
 
+## 🗄️ Database Schema Management
+
+NexaSphere uses a **versioned, coordinated database migration strategy** to ensure schema consistency across all backend services.
+
+### Migration Tools
+
+Each backend service uses a dedicated migration tool:
+
+| Service | Tool | Location | Command |
+| :--- | :--- | :--- | :--- |
+| **Node.js** (`server/`) | [node-pg-migrate](https://github.com/salsita/node-pg-migrate) | `server/migrations/` | `npm run migrate:latest` |
+| **Java** (`server-java/`) | [Flyway](https://flywaydb.org/) | `server-java/src/main/resources/db/migration/` | Auto-runs on boot |
+| **Python** (`server-python/`) | [Alembic](https://alembic.sqlalchemy.org/) | `server-python/alembic/versions/` | `alembic upgrade head` |
+
+### Quick Start
+
+**Node.js**: Create and apply migrations
+```bash
+cd server
+npm install  # Installs node-pg-migrate
+npm run migrate:create -- description_of_change  # Create new migration
+npm run migrate:latest  # Apply all pending migrations
+npm run migrate:rollback  # Rollback one migration
+```
+
+**Java**: Migrations auto-apply on startup
+```bash
+cd server-java
+mvn spring-boot:run  # Flyway runs automatically
+```
+
+**Python**: Create and apply migrations
+```bash
+cd server-python
+pip install -r requirements.txt  # Installs Alembic
+alembic revision -m "description of change"  # Create new migration
+alembic upgrade head  # Apply all pending migrations
+```
+
+### Key Rules
+
+✅ **Always write reversible migrations** (both `up` and `down`)
+✅ **Coordinate migrations across services** before deploying
+✅ **Test migrations on a fresh database** before production
+✅ **Use descriptive names**: `add_category_to_events`, not `schema_fix`
+✅ **Keep migrations small and focused** (one change per file)
+
+❌ **Never modify production databases directly**
+❌ **Never skip rollback functions** (down migration)
+❌ **Never assume execution order** across different services
+
+### Complete Migration Guide
+
+For detailed examples, troubleshooting, and best practices, see **[DATABASE_MIGRATIONS.md](DATABASE_MIGRATIONS.md)** — this document covers:
+- Creating new migrations per service
+- Coordinated multi-service deployments
+- Common commands and troubleshooting
+- Production safety checklist
+
+---
+
 ### 🛡️ Developed by NexaSphere Core Team
 *Last Updated: May 2026*

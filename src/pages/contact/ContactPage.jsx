@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import glbajajLogo from '../../assets/images/logos/glbajaj-logo.png';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 /* ─────────────────────────────────────────────────────────
    NEXASPHERE — CONTACT PAGE
@@ -329,6 +330,7 @@ function MessageCTA() {
 
 /* ══════════════════ MAIN EXPORT ══════════════════ */
 export default function ContactPage({ onBack }) {
+  const [captchaToken, setCaptchaToken] = useState('');
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {

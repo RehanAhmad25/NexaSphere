@@ -304,4 +304,14 @@
   }
 }
 
+/* ── Light mode: ambient orbs visible on light background ── */
+[data-theme="light"] .ambient-orb {
+  opacity: 1 !important;
+  mix-blend-mode: normal;
+  filter: blur(90px) saturate(1.8);
+}
 
+/* ── Light mode: particle canvas ── */
+[data-theme="light"] canvas {
+  opacity: 1;
+}

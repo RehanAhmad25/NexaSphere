@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { teamMembers } from '../../data/teamData';
 import TeamMemberModal from './TeamMemberModal';
 import { IconSpark } from '../../shared/Icons';
+import SafeImage from '../../shared/SafeImage';
 import type { CoreTeamMember } from '../../types/api';
 import type { TeamSectionProps } from '../../types/components';
 
@@ -66,7 +67,7 @@ function MemberCard({ member, idx, onClick }: {
       onKeyDown={handleKeyDown}
     >
       <div className="team-card-photo-wrap">
-        <img src={member.photo} alt={member.name} className="team-card-photo" />
+        <SafeImage src={member.photo} alt={member.name} className="team-card-photo" fallbackType="avatar" />
       </div>
       <div className="team-card-name">{member.name}</div>
       <div className="team-card-role">{member.role}</div>

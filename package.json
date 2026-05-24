@@ -10,16 +10,20 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
+    "test:e2e": "playwright test",
     "e2e:debug": "playwright test --debug"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.5.2",
     "@sentry/react": "^7.84.0",
     "@sentry/tracing": "^7.84.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-to-print": "^3.3.0",
     "recharts": "^3.8.1",
     "socket.io-client": "^4.8.3"
   },

@@ -3,14 +3,13 @@
  * Handles service worker registration and push notification setup
  */
 
+import { captureHandledException } from './errorTracking';
+
 /**
  * Register service worker
  */
 export async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) {
-    if (!import.meta.env.PROD) {
-      console.log('Service Workers not supported');
-    }
     return null;
   }
 
@@ -19,14 +18,9 @@ export async function registerServiceWorker() {
       scope: '/',
     });
 
-    if (!import.meta.env.PROD) {
-      console.log('Service Worker registered successfully:', registration);
-    }
     return registration;
   } catch (error) {
-    if (!import.meta.env.PROD) {
-      console.error('Service Worker registration failed:', error);
-    }
+    captureHandledException(error, 'Service Worker registration failed:');
     return null;
   }
 }
@@ -36,9 +30,6 @@ export async function registerServiceWorker() {
  */
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    if (!import.meta.env.PROD) {
-      console.log('Notifications not supported');
-    }
     return null;
   }
 
@@ -51,9 +42,7 @@ export async function requestNotificationPermission() {
       const permission = await Notification.requestPermission();
       return permission;
     } catch (error) {
-      if (!import.meta.env.PROD) {
-        console.error('Failed to request notification permission:', error);
-      }
+      captureHandledException(error, 'Failed to request notification permission:');
       return null;
     }
   }
@@ -66,9 +55,6 @@ export async function requestNotificationPermission() {
  */
 export async function getPushSubscription(registration) {
   if (!registration || !('pushManager' in registration)) {
-    if (!import.meta.env.PROD) {
-      console.log('Push Manager not available');
-    }
     return null;
   }
 
@@ -76,9 +62,7 @@ export async function getPushSubscription(registration) {
     const subscription = await registration.pushManager.getSubscription();
     return subscription;
   } catch (error) {
-    if (!import.meta.env.PROD) {
-      console.error('Failed to get push subscription:', error);
-    }
+    captureHandledException(error, 'Failed to get push subscription:');
     return null;
   }
 }
@@ -88,9 +72,6 @@ export async function getPushSubscription(registration) {
  */
 export async function subscribeToPushNotifications(registration, vapidPublicKey) {
   if (!registration || !('pushManager' in registration)) {
-    if (!import.meta.env.PROD) {
-      console.log('Push Manager not available');
-    }
     return null;
   }
 
@@ -99,10 +80,6 @@ export async function subscribeToPushNotifications(registration, vapidPublicKey)
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
     });
-
-    if (!import.meta.env.PROD) {
-      console.log('Subscribed to push notifications:', subscription);
-    }
 
     // Send subscription to server
     await fetch('/api/notifications/subscribe', {
@@ -115,9 +92,7 @@ export async function subscribeToPushNotifications(registration, vapidPublicKey)
 
     return subscription;
   } catch (error) {
-    if (!import.meta.env.PROD) {
-      console.error('Failed to subscribe to push notifications:', error);
-    }
+    captureHandledException(error, 'Failed to subscribe to push notifications:');
     return null;
   }
 }
@@ -134,9 +109,6 @@ export async function unsubscribeFromPushNotifications(registration) {
     const subscription = await registration.pushManager.getSubscription();
     if (subscription) {
       await subscription.unsubscribe();
-      if (!import.meta.env.PROD) {
-        console.log('Unsubscribed from push notifications');
-      }
 
       // Notify server
       await fetch('/api/notifications/unsubscribe', {
@@ -150,9 +122,7 @@ export async function unsubscribeFromPushNotifications(registration) {
       return true;
     }
   } catch (error) {
-    if (!import.meta.env.PROD) {
-      console.error('Failed to unsubscribe from push notifications:', error);
-    }
+    captureHandledException(error, 'Failed to unsubscribe from push notifications:');
   }
 
   return false;
@@ -196,18 +166,12 @@ export async function initializePushNotifications(vapidPublicKey) {
     // Register service worker
     const registration = await registerServiceWorker();
     if (!registration) {
-      if (!import.meta.env.PROD) {
-        console.log('Service Worker registration failed');
-      }
       return null;
     }
 
     // Request permission
     const permission = await requestNotificationPermission();
     if (permission !== 'granted') {
-      if (!import.meta.env.PROD) {
-        console.log('Notification permission not granted');
-      }
       return null;
     }
 
@@ -219,9 +183,7 @@ export async function initializePushNotifications(vapidPublicKey) {
 
     return { registration, subscription };
   } catch (error) {
-    if (!import.meta.env.PROD) {
-      console.error('Failed to initialize push notifications:', error);
-    }
+    captureHandledException(error, 'Failed to initialize push notifications:');
     return null;
   }
 }

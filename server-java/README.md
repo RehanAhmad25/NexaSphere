@@ -346,6 +346,20 @@ POST   /api/admin/logout
 
 <br/>
 
+### 📚 API Documentation (Swagger UI)
+
+<br/>
+
+NexaSphere includes interactive API documentation powered by OpenAPI 3 (Swagger UI). 
+Once the server is running, you can access the documentation using the following URLs:
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI 3 JSON Data:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+To test secure admin endpoints directly from Swagger UI, click the **Authorize** button and input your Bearer JWT token obtained from `/api/admin/login`.
+
+<br/>
+
 ---
 ## 🔐 Authentication
 

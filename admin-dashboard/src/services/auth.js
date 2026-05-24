@@ -45,6 +45,7 @@ export const auth = {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem(OFFLINE_FLAG_KEY);
+    sessionStorage.clear();
   },
 
   getToken() { return localStorage.getItem(TOKEN_KEY); },

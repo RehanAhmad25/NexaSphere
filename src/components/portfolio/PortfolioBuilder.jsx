@@ -35,6 +35,13 @@ export default function PortfolioBuilder() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [selectedRoadmaps, setSelectedRoadmaps] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
+  const [customProjects, setCustomProjects] = useState([]);
+
+  // GitHub Fetching States
+  const [ghUsername, setGhUsername] = useState('');
+  const [isFetchingGh, setIsFetchingGh] = useState(false);
+  const [ghRepos, setGhRepos] = useState([]);
+  const [ghError, setGhError] = useState('');
 
   // States
   const [isSaving, setIsSaving] = useState(false);
@@ -87,6 +94,7 @@ export default function PortfolioBuilder() {
         setSelectedSkills(data.skills || []);
         setSelectedRoadmaps(data.roadmaps || []);
         setSelectedProjects(data.projects || []);
+        setCustomProjects(data.customProjects || []);
         setSuccessMsg('Existing portfolio configuration found and loaded!');
       }
     } catch (err) {
@@ -122,7 +130,8 @@ export default function PortfolioBuilder() {
         seoMetadata,
         skills: selectedSkills,
         roadmaps: selectedRoadmaps,
-        projects: selectedProjects
+        projects: selectedProjects,
+        customProjects
       };
 
       const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
@@ -163,6 +172,47 @@ export default function PortfolioBuilder() {
     setSelectedProjects(prev =>
       prev.includes(projectId) ? prev.filter(p => p !== projectId) : [...prev, projectId]
     );
+  };
+
+  const fetchGithubRepos = async () => {
+    if (!ghUsername) return;
+    setIsFetchingGh(true);
+    setGhError('');
+    try {
+      const res = await fetch(`https://api.github.com/users/${ghUsername}/repos?sort=updated&per_page=30`);
+      if (!res.ok) {
+        if (res.status === 404) throw new Error('GitHub user not found.');
+        if (res.status === 403) throw new Error('GitHub API rate limit exceeded.');
+        throw new Error('Failed to fetch repositories.');
+      }
+      const data = await res.json();
+      setGhRepos(data);
+    } catch (err) {
+      setGhError(err.message);
+    } finally {
+      setIsFetchingGh(false);
+    }
+  };
+
+  const toggleGithubRepo = (repo) => {
+    setCustomProjects(prev => {
+      const exists = prev.find(p => p.id === repo.id);
+      if (exists) {
+        return prev.filter(p => p.id !== repo.id);
+      } else {
+        const customProj = {
+          id: repo.id,
+          title: repo.name,
+          shortDesc: repo.description || 'GitHub Repository',
+          category: 'Open Source',
+          techStack: repo.language ? [repo.language] : [],
+          github: repo.html_url,
+          demo: repo.homepage || '#',
+          stars: repo.stargazers_count
+        };
+        return [...prev, customProj];
+      }
+    });
   };
 
   const getPortfolioUrl = () => {
@@ -472,6 +522,63 @@ export default function PortfolioBuilder() {
                 })}
               </div>
             </div>
+
+            <div className="form-group" style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px dashed var(--bdr2)' }}>
+              <label className="form-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                </svg>
+                Sync with GitHub (Optional)
+              </label>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
+                <input
+                  type="text"
+                  placeholder="GitHub username..."
+                  className="form-input"
+                  value={ghUsername}
+                  onChange={e => setGhUsername(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={fetchGithubRepos}
+                  disabled={isFetchingGh || !ghUsername}
+                >
+                  {isFetchingGh ? 'Fetching...' : 'Fetch Repos'}
+                </button>
+              </div>
+              
+              {ghError && (
+                <div style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: '12px' }}>{ghError}</div>
+              )}
+
+              {ghRepos.length > 0 && (
+                <div className="checklist-grid" role="group" aria-label="GitHub Repositories">
+                  {ghRepos.map(repo => {
+                    const isActive = customProjects.some(p => p.id === repo.id);
+                    return (
+                      <label key={repo.id} className={`checklist-item ${isActive ? 'active' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={() => toggleGithubRepo(repo)}
+                          />
+                          <span style={{ fontWeight: 'bold' }}>{repo.name}</span>
+                          {repo.stargazers_count > 0 && (
+                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.8 }}>★ {repo.stargazers_count}</span>
+                          )}
+                        </div>
+                        {repo.language && (
+                          <span style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px', paddingLeft: '24px' }}>{repo.language}</span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* SEO & Optimization metadata */}
@@ -647,6 +754,12 @@ export default function PortfolioBuilder() {
                           </div>
                         );
                       })}
+                      {customProjects.map(proj => (
+                        <div key={proj.id} className="portfolio-roadmap-card" style={{ padding: '8px 12px' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{proj.title}</span>
+                          <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>GitHub Import</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
