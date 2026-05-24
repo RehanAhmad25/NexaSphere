@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import socketClient from '../utils/socketClient';
+import { getSocketServerUrl } from '../utils/runtimeConfig';
 
 export function useSocket(serverUrl) {
   const [connected, setConnected] = useState(false);
@@ -12,8 +13,13 @@ export function useSocket(serverUrl) {
 
   useEffect(() => {
     // Initialize socket connection if not already done
-    const base = serverUrl || (import.meta?.env?.VITE_API_BASE || window.location.origin).replace(/\/+$/, '');
+    const base = serverUrl || getSocketServerUrl();
     const socket = socketClient.initializeSocket(base);
+    if (!socket) {
+      setConnected(false);
+      setSocketId(null);
+      return undefined;
+    }
 
     const onConnect = () => {
       setConnected(true);

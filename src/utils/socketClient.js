@@ -5,20 +5,43 @@
 
 import io from 'socket.io-client';
 import { captureHandledException } from './errorTracking';
+import { getSocketPath, getSocketServerUrl } from './runtimeConfig';
 
 let socket = null;
 let eventHandlers = {};
+let currentSocketUrl = '';
+let warnedMissingSocketConfig = false;
 
 /**
  * Initialize Socket.IO client
  */
-export function initializeSocket(serverUrl = window.location.origin) {
-  socket = io(serverUrl, {
+export function initializeSocket(serverUrl = getSocketServerUrl()) {
+  const resolvedUrl = serverUrl || getSocketServerUrl();
+  if (!resolvedUrl) {
+    if (!warnedMissingSocketConfig) {
+      warnedMissingSocketConfig = true;
+      console.warn('Socket.IO disabled: no socket server URL configured for this environment.');
+    }
+    return null;
+  }
+
+  if (socket && currentSocketUrl === resolvedUrl) {
+    return socket;
+  }
+
+  if (socket) {
+    socket.disconnect();
+  }
+
+  currentSocketUrl = resolvedUrl;
+  socket = io(resolvedUrl, {
+    path: getSocketPath(),
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 8,
     transports: ['websocket', 'polling'],
+    timeout: 5000,
   });
 
   // Global event handlers
@@ -32,6 +55,14 @@ export function initializeSocket(serverUrl = window.location.origin) {
 
   socket.on('error', (error) => {
     captureHandledException(error, 'Socket.IO error:');
+  });
+
+  socket.on('connect_error', (error) => {
+    captureHandledException(error, 'Socket.IO connection error:');
+  });
+
+  socket.on('reconnect_failed', () => {
+    captureHandledException(new Error('Socket.IO reconnect attempts exhausted'), 'Socket.IO reconnect failed:');
   });
 
   // Setup custom event listeners
@@ -161,6 +192,7 @@ export function disconnect() {
   if (socket) {
     socket.disconnect();
     socket = null;
+    currentSocketUrl = '';
   }
 }
 
