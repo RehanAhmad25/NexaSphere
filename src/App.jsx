@@ -59,6 +59,8 @@ import { useDeveloperMode } from './hooks/useDeveloperMode';
 import { BookmarkProvider } from './context/BookmarkContext';
 import BookmarksDrawer from './components/bookmarks/BookmarksDrawer';
 
+import MoveToTop from "./shared/MoveToTop";
+
 const MNH = 88, DNH = 64;
 const TABS = ['Home','Dashboard','Activities','Events','Projects','Roadmaps','Portfolio','Collab','About','Team','Contact'];
 
@@ -302,26 +304,14 @@ export default function App() {
     return () => { alive = false; };
   }, []);
 
-  useEffect(() => {
-    const btn = document.getElementById('back-to-top');
-    if (!btn) return;
-
-    const handleScroll = () => {
-      btn.classList.toggle('visible', window.scrollY > 400);
-    };
-
-    const handleBackToTop = () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    btn.addEventListener('click', handleBackToTop);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      btn.removeEventListener('click', handleBackToTop);
-    };
-  }, [cinDone]);
+  // useEffect(()=>{
+  //   const btn = document.getElementById('back-to-top');
+  //   if (!btn) return;
+  //   const fn = () => btn.classList.toggle('visible', window.scrollY > 400);
+  //   window.addEventListener('scroll', fn, { passive:true });
+  //   btn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+  //   return () => window.removeEventListener('scroll', fn);
+  // }, []);
 
   useEffect(()=>{
     if (page) return;
@@ -569,7 +559,7 @@ export default function App() {
       </main>
 
       {/* Back to top button */}
-      {cinDone && <button id="back-to-top" aria-label="Back to top">↑</button>}
+      {cinDone && <MoveToTop />}
 
       {/* ── Floating Search Button (bottom-left) ── */}
       {cinDone && (

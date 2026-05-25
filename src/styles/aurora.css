@@ -22,8 +22,8 @@
   100% { opacity: .80; transform: scale(1.01) translateY(5px); }
 }
 
-[data-theme="dark"] #root > *:not(.ns-navbar):not(.ns-navbar-mobile),
-:not([data-theme]) #root > *:not(.ns-navbar):not(.ns-navbar-mobile) { position: relative; z-index: 1; }
+[data-theme="dark"] #root > *:not(.ns-navbar):not(.ns-navbar-mobile):not(.move-to-top),
+:not([data-theme]) #root > *:not(.ns-navbar):not(.ns-navbar-mobile):not(.move-to-top) { position: relative; z-index: 1; }
 
 [data-theme="dark"] .activity-card,
 :not([data-theme]) .activity-card,
