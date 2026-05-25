@@ -80,7 +80,11 @@ function parseBearer(authHeader = '') {
 
 async function requireAdmin(req, res, next) {
   try {
-    const bearer = parseBearer(req.headers.authorization || '') || req.query.token;
+    if (req.query.token) {
+      return res.status(400).json({ error: 'Do not pass tokens in URLs. Use Authorization: Bearer header.' });
+    }
+
+    const bearer = parseBearer(req.headers.authorization || '');
     const session = await getAdminSession(bearer);
 
     if (!session) {

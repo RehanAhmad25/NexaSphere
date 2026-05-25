@@ -35,7 +35,7 @@ export const coreTeamService = {
 
   async assertCanManageActivityEvent(body) {
     const gate = manageActivityGateSchema.parse(body);
-    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD || 'Admin@123';
+    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD;
     if (String(gate.password || '') !== expectedPassword) {
       throw new Error('Unauthorized. Core team details or password did not match.');
     }

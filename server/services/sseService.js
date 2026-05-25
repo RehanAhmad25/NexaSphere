@@ -59,7 +59,7 @@ export function getConnectedSSEClientsCount() {
  * SSE middleware setup
  */
 export function setupSSEHeaders(req, res, next) {
-  const allowedOrigin = process.env.CORS_ORIGIN?.split(',')[0]?.trim() || 'http://localhost:5173';
+  const allowedOrigin = process.env.PUBLIC_APP_URL || process.env.CORS_ORIGIN?.split(',')[0]?.trim() || 'http://localhost:5173';
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');

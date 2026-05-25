@@ -13,7 +13,7 @@
    - (Recommendation engine tables: Profile, Events, event_participants)
 */
 
-exports.up = (pgm) => {
+export const up = (pgm) => {
   // Create pgcrypto extension for UUID support
   pgm.sql(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
 
@@ -297,7 +297,7 @@ exports.up = (pgm) => {
   });
 };
 
-exports.down = (pgm) => {
+export const down = (pgm) => {
   // Reverse order: dependencies first, then base tables
   pgm.dropTable('event_participants', { ifExists: true, cascade: true });
   pgm.dropTable('Events', { ifExists: true, cascade: true });

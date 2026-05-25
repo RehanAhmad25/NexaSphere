@@ -60,7 +60,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/nexasphere_test
         run: |
-          npm run -w server -- --version
+          npm --prefix server run migrate -- --version
           psql $DATABASE_URL -c "SELECT count(*) as migration_count FROM pgmigrations;"
           psql $DATABASE_URL -c "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;"
 

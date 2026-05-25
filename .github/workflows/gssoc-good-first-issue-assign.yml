@@ -1,0 +1,193 @@
+name: GSSoC — Good First Issue Self-Assign
+
+# ─────────────────────────────────────────────────────────────────────────────
+# When a contributor comments "/assign" or "assign me" on a `good first issue`,
+# the bot automatically assigns them and replies with instructions.
+#
+# Also: when `good first issue` label is applied to an issue, it posts a
+# "help wanted" banner inviting contributors to self-assign.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [labeled]
+
+jobs:
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 1 — Self-assign via comment trigger
+  # ════════════════════════════════════════════════════════════════════════════
+  self-assign:
+    name: Self-Assign on Comment
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      (
+        contains(github.event.comment.body, '/assign') ||
+        contains(github.event.comment.body, 'assign me') ||
+        contains(github.event.comment.body, 'Assign me') ||
+        contains(github.event.comment.body, 'can i work') ||
+        contains(github.event.comment.body, 'Can I work') ||
+        contains(github.event.comment.body, 'can I work')
+      )
+    permissions:
+      issues: write
+
+    steps:
+      - name: Check label and assign contributor
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const issue     = context.payload.issue;
+            const issueNum  = issue.number;
+            const commenter = context.payload.comment.user.login;
+
+            // Skip bots
+            if (commenter.endsWith('[bot]')) {
+              console.log('⏭️  Skipping bot commenter.');
+              return;
+            }
+
+            // Get issue labels
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner, repo, issue_number: issueNum,
+            });
+            const labelNames = labels.map(l => l.name);
+            const isGoodFirstIssue = labelNames.includes('good first issue');
+
+            // Check current assignees
+            const assignees      = issue.assignees || [];
+            const assigneeLogins = assignees.map(a => a.login);
+            const alreadyAssigned = assigneeLogins.includes(commenter);
+
+            if (alreadyAssigned) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNum,
+                body: [
+                  `👋 @${commenter} — you are **already assigned** to this issue!`,
+                  ``,
+                  `Start working and submit a PR with \`Closes #${issueNum}\` in the description.`,
+                  ``,
+                  `_GSSoC'26 automation · Mentor: [@Ayushh-Sharmaa](https://github.com/Ayushh-Sharmaa)_`,
+                ].join('\n'),
+              });
+              return;
+            }
+
+            // Check if already has too many assignees (limit: 1 for good first issue)
+            if (isGoodFirstIssue && assigneeLogins.length >= 1) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNum,
+                body: [
+                  `⚠️ @${commenter} — this \`good first issue\` is **already assigned** to @${assigneeLogins[0]}.`,
+                  ``,
+                  `Please look for another open \`good first issue\` to work on!`,
+                  ``,
+                  `Browse available issues → [Good First Issues](https://github.com/${owner}/${repo}/labels/good%20first%20issue)`,
+                  ``,
+                  `_GSSoC'26 automation · Mentor: [@Ayushh-Sharmaa](https://github.com/Ayushh-Sharmaa)_`,
+                ].join('\n'),
+              });
+              return;
+            }
+
+            // Assign the commenter
+            await github.rest.issues.addAssignees({
+              owner, repo, issue_number: issueNum,
+              assignees: [commenter],
+            });
+            console.log(`✅ Assigned @${commenter} to issue #${issueNum}`);
+
+            const issueLevelLabel = labelNames.find(n => n.startsWith('level:')) || 'level:beginner';
+            const pointsMap = {
+              'level:beginner':     10,
+              'level:intermediate': 25,
+              'level:advanced':     45,
+              'level:critical':     60,
+            };
+            const points = pointsMap[issueLevelLabel] || 10;
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNum,
+              body: [
+                `## 🎉 You've been assigned, @${commenter}!`,
+                ``,
+                isGoodFirstIssue
+                  ? `Welcome to **GSSoC'26**! This is a \`good first issue\` — perfect to get started with NexaSphere. 🚀`
+                  : `You've been assigned to this issue. Good luck! 🚀`,
+                ``,
+                `| Field | Details |`,
+                `|-------|---------|`,
+                `| 📌 Issue | #${issueNum} |`,
+                `| 🎯 Difficulty | \`${issueLevelLabel}\` → **${points} pts** |`,
+                `| 🎓 Mentor | [@Ayushh-Sharmaa](https://github.com/Ayushh-Sharmaa) |`,
+                ``,
+                `**Next steps:**`,
+                `1. 🍴 Fork the repo and create a new branch`,
+                `2. 💻 Make your changes following the [contribution guide](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md)`,
+                `3. 🔗 Open a PR with \`Closes #${issueNum}\` in the description`,
+                `4. ✅ Ensure all CI checks pass`,
+                ``,
+                `> ⚠️ If you don't open a PR within **7 days**, the issue may be unassigned.`,
+                ``,
+                `_GSSoC'26 automation · Mentor: [@Ayushh-Sharmaa](https://github.com/Ayushh-Sharmaa)_`,
+              ].join('\n'),
+            });
+            console.log(`💬 Assignment comment posted on issue #${issueNum}`);
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 2 — Post banner when `good first issue` label is applied
+  # ════════════════════════════════════════════════════════════════════════════
+  good-first-issue-banner:
+    name: Good First Issue Banner
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'good first issue'
+    permissions:
+      issues: write
+
+    steps:
+      - name: Post good-first-issue invitation comment
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const issue    = context.payload.issue;
+            const issueNum = issue.number;
+
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner, repo, issue_number: issueNum,
+            });
+            const levelLabel = labels.map(l => l.name).find(n => n.startsWith('level:')) || 'level:beginner';
+            const pointsMap  = { 'level:beginner': 10, 'level:intermediate': 25, 'level:advanced': 45, 'level:critical': 60 };
+            const points     = pointsMap[levelLabel] || 10;
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNum,
+              body: [
+                `## 🌟 Good First Issue — Open for Contribution!`,
+                ``,
+                `This issue has been tagged as a \`good first issue\` — great for **newcomers** to NexaSphere and GSSoC'26!`,
+                ``,
+                `| 🎯 Difficulty | 🏆 Points | 🎓 Mentor |`,
+                `|--------------|-----------|-----------|`,
+                `| \`${levelLabel}\` | **${points} pts** | [@Ayushh-Sharmaa](https://github.com/Ayushh-Sharmaa) |`,
+                ``,
+                `**Want to work on this?**`,
+                `Comment \`/assign\` or \`assign me\` below and the bot will assign you automatically! 🤖`,
+                ``,
+                `**Requirements:**`,
+                `- ✅ Read the [Contributing Guide](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md)`,
+                `- ✅ Fork the repository`,
+                `- ✅ Submit a PR with \`Closes #${issueNum}\` in the description`,
+                ``,
+                `_GSSoC'26 automation · Mentor: [@Ayushh-Sharmaa](https://github.com/Ayushh-Sharmaa)_`,
+              ].join('\n'),
+            });
+            console.log(`🌟 Good first issue banner posted on issue #${issueNum}`);

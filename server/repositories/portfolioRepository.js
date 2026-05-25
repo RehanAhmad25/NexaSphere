@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,10 +8,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORTFOLIOS_FILE = path.join(__dirname, '..', 'data', 'portfolios.json');
 
+const BCRYPT_ROUNDS = 12;
+
 let schemaReady = null;
 
-function hashPasskey(passkey) {
-  return crypto.createHash('sha256').update(String(passkey)).digest('hex');
+async function hashPasskey(passkey) {
+  return bcrypt.hash(String(passkey), BCRYPT_ROUNDS);
+}
+
+async function verifyHash(passkey, hash) {
+  return bcrypt.compare(String(passkey), hash);
 }
 
 async function ensureSchema(client) {
@@ -140,7 +146,6 @@ export const portfolioRepository = {
   async verifyPasskey(username, passkey) {
     const isDbAvailable = await ensureReady();
     const sanitizedUsername = String(username || '').trim().toLowerCase();
-    const passkeyHash = hashPasskey(passkey);
 
     if (isDbAvailable) {
       try {
@@ -150,7 +155,7 @@ export const portfolioRepository = {
             [sanitizedUsername]
           );
           if (!rows.length) return true; // Username does not exist, so it's a new registration (allow it)
-          return rows[0].passkey_hash === passkeyHash;
+          return await verifyHash(passkey, rows[0].passkey_hash);
         });
       } catch (err) {
         console.error('Database query failed in verifyPasskey. Falling back to local file.', err);
@@ -161,14 +166,14 @@ export const portfolioRepository = {
     const portfolios = await readLocalPortfolios();
     const portfolio = portfolios[sanitizedUsername];
     if (!portfolio) return true; // New registration
-    return portfolio.passkeyHash === passkeyHash;
+    return await verifyHash(passkey, portfolio.passkeyHash);
   },
 
   async createOrUpdate(data) {
     const isDbAvailable = await ensureReady();
     const username = String(data.username || '').trim();
     const sanitizedUsername = username.toLowerCase();
-    const passkeyHash = hashPasskey(data.passkey);
+    const passkeyHash = await hashPasskey(data.passkey);
 
     const theme = data.theme || 'glassmorphic';
     const visibleSections = data.visibleSections || { quests: true, roadmaps: true, projects: true, analytics: false };

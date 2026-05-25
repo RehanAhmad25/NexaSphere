@@ -45,19 +45,13 @@ export function sanitizeEventRecord(event = {}) {
 }
 
 export function sanitizeActivityEventRecord(event = {}) {
+  const { createdBy, ...rest } = event;
   return {
-    ...event,
+    ...rest,
     name: sanitizeText(event.name, 120),
     date: sanitizeText(event.date, 80),
     tagline: sanitizeNullableText(event.tagline, 240),
     description: sanitizeText(event.description, 1200),
-    createdBy: event.createdBy
-      ? {
-          name: sanitizeText(event.createdBy.name, 120),
-          email: sanitizeText(event.createdBy.email, 140),
-          phone: sanitizeText(event.createdBy.phone, 40),
-        }
-      : undefined,
   };
 }
 

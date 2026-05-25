@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/admin/core-team")
 @Tag(name = "Core Team Management", description = "Endpoints for managing the core team members")
-@SuppressWarnings("null")
 public class CoreTeamController {
 
     private final CoreTeamRepository repo;

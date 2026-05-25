@@ -36,21 +36,25 @@ else:
         model_name='gemini-3.1-flash-lite-preview'
     )
 
-app = FastAPI(
-    title="NexaSphere AI Core",
-    description="Python FastAPI backend for AI Chat and Recommendations.",
-    version="1.0.0"
-)
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from utils.security import limiter
+
+app = FastAPI(title="NexaSphere AI Core")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.get("/")
 async def root():
     return {"message": "NexaSphere AI Core API is running. Visit /docs for Swagger API documentation."}
 
-from routers import forms, recommend, notifications, review
+from routers import forms, recommend, certificates, notifications
 app.include_router(forms.router)
 app.include_router(recommend.router)
+app.include_router(certificates.router)
 app.include_router(notifications.router)
-app.include_router(review.router)
+app.include_router(portfolio.router)
 # 3. CORS Configuration
 origins = os.getenv("CORS_ORIGIN", "http://localhost:5173,http://localhost:5174,https://nexasphere-glbajaj.vercel.app,https://admin-nexasphere.vercel.app,https://nexa-sphere-sigma.vercel.app,https://admin-dashboard-navy-pi-22.vercel.app").split(",")
 

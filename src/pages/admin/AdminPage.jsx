@@ -77,14 +77,79 @@ export default function AdminPage({ onBack }) {
     if (!token) return;
 
     const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
-    // Connect to SSE metrics stream endpoint using query token auth
-    const eventSource = new EventSource(`${base}/api/admin/metrics/stream?token=${encodeURIComponent(token)}`);
+    const url = `${base}/api/admin/metrics/stream`;
 
-    eventSource.addEventListener('registration', (event) => {
+    const listeners = {};
+    let closed = false;
+    let reconnectTimeout;
+
+    async function connect() {
+      if (closed) return;
+      try {
+        const response = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            setToken(null);
+            localStorage.removeItem('ns_admin_token');
+            return;
+          }
+          throw new Error(`SSE connection failed: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let currentEvent = '';
+        let currentData = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              currentEvent = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              currentData = line.slice(6);
+            } else if (line === '' && currentEvent && currentData) {
+              const event = { data: currentData };
+              (listeners[currentEvent] || []).forEach(fn => fn(event));
+              currentEvent = '';
+              currentData = '';
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Admin SSE metrics stream connection interrupted or reconnecting...', err);
+      }
+
+      if (!closed) {
+        reconnectTimeout = setTimeout(connect, 3000);
+      }
+    }
+
+    const sseClient = {
+      addEventListener(event, fn) {
+        if (!listeners[event]) listeners[event] = [];
+        listeners[event].push(fn);
+      },
+      close() {
+        closed = true;
+        clearTimeout(reconnectTimeout);
+      },
+    };
+
+    sseClient.addEventListener('registration', (event) => {
       try {
         const parsed = JSON.parse(event.data);
         const payload = parsed.data;
-        
+
         setData(prev => {
           const currentStats = prev.stats || { totalUsers: 1240, activeRegistrations: 85, upcomingEvents: 3, conversionRate: '12.5%' };
           const nextStats = {
@@ -116,7 +181,7 @@ export default function AdminPage({ onBack }) {
       }
     });
 
-    eventSource.addEventListener('login', (event) => {
+    sseClient.addEventListener('login', (event) => {
       try {
         const parsed = JSON.parse(event.data);
         console.log(`SSE Login Alert: User ${parsed.data.username} connected from ${parsed.data.ip}`);
@@ -125,12 +190,10 @@ export default function AdminPage({ onBack }) {
       }
     });
 
-    eventSource.onerror = (err) => {
-      console.warn('Admin SSE metrics stream connection interrupted or reconnecting...', err);
-    };
+    connect();
 
     return () => {
-      eventSource.close();
+      sseClient.close();
     };
   }, [token]);
 

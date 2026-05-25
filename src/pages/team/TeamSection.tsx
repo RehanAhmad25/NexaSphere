@@ -1,9 +1,7 @@
 import { type KeyboardEvent, type MouseEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { teamMembers } from '../../data/teamData';
 import TeamMemberModal from './TeamMemberModal';
 import { IconSpark } from '../../shared/Icons';
-import SafeImage from '../../shared/SafeImage';
 import type { CoreTeamMember } from '../../types/api';
 import type { TeamSectionProps } from '../../types/components';
 
@@ -67,7 +65,7 @@ function MemberCard({ member, idx, onClick }: {
       onKeyDown={handleKeyDown}
     >
       <div className="team-card-photo-wrap">
-        <SafeImage src={member.photo} alt={member.name} className="team-card-photo" fallbackType="avatar" />
+        <img src={member.photo} alt={member.name} className="team-card-photo" />
       </div>
       <div className="team-card-name">{member.name}</div>
       <div className="team-card-role">{member.role}</div>
@@ -84,6 +82,28 @@ function MemberCard({ member, idx, onClick }: {
 
 export default function TeamSection({ onApply }: TeamSectionProps): ReactNode {
   const [selectedMember, setSelectedMember] = useState<CoreTeamMember | null>(null);
+  const [members, setMembers] = useState<CoreTeamMember[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
+    const url = base ? `${base}/api/content/team` : '/api/content/team';
+
+    fetch(url)
+      .then(response => (response.ok ? response.json() : Promise.reject(new Error('Failed to load team'))))
+      .then(data => {
+        if (alive && Array.isArray(data?.members)) {
+          setMembers(data.members);
+        }
+      })
+      .catch(() => {
+        if (alive) setMembers([]);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     const elements = document.querySelectorAll('#section-team .pop-flip, #section-team .pop-in, #section-team .pop-word');
@@ -116,7 +136,7 @@ export default function TeamSection({ onApply }: TeamSectionProps): ReactNode {
   return (
     <section className="section" id="section-team">
       <div className="container">
-        <div className="ns-reveal">
+        <div className="section-heading ns-reveal">
           <span className="cin-section-label pop-in">GL Bajaj Group of Institutions · Mathura</span>
           <h2 className="section-title pop-word">Core Team</h2>
           <p className="section-subtitle pop-in" style={{ animationDelay: '0.1s' }}>
@@ -125,7 +145,7 @@ export default function TeamSection({ onApply }: TeamSectionProps): ReactNode {
         </div>
 
         <div className="team-grid cin-container">
-          {teamMembers.map((member, index) => (
+          {members.map((member, index) => (
             <MemberCard key={member.id} member={member} idx={index} onClick={setSelectedMember} />
           ))}
         </div>

@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
+from utils.security import sanitize_text
 
 ALLOWED_YEARS = {"1st Year", "2nd Year", "3rd Year", "4th Year"}
 
@@ -12,6 +13,13 @@ class FormSubmission(BaseModel):
     branch: str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
     section: str = Field(..., max_length=1)
     reason: Optional[str] = Field(None, max_length=1000)
+
+    @field_validator("name", "branch", "reason", mode="before")
+    @classmethod
+    def sanitize_text_fields(cls, v):
+        if isinstance(v, str):
+            return sanitize_text(v)
+        return v
 
     @field_validator("name")
     @classmethod

@@ -4,11 +4,10 @@ import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
 import { DynamicIcon } from '../../shared/Icons';
 import BookmarkButton from '../../components/common/BookmarkButton';
-import CalendarView from '../../components/events/CalendarView';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
 
-export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
-
+function EventsPageContent({ onBack, onEventClick, events = fallbackEvents }) {
+  const safeEvents = Array.isArray(events) ? events : [];
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(entries => {
@@ -81,9 +80,26 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
       </div>
 
       <div className="container">
-        {viewMode === 'list' ? (
-          <div className="events-timeline ns-reveal">
-            {events.map((ev, i) => {
+        <div className="events-timeline ns-reveal">
+          {safeEvents.length === 0 ? (
+            <div style={{
+              textAlign: 'center', padding: '80px 24px', margin: '40px auto', maxWidth: '500px',
+              background: 'var(--card)', borderRadius: '16px', border: '1px solid var(--bdr)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
+            }}>
+              <div style={{ color: 'var(--c1)', marginBottom: '20px', opacity: 0.8 }}>
+                <DynamicIcon name="Calendar" size={56} />
+              </div>
+              <h3 style={{ fontSize: '1.4rem', marginBottom: '12px', color: 'var(--t1)', fontWeight: 600 }}>No upcoming events found</h3>
+              <p style={{ color: 'var(--t2)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>
+                We currently don't have any events to show. Please check back later for new updates and exciting activities!
+              </p>
+              <button onClick={() => window.location.reload()} className="btn btn-primary" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <DynamicIcon name="RefreshCw" size={16} /> Refresh
+              </button>
+            </div>
+          ) : (
+            safeEvents.map((ev, i) => {
               const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
               return (
                 <div className="timeline-item" key={ev.id}>
@@ -146,19 +162,19 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
                   </div>
                 </div>
               );
-            })}
+            })
+          )}
 
+          {safeEvents.length > 0 && (
             <div className="timeline-item">
               <div className="timeline-dot upcoming" />
-              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${events.length * .11}s` }}>
+              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${safeEvents.length * .11}s` }}>
                 <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
                 <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
               </div>
             </div>
-          </div>
-        ) : (
-          <CalendarView events={events} onEventClick={onEventClick} />
-        )}
+          )}
+        </div>
       </div>
 
       <Footer />
@@ -166,3 +182,10 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
   );
 }
 
+export default function EventsPage(props) {
+  return (
+    <ErrorBoundary>
+      <EventsPageContent {...props} />
+    </ErrorBoundary>
+  );
+}

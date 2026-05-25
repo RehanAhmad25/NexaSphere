@@ -16,7 +16,7 @@ class AdminAuthServiceTest {
 
     @Test
     void testLoginCorrectCredentials() {
-        TokenSession session = adminAuthService.login("nexasphere@glbajajgroup.org", "Admin@123");
+        TokenSession session = adminAuthService.login("test-admin@example.com", "Test@Password1");
         assertNotNull(session.token());
         assertEquals(48, session.token().length());
         assertTrue(session.token().matches("^[0-9a-f]{48}$"));

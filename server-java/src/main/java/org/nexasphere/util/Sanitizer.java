@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
 
 @Component
-@SuppressWarnings("null")
 public class Sanitizer {
 
     public String clean(String input) {

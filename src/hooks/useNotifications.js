@@ -1,15 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
-import notificationsData from '../data/notificationsData';
 import socketClient from '../utils/socketClient';
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState(notificationsData);
+  const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // Initialize socket and listen to real-time events
   useEffect(() => {
+    // Fetch persisted notifications from server (if available)
+    (async () => {
+      try {
+        const base = import.meta?.env?.VITE_API_BASE || '';
+        const res = await fetch(base + '/api/notifications');
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.notifications)) setNotifications(json.notifications);
+        }
+      } catch (err) {
+        // ignore fetch errors — fallback to empty list
+        console.warn('Failed to fetch notifications', err.message);
+      }
+    })();
+
     const base = (import.meta?.env?.VITE_API_BASE || window.location.origin).replace(/\/+$/, '');
     const socket = socketClient.initializeSocket(base);
 
@@ -111,17 +125,34 @@ export function useNotifications() {
   }, []);
 
   const markAsRead = useCallback((id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    );
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    // Persist
+    (async () => {
+      try {
+        const base = import.meta?.env?.VITE_API_BASE || '';
+        await fetch(base + '/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      } catch (e) {}
+    })();
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    (async () => {
+      try {
+        const base = import.meta?.env?.VITE_API_BASE || '';
+        await fetch(base + '/api/notifications/mark-all-read', { method: 'POST' });
+      } catch (e) {}
+    })();
   }, []);
 
   const clearAll = useCallback(() => {
     setNotifications([]);
+    (async () => {
+      try {
+        const base = import.meta?.env?.VITE_API_BASE || '';
+        await fetch(base + '/api/notifications', { method: 'DELETE' });
+      } catch (e) {}
+    })();
   }, []);
 
   const togglePanel = useCallback(() => {
@@ -142,4 +173,4 @@ export function useNotifications() {
     markAllAsRead,
     clearAll,
   };
-}
+}

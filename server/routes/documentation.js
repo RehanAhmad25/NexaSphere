@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import redoc from 'redoc-express';
 import specs from '../config/swagger.js';
 import logger from '../utils/logger.js';
+import yaml from 'yaml';
 
 const router = express.Router();
 
@@ -53,8 +54,7 @@ router.get('/swagger.json', (req, res) => {
  */
 router.get('/swagger.yaml', (req, res) => {
   res.setHeader('Content-Type', 'application/yaml');
-  const YAML = require('yaml');
-  res.send(YAML.stringify(specs));
+  res.send(yaml.stringify(specs));
   logger.info('OpenAPI YAML spec requested', { ip: req.ip });
 });
 

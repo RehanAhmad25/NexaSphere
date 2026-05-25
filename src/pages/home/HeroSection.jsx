@@ -84,7 +84,7 @@ function Logo3D({ ready, isLight }) {
       }}
     >
       <OrbitRings isLight={isLight}/>
-      <img src={BRAND_LOGO_ICON} alt="NexaSphere" className="hero-logo-img"/>
+      <img src={BRAND_LOGO_ICON} alt="NexaSphere" className="hero-logo-img" width={220} height={220} />
       <div style={{position:'absolute',bottom:'-8px',left:'50%',transform:'translateX(-50%)',width:'90px',height:'14px',borderRadius:'50%',background:`radial-gradient(ellipse,${isLight?'rgba(204,17,17,.22)':'rgba(204,17,17,.32)'},transparent 70%)`,filter:'blur(5px)',animation:'float 5s ease-in-out infinite'}}/>
     </div>
   );
@@ -95,7 +95,7 @@ function StatsBar({ vis, isLight }) {
   const items = [{v:'12',l:'Members',i:'Users'},{v:'8',l:'Activities',i:'Activity'},{v:'1',l:'Events Done',i:'Calendar'},{v:'∞',l:'Ideas',i:'Lightbulb'}];
   return (
     <div style={{
-      display:'flex',maxWidth:'500px',margin:'40px auto 0',
+      display:'flex',maxWidth:'500px',margin:'56px auto 0',
       background: isLight ? 'rgba(26,26,26,.04)' : 'rgba(204,17,17,.04)',
       border:`1px solid ${isLight?'rgba(26,26,26,.09)':'rgba(204,17,17,.12)'}`,
       borderRadius:'14px',overflow:'hidden',
@@ -134,7 +134,7 @@ function Atmosphere({ isLight }) {
       <div style={{position:'absolute',inset:0,overflow:'hidden',zIndex:0,pointerEvents:'none'}}>
         {Array.from({length:9},(_,i)=>(
           <div key={i} style={{
-            position:'absolute',left:`${6+i*11}%`,top:0,
+            position:'absolute',left:`${8+i*10}%`,top:0,
             fontFamily:"'Space Mono',monospace",fontSize:'8px',
             color: isLight ? 'rgba(180,20,20,0.45)' : 'var(--c1)',
             lineHeight:1.9,userSelect:'none',
@@ -198,20 +198,19 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
         transition:'background 1.2s cubic-bezier(.4,0,.2,1)',
       }} />
       {/* Logo glow — subtle radial red only around center */}
-      <div style={{
-        position:'absolute',
-        top:'50%', left:'50%',
-        transform:'translate(-50%,-58%)',
-        width:'480px', height:'480px',
-        borderRadius:'50%',
-        background: isLight
-          ? 'radial-gradient(circle, rgba(230,57,70,0.10) 0%, transparent 65%)'
-          : 'radial-gradient(circle, rgba(230,57,70,0.18) 0%, transparent 65%)',
-        pointerEvents:'none',
-        zIndex:0,
-        filter:'blur(32px)',
-        animation:'cinGlow 4s ease-in-out infinite',
-      }} />
+      <div className="hero-glow" aria-hidden="true" style={{
+        position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-58%)',
+        pointerEvents:'none', zIndex:0, filter:'blur(32px)', animation:'cinGlow 4s ease-in-out infinite'
+      }}
+      // inline background kept here so it adapts to theme
+      >
+        <div style={{
+          width:'100%', height:'100%', borderRadius:'50%',
+          background: isLight
+            ? 'radial-gradient(circle, rgba(230,57,70,0.10) 0%, transparent 65%)'
+            : 'radial-gradient(circle, rgba(230,57,70,0.18) 0%, transparent 65%)'
+        }} />
+      </div>
       <Atmosphere isLight={isLight}/>
 
       <div className="hero-content" style={{position:'relative',zIndex:2,paddingBottom:'80px'}}>
@@ -245,7 +244,7 @@ export default function HeroSection({ onTabChange, onApply, onJoin, theme = 'dar
           </div>
           
           <div style={{
-            marginTop:'6px',padding:'14px 24px',
+            marginTop:'16px',padding:'14px 24px',
             background: isLight ? 'rgba(204,17,17,.05)' : 'rgba(204,17,17,.07)',
             border:`1px solid ${isLight?'rgba(204,17,17,.18)':'rgba(204,17,17,.18)'}`,
             borderRadius:'16px',maxWidth:'420px',textAlign:'center',

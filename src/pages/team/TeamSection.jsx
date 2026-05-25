@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { teamMembers } from '../../data/teamData';
 import TeamMemberModal from './TeamMemberModal';
 import { IconArrowRight, IconSpark } from '../../shared/Icons';
-import SafeImage from '../../shared/SafeImage';
 
 function MemberCard({ member, idx, onClick }) {
   const ref = useRef(null);
+  const [imgError, setImgError] = useState(false);
   const agDelay = [-0.0, -2.1, -4.2, -1.0, -3.3, -5.5, -0.7, -6.1, -2.8, -4.9, -1.6, -3.8];
 
   const onMove = e => {
@@ -42,7 +41,12 @@ function MemberCard({ member, idx, onClick }) {
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') click(); }}
     >
       <div className="team-card-photo-wrap">
-        <SafeImage src={member.photo} alt={member.name} className="team-card-photo" loading="lazy" fallbackType="avatar" />
+        <img 
+          src={(!member.photo || imgError) ? 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(member.name) + '&backgroundColor=7b6fff&textColor=ffffff' : member.photo} 
+          alt={member.name} 
+          className="team-card-photo" 
+          onError={() => setImgError(true)}
+        />
       </div>
       <div className="team-card-name">{member.name}</div>
       <div className="team-card-role">{member.role}</div>
@@ -58,6 +62,24 @@ function MemberCard({ member, idx, onClick }) {
 
 export default function TeamSection({ onApply }) {
   const [sel, setSel] = useState(null);
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
+    const url = base ? `${base}/api/content/team` : '/api/content/team';
+    
+    fetch(url)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        if (!alive) return;
+        if (Array.isArray(data?.members)) {
+          setMembers(data.members);
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     const elements = document.querySelectorAll('#section-team .pop-flip, #section-team .pop-in, #section-team .pop-word');
@@ -92,14 +114,14 @@ export default function TeamSection({ onApply }) {
   return (
     <section className="section" id="section-team">
       <div className="container">
-        <div>
+        <div className="section-heading">
           <span className="cin-section-label pop-in">GL Bajaj Group of Institutions · Mathura</span>
           <h2 className="section-title pop-word">Core Team</h2>
           <p className="section-subtitle pop-in" style={{ animationDelay: '.1s' }}>The Minds Behind NexaSphere</p>
         </div>
 
         <div className="team-grid cin-container">
-          {teamMembers.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)}
+          {members.map((m, i) => <MemberCard key={m.id} member={m} idx={i} onClick={setSel} />)}
         </div>
 
 

@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@SuppressWarnings("null")
 class AdminAuthControllerTest {
 
     @Autowired
@@ -21,13 +20,13 @@ class AdminAuthControllerTest {
     @Test
     void testLoginFlow() throws Exception {
         // POST /login correct creds -> 200 + token in body
-        String loginJson = "{\"email\": \"nexasphere@glbajajgroup.org\", \"password\": \"Admin@123\"}";
+        String loginJson = "{\"email\": \"test-admin@example.com\", \"password\": \"Test@Password1\"}";
         String response = mockMvc.perform(post("/api/admin/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.email").value("nexasphere@glbajajgroup.org"))
+                .andExpect(jsonPath("$.email").value("test-admin@example.com"))
                 .andReturn().getResponse().getContentAsString();
 
         // Extract token manually to avoid JsonPath dependency if not present, though it usually is
@@ -37,7 +36,7 @@ class AdminAuthControllerTest {
         mockMvc.perform(get("/api/admin/me")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("nexasphere@glbajajgroup.org"));
+                .andExpect(jsonPath("$.email").value("test-admin@example.com"));
 
         // POST /logout valid token -> 200 + { "ok": true }
         mockMvc.perform(post("/api/admin/logout")
@@ -68,7 +67,7 @@ class AdminAuthControllerTest {
 
     @Test
     void testLoginRateLimiting() throws Exception {
-        String loginJson = "{\"email\": \"nexasphere@glbajajgroup.org\", \"password\": \"wrongpass\"}";
+        String loginJson = "{\"email\": \"test-admin@example.com\", \"password\": \"wrongpass\"}";
         
         // First 10 attempts should be allowed (burst capacity)
         for (int i = 0; i < 10; i++) {

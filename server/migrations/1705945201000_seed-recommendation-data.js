@@ -10,7 +10,7 @@
    - Event participation history for collaborative filtering
 */
 
-exports.up = async (pgm) => {
+export const up = async (pgm) => {
   // Seed Users (Profiles)
   await pgm.db.query(`
     INSERT INTO "Profile" (id, interests) VALUES
@@ -53,7 +53,7 @@ exports.up = async (pgm) => {
   `);
 };
 
-exports.down = async (pgm) => {
+export const down = async (pgm) => {
   // Clear seeded data
   await pgm.db.query(`DELETE FROM event_participants WHERE user_id LIKE 'user_%' OR user_id = '101';`);
   await pgm.db.query(`DELETE FROM "Profile" WHERE id LIKE 'user_%' OR id = '101';`);

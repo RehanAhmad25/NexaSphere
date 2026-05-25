@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/admin/events")
 @Tag(name = "Events Management", description = "Endpoints for managing NexaSphere events")
-@SuppressWarnings("null")
 public class EventsController {
 
     private final EventRepository repo;

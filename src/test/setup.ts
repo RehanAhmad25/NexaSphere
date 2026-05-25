@@ -22,6 +22,9 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock window.scrollTo
+window.scrollTo = vi.fn();
+
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn(() => ({
   observe: vi.fn(),

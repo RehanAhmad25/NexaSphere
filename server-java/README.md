@@ -123,8 +123,8 @@ mvn spring-boot:run
 
 | Variable           | Example                     | Purpose                  |
 | ------------------ | --------------------------- | ------------------------ |
-| **ADMIN_EMAIL**    | nexasphere@glbajajgroup.org | Admin login email        |
-| **ADMIN_PASSWORD** | Admin@123                   | Admin login password     |
+| **ADMIN_EMAIL**    | your-admin-email@example.com | Admin login email        |
+| **ADMIN_PASSWORD** | your-secure-password         | Admin login password     |
 | **CORS_ORIGIN**    | http://localhost:5173       | Allowed frontend origins |
 
 <br/>
@@ -170,9 +170,9 @@ spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.show-sql=false
 spring.jpa.properties.hibernate.format_sql=true
 
-# ========== Admin Credentials ==========
-app.admin.email=nexasphere@glbajajgroup.org
-app.admin.password=Admin@123
+# ========== Admin Credentials — set via environment variables only, never commit real values ==========
+app.admin.email=your-admin-email@example.com
+app.admin.password=your-secure-password
 
 # ========== CORS Configuration ==========
 app.cors.origin=http://localhost:5173,https://nexasphere-glbajaj.vercel.app
@@ -371,8 +371,8 @@ To test secure admin endpoints directly from Swagger UI, click the **Authorize**
 curl -X POST http://localhost:8080/api/admin/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email":"nexasphere@glbajajgroup.org",
-    "password":"Admin@123"
+    "email":"<ADMIN_EMAIL>",
+    "password":"<ADMIN_PASSWORD>"
   }'
 ```
 
@@ -473,8 +473,8 @@ railway up
 In Railway Dashboard, add:
 
 ```
-ADMIN_EMAIL=nexasphere@glbajajgroup.org
-ADMIN_PASSWORD=Admin@123
+ADMIN_EMAIL=your-admin-email@example.com
+ADMIN_PASSWORD=your-secure-password
 CORS_ORIGIN=https://nexasphere-glbajaj.vercel.app
 DB_URL=jdbc:postgresql://[rail-host]:5432/railway
 DB_DRIVER=org.postgresql.Driver

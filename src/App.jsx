@@ -9,6 +9,7 @@ import './styles/portfolio.css';
 
 import './styles/aurora.css';
 import './styles/motion.css';
+import WorkspacePage from './pages/workspace/WorkspacePage';
 import SearchBar from './components/SearchBar';
 import FloatingDock from "./components/common/FloatingDock";
 import ParticleBackground  from './shared/ParticleBackground';
@@ -35,11 +36,14 @@ import EventsPage          from './pages/events/EventsPage';
 import AboutPage           from './pages/about/AboutPage';
 import TeamPage            from './pages/team/TeamPage';
 import ContactPage         from './pages/contact/ContactPage';
-import RecruitmentPage     from './pages/recruitment/RecruitmentPage';
-import MembershipPage      from './pages/membership/MembershipPage';
-import AdminPage           from './pages/admin/AdminPage';
+import dynamic from 'next/dynamic';
+
+const RecruitmentPage = dynamic(() => import('./pages/recruitment/RecruitmentPage'), { ssr: false });
+const MembershipPage = dynamic(() => import('./pages/membership/MembershipPage'), { ssr: false });
+const AdminPage = dynamic(() => import('./pages/admin/AdminPage'), { ssr: false });
 import RoadmapsPage        from './pages/roadmaps/RoadmapsPage';
 import ProjectsPage        from './pages/projects/ProjectsPage';
+import CertificateVerifyPage from './pages/certificates/CertificateVerifyPage';
 import CollabPage          from './pages/collab/CollabPage';
 import PortfolioBuilder    from './components/portfolio/PortfolioBuilder';
 import PublicPortfolio     from './pages/portfolio/PublicPortfolio';
@@ -54,6 +58,8 @@ import { useDeveloperMode } from './hooks/useDeveloperMode';
 
 import { BookmarkProvider } from './context/BookmarkContext';
 import BookmarksDrawer from './components/bookmarks/BookmarksDrawer';
+
+import MoveToTop from "./shared/MoveToTop";
 
 const MNH = 88, DNH = 64;
 const TABS = ['Home','Dashboard','Activities','Events','Projects','Roadmaps','Portfolio','Collab','About','Team','Contact'];
@@ -222,6 +228,22 @@ function Cursor() {
 }
 
 export default function App() {
+  /* ── Certificate verify route detection ── */
+  const verifyCertId = (() => {
+    const path = window.location.pathname;
+    const m = path.match(/^\/verify\/([A-Za-z0-9_%-]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  })();
+
+  if (verifyCertId) {
+    return (
+      <CertificateVerifyPage
+        certificateId={verifyCertId}
+        onGoHome={() => { window.history.pushState({}, '', '/'); window.location.reload(); }}
+      />
+    );
+  }
+
   const [cinDone,    setCinDone]    = useState(false);
   const [activeTab,  setActiveTab]  = useState('Home');
   const [mobile,     setMobile]     = useState(window.innerWidth <= 768);
@@ -273,23 +295,37 @@ export default function App() {
     const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
     const url  = base ? `${base}/api/content/events` : '/api/content/events';
     fetch(url)
-      .then(r => r.ok ? r.json() : Promise.reject(new Error('Failed')))
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then(data => {
         if (!alive) return;
-        if (Array.isArray(data?.events) && data.events.length > 0) setEventsData(data.events);
+        if (data && Array.isArray(data.events)) {
+          setEventsData(data.events);
+        } else if (Array.isArray(data)) {
+          setEventsData(data);
+        } else {
+          console.warn('Malformed API response for events:', data);
+          setEventsData([]);
+        }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!alive) return;
+        console.error('Failed to fetch events:', err);
+        setEventsData([]);
+      });
     return () => { alive = false; };
   }, []);
 
-  useEffect(()=>{
-    const btn = document.getElementById('back-to-top');
-    if (!btn) return;
-    const fn = () => btn.classList.toggle('visible', window.scrollY > 400);
-    window.addEventListener('scroll', fn, { passive:true });
-    btn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
+  // useEffect(()=>{
+  //   const btn = document.getElementById('back-to-top');
+  //   if (!btn) return;
+  //   const fn = () => btn.classList.toggle('visible', window.scrollY > 400);
+  //   window.addEventListener('scroll', fn, { passive:true });
+  //   btn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+  //   return () => window.removeEventListener('scroll', fn);
+  // }, []);
 
   useEffect(()=>{
     if (page) return;
@@ -369,6 +405,21 @@ export default function App() {
     window.addEventListener('mousemove', onMove, { passive:true });
     return () => { obs.disconnect(); window.removeEventListener('mousemove', onMove); };
   }, [cinDone, page]);
+
+  useInteractionEffects(cinDone, page);
+  useBackToTop();
+  useActiveTabObserver(page, mobile, NAV_TABS, NAV_HEIGHTS, setActiveTab);
+  
+  // Add direct URL parsing for workspace route
+  useEffect(() => {
+    if (window.location.pathname.startsWith('/workspace/')) {
+      const roomId = window.location.pathname.split('/workspace/')[1];
+      if (roomId) {
+        setCinDone(true);
+        setPage({ type: 'workspace', roomId });
+      }
+    }
+  }, []);
 
   useNsReveal([cinDone, page]);
   useHeroParallax();
@@ -498,7 +549,8 @@ export default function App() {
               <EventDetailPage event={page.event} onBack={page.activityKey ? onBackAct : onBackMain}/>
             )}
             {page.type === 'portfolio' && <PublicPortfolio username={page.username} onBack={onBackHome} />}
-            {page.type && !['section','activity','event','apply','join','portfolio'].includes(page.type) && (
+            {page.type === 'workspace' && <WorkspacePage roomId={page.roomId} onBack={onBackHome} />}
+            {page.type && !['section','activity','event','apply','join','portfolio','workspace'].includes(page.type) && (
               <NotFoundPage onGoHome={onBackHome}/>
             )}
           </PageIn>
@@ -521,7 +573,7 @@ export default function App() {
       </main>
 
       {/* Back to top button */}
-      {cinDone && <button id="back-to-top" aria-label="Back to top">↑</button>}
+      {cinDone && <MoveToTop />}
 
       {/* ── Floating Search Button (bottom-left) ── */}
       {cinDone && (

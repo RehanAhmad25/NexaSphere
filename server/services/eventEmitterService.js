@@ -6,6 +6,7 @@
 import EventEmitter from 'events';
 import logger from '../utils/logger.js';
 import { emitToRoom, getRoom } from '../config/socket.js';
+import notificationsService from './notificationsService.js';
 import {
   sendRegistrationConfirmationEmail,
   sendWaitlistPromotionEmail,
@@ -71,6 +72,16 @@ class RealTimeEventManager extends EventEmitter {
         timestamp: new Date(),
       });
 
+      // Persist notification (store per-user if userId provided)
+      try {
+        notificationsService.addNotification(data.userId || 'global', {
+          type: 'connection',
+          title: 'Registration Confirmed',
+          message: `You're registered for ${data.eventName}`,
+          link: `/events/${data.eventId}`,
+        });
+      } catch (err) { logger.warn('Failed to persist notification', { err: err.message }); }
+
       // Notify admin
       emitToRoom(getRoom('admin'), 'admin:new-registration', {
         userId: data.userId,
@@ -120,6 +131,16 @@ class RealTimeEventManager extends EventEmitter {
         eventId: data.eventId,
         timestamp: new Date(),
       });
+
+      // Persist notification
+      try {
+        notificationsService.addNotification(data.userId || 'global', {
+          type: 'mention',
+          title: 'Waitlist Promotion',
+          message: `You've been promoted for ${data.eventName}`,
+          link: `/events/${data.eventId}`,
+        });
+      } catch (err) { logger.warn('Failed to persist notification', { err: err.message }); }
 
       // Notify admin
       emitToRoom(getRoom('admin'), 'admin:waitlist-promotion', {
@@ -172,6 +193,16 @@ class RealTimeEventManager extends EventEmitter {
         eventName: data.eventName,
         timestamp: new Date(),
       });
+
+      // Persist notification
+      try {
+        notificationsService.addNotification(data.userId || 'global', {
+          type: 'system',
+          title: `Reminder: ${data.eventName}`,
+          message: `${data.eventName} is starting soon`,
+          link: `/events/${data.eventId}`,
+        });
+      } catch (err) { logger.warn('Failed to persist notification', { err: err.message }); }
     } catch (error) {
       logger.error('Error handling event reminder', { error: error.message });
     }
@@ -212,6 +243,16 @@ class RealTimeEventManager extends EventEmitter {
         points: data.points,
         timestamp: new Date(),
       });
+
+      // Persist notification
+      try {
+        notificationsService.addNotification(data.userId || 'global', {
+          type: 'system',
+          title: 'Attendance Marked',
+          message: `Attendance for ${data.eventName} recorded. You earned ${data.points || 0} points.`,
+          link: `/events/${data.eventId}`,
+        });
+      } catch (err) { logger.warn('Failed to persist notification', { err: err.message }); }
 
       // Notify admin
       emitToRoom(getRoom('admin'), 'admin:attendance-marked', {

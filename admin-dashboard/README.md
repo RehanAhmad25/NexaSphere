@@ -26,7 +26,7 @@ Also add the admin dashboard URL to `CORS_ORIGIN` in the Java backend environmen
 
 ## Features
 
-- Login with email/password → JWT stored in localStorage
+- Login with email/password → JWT stored in localStorage (verified against backend on every page load)
 - Events CRUD (create, edit, delete)
 - Activity Events management per category (8 activity types)
 - Core Team member add/remove
@@ -139,18 +139,7 @@ npm run dev
 
 ## 🔑 Login Credentials
 
-<br/>
-
-<table align="center">
-  <tr>
-    <td><strong>Email</strong></td>
-    <td>nexasphere@glbajajgroup.org</td>
-  </tr>
-  <tr>
-    <td><strong>Password</strong></td>
-    <td>Admin@123</td>
-  </tr>
-</table>
+Credentials are configured via environment variables on the backend only. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your backend deployment environment. Never commit real credentials to the repository.
 
 <br/>
 
