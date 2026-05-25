@@ -3,6 +3,7 @@ import { useReactToPrint } from 'react-to-print';
 import { projectsData } from '../../data/projectsData';
 import { roadmapData } from '../../data/roadmapData';
 import ResumePrintTemplate from '../../components/portfolio/ResumePrintTemplate';
+import { PortfolioSkeleton } from '../../components/ui/skeleton/PortfolioSkeleton';
 import '../../styles/print.css';
 
 export default function PublicPortfolio({ username, onBack }) {
@@ -105,20 +106,7 @@ export default function PublicPortfolio({ username, onBack }) {
   });
 
   if (isLoading) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-        <div style={{
-          width: '50px', height: '50px',
-          border: '3px solid rgba(204, 17, 17, 0.1)',
-          borderTopColor: 'var(--c1)',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <p style={{ fontFamily: 'Orbitron, monospace', color: 'var(--t2)', fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          Decompiling Showcase Portfolio...
-        </p>
-      </div>
-    );
+    return <PortfolioSkeleton />;
   }
 
   if (error || !portfolio) {
