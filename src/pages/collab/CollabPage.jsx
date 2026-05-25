@@ -22,7 +22,6 @@ export default function CollabPage({ onBack }) {
 
   const handleJoinSubmit = async (requestData) => {
     // Send request to Java backend / Python notification webhook
-    console.log("Submitting request:", requestData);
     return new Promise(resolve => setTimeout(resolve, 1000));
   };
 

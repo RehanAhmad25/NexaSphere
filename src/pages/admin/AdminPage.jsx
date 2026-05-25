@@ -118,8 +118,7 @@ export default function AdminPage({ onBack }) {
 
     eventSource.addEventListener('login', (event) => {
       try {
-        const parsed = JSON.parse(event.data);
-        console.log(`SSE Login Alert: User ${parsed.data.username} connected from ${parsed.data.ip}`);
+        JSON.parse(event.data);
       } catch (err) {
         console.error('Failed to parse login SSE message:', err);
       }

@@ -1148,7 +1148,6 @@ export default function MembershipPage({ onBack }) {
                     <Turnstile
                       siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
                       onSuccess={(token) => {
-                        console.log("Turnstile Token generated:", token);
                         setCaptchaToken(token);
                       }}
                     />
