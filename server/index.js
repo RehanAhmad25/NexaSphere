@@ -17,15 +17,22 @@ import { initializeSocketIO, emitToRoom, getRoom } from "./config/socket.js";
 import adminStreamRouter from "./routes/adminStream.js";
 import { broadcastSSEEvent } from "./services/sseService.js";
 import rateLimit from "express-rate-limit";
-import { formRateLimiter } from "./middleware/rateLimiter.js";
 import {
   apiRateLimiter,
   authRateLimiter,
+  formRateLimiter,
   notificationRateLimiter,
+  portfolioRateLimiter,
+  validateLimiters,
 } from "./middleware/rateLimiter.js";
 
 import { portfolioRepository } from "./repositories/portfolioRepository.js";
 import { Mutex } from "async-mutex";
+
+// Fail fast on startup if any rate limiter failed to export correctly.
+// This prevents the silent "undefined middleware" failure mode where Express
+// skips a middleware registered as undefined with no error or warning.
+validateLimiters();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1077,14 +1084,7 @@ async function handleForm(formType, req, res) {
   }
 }
 
-const portfolioRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 requests per windowMs
-  message: {
-    error:
-      "Too many portfolio update attempts from this IP, please try again after 15 minutes",
-  },
-});
+// portfolioRateLimiter is imported from ./middleware/rateLimiter.js
 
 const failedPasskeyAttempts = new Map();
 
