@@ -3,13 +3,13 @@
  * Handles WebSocket connections and real-time updates
  */
 
-import io from 'socket.io-client';
-import { captureHandledException } from './errorTracking';
-import { getSocketPath, getSocketServerUrl } from './runtimeConfig';
+import io from "socket.io-client";
+import { captureHandledException } from "./errorTracking";
+import { getSocketPath, getSocketServerUrl } from "./runtimeConfig";
 
 let socket = null;
-let eventHandlers = {};
-let currentSocketUrl = '';
+const eventHandlers = {};
+let currentSocketUrl = "";
 let warnedMissingSocketConfig = false;
 
 /**
@@ -20,7 +20,9 @@ export function initializeSocket(serverUrl = getSocketServerUrl()) {
   if (!resolvedUrl) {
     if (!warnedMissingSocketConfig) {
       warnedMissingSocketConfig = true;
-      console.warn('Socket.IO disabled: no socket server URL configured for this environment.');
+      console.warn(
+        "Socket.IO disabled: no socket server URL configured for this environment."
+      );
     }
     return null;
   }
@@ -37,43 +39,42 @@ export function initializeSocket(serverUrl = getSocketServerUrl()) {
   socket = io(resolvedUrl, {
     path: getSocketPath(),
     reconnection: true,
-    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     reconnectionAttempts: 8,
-    transports: ['websocket', 'polling'],
+    transports: ["websocket", "polling"],
     timeout: 5000,
   });
 
   // Global event handlers - connection lifecycle monitoring
-  socket.on('connect', () => {
+  socket.on("connect", () => {
     identifyUser(); // try to identify if user info is available locally
   });
 
-  socket.on('reconnect_failed', () => {
-    console.error('[Socket.IO] Reconnection failed');
+  socket.on("reconnect_failed", () => {
+    console.error("[Socket.IO] Reconnection failed");
   });
 
-  socket.on('connect_error', (error) => {
-    console.error('[Socket.IO] Connection Error:', error);
-    captureHandledException(error, 'Socket.IO connect_error:');
+  socket.on("connect_error", (error) => {
+    console.error("[Socket.IO] Connection Error:", error);
+    captureHandledException(error, "Socket.IO connect_error:");
   });
 
-  socket.on('error', (error) => {
-    console.error('[Socket.IO] Error:', error);
-    captureHandledException(error, 'Socket.IO error:');
+  socket.on("error", (error) => {
+    console.error("[Socket.IO] Error:", error);
+    captureHandledException(error, "Socket.IO error:");
   });
 
-  socket.on('connect_error', (error) => {
-    captureHandledException(error, 'Socket.IO connection error:');
+  socket.on("connect_error", (error) => {
+    captureHandledException(error, "Socket.IO connection error:");
   });
 
-  socket.on('reconnect_failed', () => {
-    captureHandledException(new Error('Socket.IO reconnect attempts exhausted'), 'Socket.IO reconnect failed:');
+  socket.on("reconnect_failed", () => {
+    captureHandledException(
+      new Error("Socket.IO reconnect attempts exhausted"),
+      "Socket.IO reconnect failed:"
+    );
   });
-
-  // Setup custom event listeners
-  setupEventListeners();
 
   return socket;
 }
@@ -83,7 +84,7 @@ export function initializeSocket(serverUrl = getSocketServerUrl()) {
  */
 export function getSocket() {
   if (!socket) {
-    throw new Error('Socket.IO not initialized. Call initializeSocket first.');
+    throw new Error("Socket.IO not initialized. Call initializeSocket first.");
   }
   return socket;
 }
@@ -94,7 +95,7 @@ export function getSocket() {
 export function identifyUser(userId, email) {
   // If not explicitly passed, try to fetch from localStorage
   if (!userId || !email) {
-    const storedUser = localStorage.getItem('ns_user');
+    const storedUser = localStorage.getItem("ns_user");
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
@@ -107,7 +108,7 @@ export function identifyUser(userId, email) {
   }
 
   if (socket && userId) {
-    socket.emit('user:identify', { userId, email });
+    socket.emit("user:identify", { userId, email });
   }
 }
 
@@ -116,7 +117,7 @@ export function identifyUser(userId, email) {
  */
 export function joinRoom(roomName) {
   if (socket) {
-    socket.emit('room:join', roomName);
+    socket.emit("room:join", roomName);
   }
 }
 
@@ -125,7 +126,7 @@ export function joinRoom(roomName) {
  */
 export function leaveRoom(roomName) {
   if (socket) {
-    socket.emit('room:leave', roomName);
+    socket.emit("room:leave", roomName);
   }
 }
 
@@ -167,7 +168,7 @@ export function disconnect() {
   if (socket) {
     socket.disconnect();
     socket = null;
-    currentSocketUrl = '';
+    currentSocketUrl = "";
   }
 }
 

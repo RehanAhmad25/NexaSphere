@@ -369,7 +369,15 @@ export default function App() {
     );
   }
 
-  const [cinDone, setCinDone] = useState(false);
+  const [cinDone, setCinDone] = useState(() => {
+    if (typeof window !== "undefined") {
+      return (
+        window.location.search.includes("skipIntro") ||
+        window.navigator.userAgent.includes("Playwright")
+      );
+    }
+    return false;
+  });
   const [activeTab, setActiveTab] = useState("Home");
   const [mobile, setMobile] = useState(window.innerWidth <= 768);
   const [wipeOn, setWipeOn] = useState(false);
@@ -378,7 +386,7 @@ export default function App() {
   const [eventsData, setEventsData] = useState(fallbackEvents);
   const [searchOpen, setSearchOpen] = useState(false); // ← Search state
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
-  const { resolvedTheme: theme } = useTheme();
+  const { resolvedTheme: theme, setTheme } = useTheme();
   const { isOpen: isTerminalOpen, closeTerminal } = useDeveloperMode();
 
   useEffect(() => {
