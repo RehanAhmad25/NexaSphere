@@ -1,5 +1,29 @@
 import { z } from 'zod';
 
+// Parses and clamps ?page / ?limit query parameters.
+// page: positive integer, minimum 1, defaults to 1.
+// limit: positive integer, clamped to [1, 100], defaults to 20.
+export const paginationSchema = z
+  .object({
+    page: z
+      .union([z.string(), z.number()])
+      .transform((v) => {
+        const parsed = parseInt(String(v), 10);
+        return Math.max(1, Number.isNaN(parsed) ? 1 : parsed);
+      })
+      .optional()
+      .default(1),
+    limit: z
+      .union([z.string(), z.number()])
+      .transform((v) => {
+        const parsed = parseInt(String(v), 10);
+        return Math.min(100, Math.max(1, Number.isNaN(parsed) ? 20 : parsed));
+      })
+      .optional()
+      .default(20),
+  })
+  .passthrough();
+
 const tagsSchema = z
   .union([z.array(z.string()).min(0), z.string()])
   .transform((val) => {

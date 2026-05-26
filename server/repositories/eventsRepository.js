@@ -16,10 +16,20 @@ function mapRow(row) {
 }
 
 export const eventsRepository = {
-  async list() {
+  // Returns { rows, total } — rows are the current page, total is the full
+  // count without LIMIT so callers can build pagination metadata.
+  async list({ page = 1, limit = 20 } = {}) {
     return withDb(async (client) => {
-      const { rows } = await client.query('select * from events order by created_at desc');
-      return rows.map(mapRow);
+      const offset = (page - 1) * limit;
+      const [{ rows }, countResult] = await Promise.all([
+        client.query(
+          'select * from events order by created_at desc limit $1 offset $2',
+          [limit, offset],
+        ),
+        client.query('select count(*)::int as total from events'),
+      ]);
+      const total = countResult.rows[0]?.total ?? 0;
+      return { rows: rows.map(mapRow), total };
     });
   },
 
@@ -72,4 +82,3 @@ export const eventsRepository = {
     });
   },
 };
-

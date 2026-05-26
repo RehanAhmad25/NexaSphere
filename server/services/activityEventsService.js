@@ -3,8 +3,8 @@ import { coreTeamService } from './coreTeamService.js';
 import { activityEventSchema } from '../validators/activityEventSchemas.js';
 
 export const activityEventsService = {
-  async listActivityEvents(activityKey) {
-    return activityEventsRepository.listByActivityKey(activityKey);
+  async listActivityEvents(activityKey, { page = 1, limit = 20 } = {}) {
+    return activityEventsRepository.listByActivityKey(activityKey, { page, limit });
   },
 
   async assertCanManage(body) {
@@ -20,4 +20,3 @@ export const activityEventsService = {
     return activityEventsRepository.delete(activityKey, eventId);
   },
 };
-

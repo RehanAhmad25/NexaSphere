@@ -13,13 +13,23 @@ function mapRow(row) {
 }
 
 export const activityEventsRepository = {
-  async listByActivityKey(activityKey) {
+  // Returns { rows, total } — rows are the current page, total is the full
+  // count for the given activityKey so callers can build pagination metadata.
+  async listByActivityKey(activityKey, { page = 1, limit = 20 } = {}) {
     return withDb(async (client) => {
-      const { rows } = await client.query(
-        'select * from activity_events where activity_key=$1 order by created_at desc',
-        [activityKey]
-      );
-      return rows.map(mapRow);
+      const offset = (page - 1) * limit;
+      const [{ rows }, countResult] = await Promise.all([
+        client.query(
+          'select * from activity_events where activity_key=$1 order by created_at desc limit $2 offset $3',
+          [activityKey, limit, offset],
+        ),
+        client.query(
+          'select count(*)::int as total from activity_events where activity_key=$1',
+          [activityKey],
+        ),
+      ]);
+      const total = countResult.rows[0]?.total ?? 0;
+      return { rows: rows.map(mapRow), total };
     });
   },
 
@@ -58,4 +68,3 @@ export const activityEventsRepository = {
     });
   },
 };
-
