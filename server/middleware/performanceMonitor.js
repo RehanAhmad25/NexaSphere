@@ -14,6 +14,43 @@ const metrics = {
   totalErrors: 0,
 };
 
+const MAX_TRACKED_ENDPOINTS = parsePositiveInteger(process.env.MONITORING_MAX_TRACKED_ENDPOINTS, 1000);
+
+function parsePositiveInteger(val, defaultVal) {
+  const parsed = parseInt(val, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : defaultVal;
+}
+
+function normalizePathPattern(path) {
+  if (!path || typeof path !== 'string') return 'unknown';
+  
+  // Split path into segments
+  const segments = path.split('/').map(segment => {
+    // 1. UUID check
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(segment)) {
+      return ':id';
+    }
+    
+    // 2. MongoDB ObjectID check (24 hex characters)
+    const mongoIdRegex = /^[0-9a-f]{24}$/i;
+    if (mongoIdRegex.test(segment)) {
+      return ':id';
+    }
+    
+    // 3. Numeric ID check
+    const numericRegex = /^\d+$/;
+    if (numericRegex.test(segment)) {
+      return ':id';
+    }
+    
+    // 4. Return original segment if no dynamic pattern matches
+    return segment;
+  });
+  
+  return segments.join('/');
+}
+
 /**
  * Performance monitoring middleware
  * @param {Object} req - Express request
@@ -28,7 +65,31 @@ const performanceMonitor = (req, res, next) => {
   res.send = function (data) {
     const duration = Date.now() - startTime;
     const statusCode = res.statusCode;
-    const endpoint = `${req.method} ${req.baseUrl}${req.path}`;
+
+    // 1. Resolve to route pattern (if matched by router) or normalize raw path (for 404s/early middleware issues)
+    let routePath = '';
+    if (req.route) {
+      if (typeof req.route.path === 'string') {
+        routePath = req.route.path;
+      } else if (Array.isArray(req.route.path)) {
+        routePath = req.route.path.join('|');
+      } else if (req.route.path instanceof RegExp) {
+        routePath = req.route.path.toString();
+      }
+    }
+
+    let endpoint = '';
+    if (req.route) {
+      endpoint = `${req.method} ${req.baseUrl || ''}${routePath}`;
+    } else {
+      const normalizedPath = normalizePathPattern(req.path);
+      endpoint = `${req.method} ${normalizedPath}`;
+    }
+
+    // Trailing slash consolidation
+    if (endpoint.length > 1 && endpoint.endsWith('/')) {
+      endpoint = endpoint.slice(0, -1);
+    }
 
     // Update metrics
     metrics.totalRequests++;
@@ -36,8 +97,17 @@ const performanceMonitor = (req, res, next) => {
       metrics.totalErrors++;
     }
 
-    // Update endpoint-specific metrics
+    // Update endpoint-specific metrics with upper bound validation
     if (!metrics.endpoints[endpoint]) {
+      const currentKeys = Object.keys(metrics.endpoints);
+      if (currentKeys.length >= MAX_TRACKED_ENDPOINTS) {
+        // Safe FIFO eviction: delete the oldest inserted key (O(1) operation due to V8 key insertion ordering)
+        const oldestKey = currentKeys[0];
+        if (oldestKey) {
+          delete metrics.endpoints[oldestKey];
+        }
+      }
+
       metrics.endpoints[endpoint] = {
         count: 0,
         totalTime: 0,
