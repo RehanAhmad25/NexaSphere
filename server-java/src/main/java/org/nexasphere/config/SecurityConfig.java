@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").authenticated()
                         .requestMatchers("/api/admin/login").permitAll()
                         .requestMatchers("/api/content/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()

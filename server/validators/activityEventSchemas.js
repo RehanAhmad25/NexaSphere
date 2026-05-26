@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { generatePrefixedId } from '../utils/uuid.js';
 
 export const activityEventSchema = z
   .object({
@@ -18,7 +19,8 @@ export const activityEventSchema = z
       .default(undefined),
   })
   .transform((data) => {
-    const id = data.id || `manual-${Date.now()}`;
+    const id = data.id || generatePrefixedId('manual');
+
     return {
       ...data,
       id,

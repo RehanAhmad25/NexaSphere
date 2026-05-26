@@ -48,21 +48,6 @@ export default function AdminPage({ onBack }) {
       setError(null);
     } catch (err) {
       setError(err.message);
-      // Fallback for dev environment if token is present but API fails
-      if (import.meta.env.DEV && authToken) {
-        console.warn('Using fallback mock data for analytics');
-        setData({
-          stats: { totalUsers: 1240, activeRegistrations: 85, upcomingEvents: 3, conversionRate: '12.5%' },
-          growth: Array.from({ length: 30 }, (_, i) => ({
-            date: new Date(Date.now() - (30 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            registrations: Math.floor(Math.random() * 20) + i
-          })),
-          events: [
-            { name: 'KSS #153', capacity: 100, attendance: 92, waitlist: 15 },
-            { name: 'AI Workshop', capacity: 60, attendance: 58, waitlist: 20 }
-          ]
-        });
-      }
     } finally {
       setLoading(false);
     }
@@ -152,11 +137,11 @@ export default function AdminPage({ onBack }) {
         const payload = parsed.data;
 
         setData(prev => {
-          const currentStats = prev.stats || { totalUsers: 1240, activeRegistrations: 85, upcomingEvents: 3, conversionRate: '12.5%' };
+          const currentStats = prev.stats || { totalUsers: null, activeRegistrations: null, upcomingEvents: null, conversionRate: null };
           const nextStats = {
             ...currentStats,
-            totalUsers: (currentStats.totalUsers || 0) + 1,
-            activeRegistrations: (currentStats.activeRegistrations || 0) + 1
+            totalUsers: currentStats.totalUsers !== null ? currentStats.totalUsers + 1 : 1,
+            activeRegistrations: currentStats.activeRegistrations !== null ? currentStats.activeRegistrations + 1 : 1
           };
 
           const todayStr = new Date().toISOString().split('T')[0];

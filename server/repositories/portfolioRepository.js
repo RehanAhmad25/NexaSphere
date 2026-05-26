@@ -12,6 +12,10 @@ const BCRYPT_ROUNDS = 12;
 
 let schemaReady = null;
 
+export function canonicalizeUsername(username) {
+  return String(username || '').trim().toLowerCase();
+}
+
 async function hashPasskey(passkey) {
   return bcrypt.hash(String(passkey), BCRYPT_ROUNDS);
 }
@@ -39,6 +43,57 @@ async function ensureSchema(client) {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS portfolio_username_case_duplicates_backup (
+      backed_up_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      canonical_username VARCHAR(100) NOT NULL,
+      portfolio JSONB NOT NULL
+    )
+  `);
+
+  await client.query(`
+    WITH duplicate_rows AS (
+      SELECT p.*
+      FROM portfolios p
+      JOIN (
+        SELECT LOWER(TRIM(username)) AS canonical_username
+        FROM portfolios
+        GROUP BY LOWER(TRIM(username))
+        HAVING COUNT(*) > 1
+      ) duplicates ON LOWER(TRIM(p.username)) = duplicates.canonical_username
+    )
+    INSERT INTO portfolio_username_case_duplicates_backup (canonical_username, portfolio)
+    SELECT LOWER(TRIM(username)), TO_JSONB(duplicate_rows)
+    FROM duplicate_rows
+  `);
+
+  await client.query(`
+    WITH ranked AS (
+      SELECT
+        ctid AS row_id,
+        ROW_NUMBER() OVER (
+          PARTITION BY LOWER(TRIM(username))
+          ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST, username ASC
+        ) AS rank
+      FROM portfolios
+    )
+    DELETE FROM portfolios p
+    USING ranked
+    WHERE p.ctid = ranked.row_id
+      AND ranked.rank > 1
+  `);
+
+  await client.query(`
+    UPDATE portfolios
+    SET username = LOWER(TRIM(username))
+    WHERE username <> LOWER(TRIM(username))
+  `);
+
+  await client.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_portfolios_username_lower_unique
+    ON portfolios (LOWER(username))
   `);
 }
 
@@ -104,13 +159,13 @@ function mapRow(row) {
 export const portfolioRepository = {
   async getByUsername(username) {
     const isDbAvailable = await ensureReady();
-    const sanitizedUsername = String(username || '').trim().toLowerCase();
+    const sanitizedUsername = canonicalizeUsername(username);
 
     if (isDbAvailable) {
       try {
         return await withDb(async (client) => {
           const { rows } = await client.query(
-            'SELECT * FROM portfolios WHERE LOWER(username) = $1',
+            'SELECT * FROM portfolios WHERE username = $1',
             [sanitizedUsername]
           );
           if (!rows.length) return null;
@@ -145,13 +200,13 @@ export const portfolioRepository = {
 
   async verifyPasskey(username, passkey) {
     const isDbAvailable = await ensureReady();
-    const sanitizedUsername = String(username || '').trim().toLowerCase();
+    const sanitizedUsername = canonicalizeUsername(username);
 
     if (isDbAvailable) {
       try {
         return await withDb(async (client) => {
           const { rows } = await client.query(
-            'SELECT passkey_hash FROM portfolios WHERE LOWER(username) = $1',
+            'SELECT passkey_hash FROM portfolios WHERE username = $1',
             [sanitizedUsername]
           );
           if (!rows.length) return true; // Username does not exist, so it's a new registration (allow it)
@@ -171,8 +226,7 @@ export const portfolioRepository = {
 
   async createOrUpdate(data) {
     const isDbAvailable = await ensureReady();
-    const username = String(data.username || '').trim();
-    const sanitizedUsername = username.toLowerCase();
+    const sanitizedUsername = canonicalizeUsername(data.username);
     const passkeyHash = await hashPasskey(data.passkey);
 
     const theme = data.theme || 'glassmorphic';
@@ -211,7 +265,7 @@ export const portfolioRepository = {
               updated_at = NOW()
             RETURNING *`,
             [
-              username, passkeyHash, theme, JSON.stringify(visibleSections), JSON.stringify(socialLinks),
+              sanitizedUsername, passkeyHash, theme, JSON.stringify(visibleSections), JSON.stringify(socialLinks),
               customDomain, JSON.stringify(seoMetadata), JSON.stringify(skills), JSON.stringify(badges),
               JSON.stringify(projects), JSON.stringify(roadmaps), bio, title
             ]
@@ -229,7 +283,7 @@ export const portfolioRepository = {
     const existing = portfolios[sanitizedUsername] || { createdAt: now };
 
     const updatedPortfolio = {
-      username,
+      username: sanitizedUsername,
       passkeyHash,
       theme,
       visibleSections,
@@ -266,4 +320,8 @@ export const portfolioRepository = {
       updatedAt: updatedPortfolio.updatedAt,
     };
   }
+};
+
+export const __portfolioRepositoryInternals = {
+  ensureSchema,
 };

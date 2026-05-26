@@ -59,6 +59,7 @@ import { useDeveloperMode } from './hooks/useDeveloperMode';
 import { BookmarkProvider } from './context/BookmarkContext';
 import BookmarksDrawer from './components/bookmarks/BookmarksDrawer';
 import { useTheme } from './hooks/useTheme';
+import { useInteractionEffects } from './hooks/useInteractionEffects';
 
 import MoveToTop from "./shared/MoveToTop";
 
@@ -162,14 +163,6 @@ function Cursor() {
         glowRef.current.style.left    = s.mx + 'px';
         glowRef.current.style.top     = s.my + 'px';
         glowRef.current.style.opacity = s.visible ? 1 : 0;
-        trailRef.current.style.left = s.ox + 'px';
-        trailRef.current.style.top = s.oy + s.floatY * 0.4 + 'px';
-        trailRef.current.style.opacity = s.visible ? (s.hovering ? 0 : 0.35) : 0; 
-      }
-      if (glowRef.current) {
-        glowRef.current.style.left = s.mx + 'px';
-        glowRef.current.style.top = s.my + 'px';
-        glowRef.current.style.opacity = s.visible ? 1 : 0; 
       }
       s.raf = requestAnimationFrame(tick);
     };

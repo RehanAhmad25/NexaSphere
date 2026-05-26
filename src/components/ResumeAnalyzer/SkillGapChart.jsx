@@ -1,12 +1,16 @@
+import React, { useMemo } from "react";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis,
   ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-export default function SkillGapChart({ skills }) {
-  const data = skills.map((s) => ({
-    subject: s.name,
-    Current: s.current,
-    Required: s.required,
-  }));
+const SkillGapChart = React.memo(function SkillGapChart({ skills }) {
+  const data = useMemo(() => {
+    if (!skills) return [];
+    return skills.map((s) => ({
+      subject: s.name,
+      Current: s.current,
+      Required: s.required,
+    }));
+  }, [skills]);
 
   return (
     <div className="chart-card">
@@ -25,4 +29,6 @@ export default function SkillGapChart({ skills }) {
       </ResponsiveContainer>
     </div>
   );
-}
+});
+
+export default SkillGapChart;

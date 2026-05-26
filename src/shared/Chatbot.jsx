@@ -5,10 +5,12 @@ import SearchBar from '../components/history/SearchBar';
 import PinnedChats from '../components/history/PinnedChats';
 import { savePrompt } from '../lib/promptStore';
 import { initializeWorkspaces } from '../lib/workspaceService';
+import { buildUrl, getAiApiBase } from '../utils/runtimeConfig';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'bot', text: 'Nexa-Intelligence Online. How can I assist your journey?' }
   ]);
@@ -49,23 +51,52 @@ const Chatbot = () => {
   }, [messages, currentWorkspace]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isSending) return;
     const userMsg = { role: 'user', text: input };
     setMessages(prev => [...prev, userMsg]);
     const currentInput = input;
     setInput('');
+    setIsSending(true);
+
+    const aiChatUrl = buildUrl(getAiApiBase(), '/ai/chat');
+
+    if (!aiChatUrl) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', text: 'Nexa-AI is offline right now. The AI service URL is not configured for this deployment.' }
+      ]);
+      setIsSending(false);
+      return;
+    }
 
     try {
-      const base = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const response = await fetch(`${base}/ai/chat`, {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+      const response = await fetch(aiChatUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: currentInput }),
+        signal: controller.signal,
       });
+      window.clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`AI chat request failed with status ${response.status}`);
+      }
+
       const data = await response.json();
-      setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', text: data.reply || 'Nexa-AI received the request, but the reply came back empty. Please try again.' }
+      ]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Nexa-AI: Core Link Failure. Try again.' }]);
+      console.error('AI chat request failed', e);
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', text: 'Nexa-AI: Core link unavailable right now. Please try again in a moment.' }
+      ]);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -143,9 +174,12 @@ const Chatbot = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Query system..."
+                placeholder={isSending ? 'Transmitting...' : 'Query system...'}
+                disabled={isSending}
               />
-              <button onClick={handleSend} className="send-btn">🚀</button>
+              <button onClick={handleSend} className="send-btn" disabled={isSending}>
+                {isSending ? '...' : '🚀'}
+              </button>
             </div>
           </div>
         </div>

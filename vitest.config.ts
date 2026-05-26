@@ -30,6 +30,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'next/image': path.resolve(__dirname, './src/shared/next-image.jsx'),
+      'next/dynamic': path.resolve(__dirname, './src/shared/next-dynamic.jsx'),
     },
   },
 });

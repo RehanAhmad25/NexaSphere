@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import {
   Bar,
   BarChart,
@@ -8,8 +9,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { linearDecimate } from '../../../utils/dataDecimation';
 
-export default function EventAttendanceChart({ data = [] }) {
+const EventAttendanceChart = React.memo(function EventAttendanceChart({ data = [] }) {
+  const decimatedData = useMemo(() => linearDecimate(data, 100), [data]);
+
   return (
     <section className="chart-container">
       <div className="chart-header">
@@ -20,7 +24,7 @@ export default function EventAttendanceChart({ data = [] }) {
       {data.length > 0 ? (
         <div className="chart-shell">
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data} margin={{ left: -10, right: 8 }}>
+            <BarChart data={decimatedData} margin={{ left: -10, right: 8 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} minTickGap={16} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} width={40} />
@@ -45,4 +49,6 @@ export default function EventAttendanceChart({ data = [] }) {
       )}
     </section>
   );
-}
+});
+
+export default EventAttendanceChart;

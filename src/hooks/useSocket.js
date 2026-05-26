@@ -5,19 +5,21 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import socketClient from '../utils/socketClient';
+import { getSocketServerUrl } from '../utils/runtimeConfig';
 
 export function useSocket(serverUrl) {
   const [connected, setConnected] = useState(false);
   const [socketId, setSocketId] = useState(null);
 
   useEffect(() => {
-    let isMounted = true;
-    const base = serverUrl || (import.meta?.env?.VITE_API_BASE || window.location.origin).replace(/\/+$/, '');
-
-    // Use the initialized socket from socketClient
-    // (We don't need local connect/disconnect listeners for internal state if it causes leaks, 
-    // but if we do, we must ensure they are cleaned up)
+    // Initialize socket connection if not already done
+    const base = serverUrl || getSocketServerUrl();
     const socket = socketClient.initializeSocket(base);
+    if (!socket) {
+      setConnected(false);
+      setSocketId(null);
+      return undefined;
+    }
 
     const onConnect = () => {
       if (!isMounted) return;

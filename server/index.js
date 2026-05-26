@@ -17,15 +17,23 @@ import { initializeSocketIO, emitToRoom, getRoom } from "./config/socket.js";
 import adminStreamRouter from "./routes/adminStream.js";
 import { broadcastSSEEvent } from "./services/sseService.js";
 import rateLimit from "express-rate-limit";
-import { formRateLimiter } from "./middleware/rateLimiter.js";
 import {
   apiRateLimiter,
   authRateLimiter,
+  formRateLimiter,
   notificationRateLimiter,
+  portfolioRateLimiter,
+  validateLimiters,
 } from "./middleware/rateLimiter.js";
+import { getPublicAppUrl } from "./utils/publicAppUrl.js";
 
 import { portfolioRepository } from "./repositories/portfolioRepository.js";
 import { Mutex } from "async-mutex";
+
+// Fail fast on startup if any rate limiter failed to export correctly.
+// This prevents the silent "undefined middleware" failure mode where Express
+// skips a middleware registered as undefined with no error or warning.
+validateLimiters();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -141,28 +149,7 @@ function requiredStrongPassword(name) {
 
 const ADMIN_EVENT_PASSWORD = requiredStrongPassword("ADMIN_EVENT_PASSWORD");
 
-if (process.env.PUBLIC_APP_URL) {
-  if (process.env.PUBLIC_APP_URL.includes(",")) {
-    throw new Error(
-      "PUBLIC_APP_URL must be a single URL, not a comma-separated list",
-    );
-  }
-  try {
-    new URL(process.env.PUBLIC_APP_URL);
-  } catch {
-    throw new Error(
-      `PUBLIC_APP_URL must be a valid absolute URL, got: ${process.env.PUBLIC_APP_URL}`,
-    );
-  }
-}
-
-function getPublicAppUrl() {
-  if (process.env.PUBLIC_APP_URL) {
-    return process.env.PUBLIC_APP_URL.replace(/\/+$/, "");
-  }
-  const firstOrigin = process.env.CORS_ORIGIN?.split(",")[0]?.trim();
-  return firstOrigin || "http://localhost:5173";
-}
+getPublicAppUrl();
 
 function normalizePrivateKey(k) {
   return k.includes("\\n") ? k.replace(/\\n/g, "\n") : k;
@@ -243,6 +230,44 @@ export async function supabaseRequest(pathname, { method = "GET", body } = {}) {
   return text ? JSON.parse(text) : [];
 }
 
+// Paginated variant: appends LIMIT/OFFSET to a PostgREST GET request and reads
+// the total row count from the Content-Range response header (sent when
+// Prefer: count=exact is set). Returns { rows, total } instead of a bare array.
+async function supabasePaginatedRequest(pathname, page, limit) {
+  if (!HAS_SUPABASE) throw new Error("Supabase is not configured");
+  const offset = (page - 1) * limit;
+  const separator = pathname.includes("?") ? "&" : "?";
+  const url = `${SUPABASE_URL}/rest/v1/${pathname}${separator}limit=${limit}&offset=${offset}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      apikey: SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "count=exact",
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase error (${res.status}): ${text}`);
+  }
+  const text = await res.text();
+  const rows = text ? JSON.parse(text) : [];
+  // Content-Range format from PostgREST: "0-19/150" or "*/0" when empty
+  const contentRange = res.headers.get("content-range") || "";
+  const totalMatch = contentRange.match(/\/(\d+)$/);
+  const total = totalMatch ? parseInt(totalMatch[1], 10) : rows.length;
+  return { rows, total };
+}
+
+// Parses ?page and ?limit from a request query object, clamps to safe bounds,
+// and returns normalised integers. Defaults: page=1, limit=20, cap=100.
+function parsePagination(query) {
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 20));
+  return { page, limit };
+}
+
 function toSafeString(value, max = 4000) {
   return String(value ?? "")
     .trim()
@@ -318,26 +343,36 @@ async function canManageActivityEvent({ name, email, phone, password }) {
   );
 }
 
-async function listEventsStore() {
+async function listEventsStore({ page = 1, limit = 20 } = {}) {
   if (HAS_SUPABASE) {
-    const rows = await supabaseRequest("events?select=*&order=created_at.desc");
-    return rows.map((r) =>
-      sanitizeEventRecord({
-        id: r.id,
-        name: r.name,
-        shortName: r.short_name || r.shortName || r.name,
-        date: r.date_text || r.date,
-        description: r.description,
-        status: r.status,
-        icon: r.icon || "Pin",
-        tags: Array.isArray(r.tags) ? r.tags : [],
-        createdAt: r.created_at,
-        updatedAt: r.updated_at,
-      }),
+    const { rows, total } = await supabasePaginatedRequest(
+      "events?select=*&order=created_at.desc",
+      page,
+      limit,
     );
+    return {
+      events: rows.map((r) =>
+        sanitizeEventRecord({
+          id: r.id,
+          name: r.name,
+          shortName: r.short_name || r.shortName || r.name,
+          date: r.date_text || r.date,
+          description: r.description,
+          status: r.status,
+          icon: r.icon || "Pin",
+          tags: Array.isArray(r.tags) ? r.tags : [],
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+        }),
+      ),
+      total,
+    };
   }
   const content = await readContent();
-  return (content.events || []).map((event) => sanitizeEventRecord(event));
+  const all = (content.events || []).map((event) => sanitizeEventRecord(event));
+  const total = all.length;
+  const start = (page - 1) * limit;
+  return { events: all.slice(start, start + limit), total };
 }
 
 function sanitizeEventRecord(event) {
@@ -462,27 +497,35 @@ async function deleteEventStore(id) {
   });
 }
 
-async function listActivityEventsStore(activityKey) {
+async function listActivityEventsStore(activityKey, { page = 1, limit = 20 } = {}) {
   if (HAS_SUPABASE) {
-    const rows = await supabaseRequest(
+    const { rows, total } = await supabasePaginatedRequest(
       `activity_events?activity_key=eq.${encodeURIComponent(activityKey)}&select=*&order=created_at.desc`,
+      page,
+      limit,
     );
-    return rows.map((r) =>
-      sanitizeActivityEventRecord({
-        id: r.id,
-        name: r.name,
-        date: r.date_text || r.date,
-        tagline: r.tagline,
-        description: r.description,
-        status: r.status || "completed",
-        createdAt: r.created_at,
-      }),
-    );
+    return {
+      events: rows.map((r) =>
+        sanitizeActivityEventRecord({
+          id: r.id,
+          name: r.name,
+          date: r.date_text || r.date,
+          tagline: r.tagline,
+          description: r.description,
+          status: r.status || "completed",
+          createdAt: r.created_at,
+        }),
+      ),
+      total,
+    };
   }
   const content = await readContent();
-  return (content.activityEvents?.[activityKey] || []).map((event) =>
+  const all = (content.activityEvents?.[activityKey] || []).map((event) =>
     sanitizeActivityEventRecord(event),
   );
+  const total = all.length;
+  const start = (page - 1) * limit;
+  return { events: all.slice(start, start + limit), total };
 }
 
 function sanitizeActivityEventRecord(event) {
@@ -725,10 +768,10 @@ function isPhoneish(s) {
 
 app.get("/healthz", async (req, res) => {
   try {
-    const events = await listEventsStore();
+    const { total } = await listEventsStore({ page: 1, limit: 1 });
     res.json({
       ok: true,
-      events: events.length,
+      events: total,
       storage: HAS_SUPABASE ? "supabase" : "file",
     });
   } catch (e) {
@@ -744,7 +787,17 @@ app.get("/healthz", async (req, res) => {
 
 app.get("/api/content/events", async (req, res) => {
   try {
-    return res.json({ events: await listEventsStore() });
+    const { page, limit } = parsePagination(req.query);
+    const { events, total } = await listEventsStore({ page, limit });
+    return res.json({
+      events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    });
   } catch (e) {
     return res
       .status(500)
@@ -755,7 +808,17 @@ app.get("/api/content/events", async (req, res) => {
 app.get("/api/content/activity-events/:activityKey", async (req, res) => {
   try {
     const activityKey = toSafeString(req.params.activityKey, 80);
-    return res.json({ events: await listActivityEventsStore(activityKey) });
+    const { page, limit } = parsePagination(req.query);
+    const { events, total } = await listActivityEventsStore(activityKey, { page, limit });
+    return res.json({
+      events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    });
   } catch (e) {
     return res
       .status(500)
@@ -851,7 +914,17 @@ app.use("/api/admin/analytics", adminAuth, analyticsRouter);
 app.use("/api/admin/metrics", adminAuth, adminStreamRouter);
 
 app.get("/api/admin/events", adminAuth, async (req, res) => {
-  return res.json({ events: await listEventsStore() });
+  const { page, limit } = parsePagination(req.query);
+  const { events, total } = await listEventsStore({ page, limit });
+  return res.json({
+    events,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    },
+  });
 });
 
 app.post("/api/admin/events", adminAuth, async (req, res) => {
@@ -1077,14 +1150,7 @@ async function handleForm(formType, req, res) {
   }
 }
 
-const portfolioRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 requests per windowMs
-  message: {
-    error:
-      "Too many portfolio update attempts from this IP, please try again after 15 minutes",
-  },
-});
+// portfolioRateLimiter is imported from ./middleware/rateLimiter.js
 
 const failedPasskeyAttempts = new Map();
 

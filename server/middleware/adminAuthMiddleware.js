@@ -9,8 +9,25 @@ const ADMIN_USERNAME = requiredEnv('ADMIN_USERNAME');
 const ADMIN_PASSWORD = requiredStrongPassword('ADMIN_PASSWORD');
 const LOGIN_WINDOW_MS = parsePositiveInteger(process.env.ADMIN_LOGIN_WINDOW_MS, 15 * 60 * 1000);
 const LOGIN_MAX_ATTEMPTS = parsePositiveInteger(process.env.ADMIN_LOGIN_MAX_ATTEMPTS, 5);
+const LOGIN_MAX_TRACKED_IPS = parsePositiveInteger(process.env.ADMIN_LOGIN_MAX_TRACKED_IPS, 10000);
+const LOGIN_CLEANUP_INTERVAL_MS = parsePositiveInteger(process.env.ADMIN_LOGIN_CLEANUP_INTERVAL_MS, 15 * 60 * 1000);
 
 const loginAttemptsByIp = new Map();
+
+// Periodic background cleanup of expired IPs to prevent memory exhaustion
+const cleanupAttemptsTimer = setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of loginAttemptsByIp.entries()) {
+    if (entry.expiresAt <= now) {
+      loginAttemptsByIp.delete(ip);
+    }
+  }
+}, LOGIN_CLEANUP_INTERVAL_MS);
+
+// Allow Node process to exit cleanly if this timer is active
+if (cleanupAttemptsTimer && typeof cleanupAttemptsTimer.unref === 'function') {
+  cleanupAttemptsTimer.unref();
+}
 
 function requiredEnv(name) {
   const value = String(process.env[name] || '').trim();
@@ -42,11 +59,44 @@ function requiredStrongPassword(name) {
 }
 
 function getClientIp(req) {
-  return String(req.ip || req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim() || 'unknown';
+  const ip = String(req.ip || req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim() || 'unknown';
+  // Truncate to maximum 128 characters to prevent extremely large malicious headers from causing memory exhaustion
+  return ip.slice(0, 128);
 }
 
 function recordLoginAttempt(ip) {
   const now = Date.now();
+
+  // Enforce size-based bound to protect against memory exhaustion via distributed/IP-rotating brute force
+  if (loginAttemptsByIp.size >= LOGIN_MAX_TRACKED_IPS && !loginAttemptsByIp.has(ip)) {
+    // 1. Evict any expired entries
+    for (const [key, entry] of loginAttemptsByIp.entries()) {
+      if (entry.expiresAt <= now) {
+        loginAttemptsByIp.delete(key);
+      }
+    }
+
+    // 2. If still full, use intelligent eviction to prioritize unblocked IPs over active brute-force attackers
+    if (loginAttemptsByIp.size >= LOGIN_MAX_TRACKED_IPS) {
+      let evictKey = null;
+      for (const [key, entry] of loginAttemptsByIp.entries()) {
+        if (entry.attempts <= LOGIN_MAX_ATTEMPTS) {
+          evictKey = key;
+          break;
+        }
+      }
+
+      // Fallback to oldest entry (FIFO) only if all tracked IPs are currently blocked
+      if (!evictKey) {
+        evictKey = loginAttemptsByIp.keys().next().value;
+      }
+
+      if (evictKey) {
+        loginAttemptsByIp.delete(evictKey);
+      }
+    }
+  }
+
   const existing = loginAttemptsByIp.get(ip);
   const attempts = existing && existing.expiresAt > now ? existing.attempts : 0;
   const entry = {
@@ -151,4 +201,16 @@ export const adminAuthMiddleware = {
   login,
   logout,
   requireAdmin,
+  // Private test exports for auditing & validation
+  _getLoginAttemptsMapSize: () => loginAttemptsByIp.size,
+  _clearAllLoginAttempts: () => loginAttemptsByIp.clear(),
+  _cleanupExpiredAttempts: () => {
+    const now = Date.now();
+    for (const [ip, entry] of loginAttemptsByIp.entries()) {
+      if (entry.expiresAt <= now) {
+        loginAttemptsByIp.delete(ip);
+      }
+    }
+  },
+  _getAttemptsTimer: () => cleanupAttemptsTimer,
 };

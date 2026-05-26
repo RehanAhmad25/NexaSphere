@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { buildUrl, getAiApiBase } from '../../utils/runtimeConfig';
 
 export default function AiMentor() {
   const [code, setCode] = useState('');
@@ -12,8 +13,12 @@ export default function AiMentor() {
     setResult(null);
 
     try {
-      const base = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${base}/ai/review`, {
+      const reviewUrl = buildUrl(getAiApiBase(), '/ai/review');
+      if (!reviewUrl) {
+        throw new Error('AI review service is not configured');
+      }
+
+      const res = await fetch(reviewUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, language })

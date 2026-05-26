@@ -3,7 +3,7 @@ import InterestSelector from '../../components/dashboard/InterestSelector';
 import QuestTracker from '../../components/dashboard/QuestTracker';
 import Leaderboard from '../../components/dashboard/Leaderboard';
 import AiMentor from '../../components/dashboard/AiMentor';
-import { DashboardCardSkeleton } from '../../components/ui/skeleton/DashboardCardSkeleton';
+import { buildUrl, getAiApiBase } from '../../utils/runtimeConfig';
 
 export default function DashboardPage({ onBack }) {
   // Mock current user for demonstration
@@ -49,8 +49,12 @@ export default function DashboardPage({ onBack }) {
     if (interests.length === 0) return;
     setLoadingRecs(true);
     try {
-      const base = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-      const res = await fetch(`${base}/recommend/events/${currentUser.id}`);
+      const recommendationsUrl = buildUrl(getAiApiBase(), `/recommend/events/${currentUser.id}`);
+      if (!recommendationsUrl) {
+        throw new Error('Recommendations service is not configured');
+      }
+
+      const res = await fetch(recommendationsUrl);
       if (res.ok) {
         const data = await res.json();
         setRecommendations(data.recommended_events || []);

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { supabaseRequest, HAS_SUPABASE } from '../index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,10 +10,6 @@ const CONTENT_FILE = path.join(__dirname, '..', 'data', 'content.json');
 
 const router = Router();
 
-/**
- * Read stored content from the local JSON file.
- * Returns the default structure if the file is missing or unreadable.
- */
 async function readContentSafe() {
   try {
     const raw = await fs.readFile(CONTENT_FILE, 'utf8');
@@ -22,74 +19,88 @@ async function readContentSafe() {
   }
 }
 
-/**
- * GET /
- * Returns a high-level summary of events, activity events, and core team members.
- */
-router.get('/', async (_req, res) => {
+router.get('/stats', async (_req, res) => {
   try {
-    const content = await readContentSafe();
+    let totalUsers = null;
+    let activeRegistrations = null;
+    let upcomingEvents = null;
+    const conversionRate = null;
 
-    const events = content.events || [];
-    const activityEvents = content.activityEvents || {};
-    const coreTeam = content.coreTeam || [];
-
-    const upcomingEvents = events.filter(e => e.status === 'upcoming');
-    const completedEvents = events.filter(e => e.status === 'completed');
-
-    const activityEventCounts = {};
-    let totalActivityEvents = 0;
-    for (const [key, list] of Object.entries(activityEvents)) {
-      const count = Array.isArray(list) ? list.length : 0;
-      activityEventCounts[key] = count;
-      totalActivityEvents += count;
+    if (HAS_SUPABASE) {
+      const [events, submissions] = await Promise.all([
+        supabaseRequest("events?select=status"),
+        supabaseRequest("form_submissions?select=id,college_email")
+      ]);
+      
+      upcomingEvents = events.filter(e => e.status === 'upcoming').length;
+      activeRegistrations = submissions.length;
+      
+      const uniqueEmails = new Set(submissions.map(s => s.college_email).filter(Boolean));
+      totalUsers = uniqueEmails.size > 0 ? uniqueEmails.size : submissions.length;
+    } else {
+      const content = await readContentSafe();
+      upcomingEvents = (content.events || []).filter(e => e.status === 'upcoming').length;
     }
 
-    res.json({
-      overview: {
-        totalEvents: events.length,
-        upcomingEvents: upcomingEvents.length,
-        completedEvents: completedEvents.length,
-        totalActivityEvents,
-        totalCoreTeamMembers: coreTeam.length,
-      },
-      activityEventCounts,
-    });
+    res.json({ totalUsers, activeRegistrations, upcomingEvents, conversionRate });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Failed to generate analytics' });
+    res.status(500).json({ error: error.message || 'Failed to generate stats' });
   }
 });
 
-/**
- * GET /events
- * Returns detailed analytics for events including tag distribution.
- */
+router.get('/growth', async (_req, res) => {
+  try {
+    let growth = [];
+
+    if (HAS_SUPABASE) {
+      const submissions = await supabaseRequest("form_submissions?select=created_at&order=created_at.asc");
+      const dailyCounts = {};
+      
+      for (const sub of submissions) {
+        if (!sub.created_at) continue;
+        const date = sub.created_at.split('T')[0];
+        dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+      }
+      
+      growth = Object.keys(dailyCounts).sort().map(date => ({
+        date,
+        registrations: dailyCounts[date]
+      }));
+    }
+
+    res.json(growth);
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to generate growth data' });
+  }
+});
+
 router.get('/events', async (_req, res) => {
   try {
-    const content = await readContentSafe();
-    const events = content.events || [];
+    let eventStats = [];
 
-    const tagFrequency = {};
-    for (const event of events) {
-      const tags = Array.isArray(event.tags) ? event.tags : [];
-      for (const tag of tags) {
-        tagFrequency[tag] = (tagFrequency[tag] || 0) + 1;
+    if (HAS_SUPABASE) {
+      const [events, submissions] = await Promise.all([
+        supabaseRequest("events?select=id,name"),
+        supabaseRequest("form_submissions?select=form_type")
+      ]);
+      
+      const countsByFormType = {};
+      for (const sub of submissions) {
+        if (!sub.form_type) continue;
+        countsByFormType[sub.form_type] = (countsByFormType[sub.form_type] || 0) + 1;
       }
+
+      eventStats = events.map(e => ({
+        name: e.name,
+        capacity: null,
+        attendance: countsByFormType[e.id] || 0,
+        waitlist: null
+      }));
     }
 
-    const statusBreakdown = {};
-    for (const event of events) {
-      const status = event.status || 'unknown';
-      statusBreakdown[status] = (statusBreakdown[status] || 0) + 1;
-    }
-
-    res.json({
-      total: events.length,
-      statusBreakdown,
-      tagFrequency,
-    });
+    res.json(eventStats);
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Failed to generate event analytics' });
+    res.status(500).json({ error: error.message || 'Failed to generate events data' });
   }
 });
 

@@ -1,3 +1,5 @@
+import { generateUUID } from '../utils/uuid.js';
+
 /**
  * Simple in-memory notifications service.
  * For production, replace with DB-backed implementation (Postgres, Mongo, etc.).
@@ -19,7 +21,7 @@ export function addNotification(userId = 'global', payload = {}) {
   while (list.length >= MAX_PER_USER) {
     list.pop();
   }
-  const id = `${Date.now()}-${Math.random().toString(36).substr(2,6)}`;
+  const id = generateUUID();
   const note = {
     id,
     type: payload.type || 'system',

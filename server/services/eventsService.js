@@ -2,8 +2,8 @@ import { eventsRepository } from '../repositories/eventsRepository.js';
 import { eventSchema } from '../validators/eventSchemas.js';
 
 export const eventsService = {
-  async listEvents() {
-    return eventsRepository.list();
+  async listEvents({ page = 1, limit = 20 } = {}) {
+    return eventsRepository.list({ page, limit });
   },
 
   async createEvent(input) {
@@ -20,4 +20,3 @@ export const eventsService = {
     return eventsRepository.delete(id);
   },
 };
-

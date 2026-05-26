@@ -122,7 +122,7 @@ function doPost(e) {
     }
 
     var data = JSON.parse(raw);
-
+    
     // Handle admin requests (getResponses) with token verification
     if (data.action === 'getResponses') {
       var token = data.token;
@@ -157,6 +157,14 @@ function doPost(e) {
       } catch (err) {
         return _respond({ ok: false, error: err.message });
       }
+    }
+
+    // CAPTCHA validation only for public submissions
+    if (!verifyTurnstileToken(data.turnstileToken)) {
+      return _respond({
+        ok: false,
+        error: 'CAPTCHA verification failed'
+      });
     }
 
     // Handle form submissions (original behavior)

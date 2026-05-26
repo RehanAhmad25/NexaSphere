@@ -132,10 +132,7 @@ if (compact) return (
             <div className="ns-nav-divider"/>
             <span className="ns-nav-brand">NexaSphere</span>
           </div>
-
-<div className="ns-nav-actions">
-  <NotificationBell />
-  <BookmarkToggle onToggle={onToggleBookmarks} />
+        </div>
 
 <div className="ns-nav-actions">
   <NotificationBell />
