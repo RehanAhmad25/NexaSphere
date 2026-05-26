@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -7,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { decimateData } from '../../../utils/dataDecimation';
 
 function formatTick(value) {
   if (!value) return '';
@@ -20,7 +22,11 @@ function formatTick(value) {
   }).format(date);
 }
 
-export default function UserGrowthChart({ data = [] }) {
+const UserGrowthChart = React.memo(function UserGrowthChart({ data = [] }) {
+  const decimatedData = useMemo(() => {
+    return decimateData(data, 100, 'date', 'registrations');
+  }, [data]);
+
   return (
     <section className="chart-container">
       <div className="chart-header">
@@ -31,7 +37,7 @@ export default function UserGrowthChart({ data = [] }) {
       {data.length > 0 ? (
         <div className="chart-shell">
           <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={data}>
+            <AreaChart data={decimatedData}>
               <defs>
                 <linearGradient id="userGrowthFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#cc1111" stopOpacity={0.42} />
@@ -74,4 +80,6 @@ export default function UserGrowthChart({ data = [] }) {
       )}
     </section>
   );
-}
+});
+
+export default UserGrowthChart;
