@@ -59,6 +59,7 @@ import { useDeveloperMode } from './hooks/useDeveloperMode';
 import { BookmarkProvider } from './context/BookmarkContext';
 import BookmarksDrawer from './components/bookmarks/BookmarksDrawer';
 import { useTheme } from './hooks/useTheme';
+import { useInteractionEffects } from './hooks/useInteractionEffects';
 
 import MoveToTop from "./shared/MoveToTop";
 
