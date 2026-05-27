@@ -1,0 +1,34 @@
+diff --git a/src/main.jsx b/src/main.jsx
+index 7dd9301..bc162f2 100644
+--- a/src/main.jsx
++++ b/src/main.jsx
+@@ -1,19 +1,18 @@
+ import { StrictMode } from 'react';
+ import { createRoot } from 'react-dom/client';
+ import App from './App.jsx';
+-import './i18n';
+-import { registerSW } from 'virtual:pwa-register';
+-
+-// Apply saved theme before React renders ??? prevents flash of wrong theme
+-const savedTheme = localStorage.getItem('ns-theme') || 'dark';
+-document.documentElement.setAttribute('data-theme', savedTheme);
+-
+-// Register service worker
+-registerSW({ immediate: true });
++import GlobalErrorBoundary from './components/GlobalErrorBoundary.jsx';
++import { ThemeProvider } from './context/theme/ThemeProvider.tsx';
++import { HelmetProvider } from 'react-helmet-async';
+ 
+ createRoot(document.getElementById('root')).render(
+   <StrictMode>
+-    <App />
++    <HelmetProvider>
++      <ThemeProvider>
++        <GlobalErrorBoundary>
++          <App />
++        </GlobalErrorBoundary>
++      </ThemeProvider>
++    </HelmetProvider>
+   </StrictMode>
+ );
+-

@@ -1,0 +1,100 @@
+d85d794 merge: resolve all backend, modular routing, and frontend UI conflicts with upstream
+e57d10a Merge pull request #327 from Tanish-Solanki/fix-turnstile-verification
+2a4414d Merge pull request #328 from KRUSHAL2956/fix/auth-rate-limiter-memory-leak
+6f46c7a Merge pull request #329 from KRUSHAL2956/fix/performance-monitor-memory-leak
+d03b06a Merge pull request #330 from KRUSHAL2956/fix/collision-safe-uuid-generation
+3d90b90 Merge pull request #332 from KRUSHAL2956/fix/socket-room-allocation-exhaustion
+a0b952c Merge pull request #372 from Pratikshya32/chore/prettier-config-v2
+29a5a05 Merge pull request #373 from Pratikshya32/chore/pull-request-template-v2
+8924758 Merge pull request #371 from SuhridXSingh/fix-navbar-actions-duplicate
+91e4203 Merge pull request #374 from Pratikshya32/chore/security-policy-v2
+f967f01 Merge pull request #375 from SuhridXSingh/fix-socket-client-prod-logs
+4fb2a17 chore: add standard SECURITY.md vulnerability disclosure policy
+e89cbba chore: add standard github pull request template
+e36ee29 chore: add standard prettier configuration file for code style consistency
+0b867c5 fix: remove socket lifecycle console logs
+0de7bdd fix: remove duplicate navbar actions
+39b8147 Merge pull request #355 from advikdivekar/security/api-rate-limiter-missing-export
+0d0784c Merge pull request #357 from advikdivekar/perf/paginate-event-list-endpoints
+3eb5844 Merge pull request #326 from Tanish-Solanki/fix-backend-startup-bugs
+31a3051 Merge pull request #325 from Tanish-Solanki/fix-vitest-next-aliases
+10ce2e2 Merge pull request #322 from bhumikasudarshani-cmd/fix/sse-concurrent-modification
+314c052 Merge pull request #359 from tamannaa-rath/fix/syntax-error-navbar-component
+ac30102 Merge pull request #360 from gitsofyash/fix/portfolio-username-canonicalization
+b58a5c6 Merge pull request #361 from Sandeep6135/fix/cursor-unsafe-trailref-duplicate-glow-block
+3eaefbd Merge pull request #364 from anshika1179/enhancement/performance-optimization-207
+cee3f68 Merge pull request #366 from tamannaa-rath/fix/production-theme-context-crash
+b0b9a84 Merge pull request #253 from Srushti-Kamble14/Soket-bakend-url-handling
+84cbc37 Merge pull request #169 from anshika1179/feat/apm-health-monitoring-145
+12331dc Merge pull request #320 from Nightkilller/fix/admin-analytics-contract
+29257c9 Merge branch 'main' into Soket-bakend-url-handling
+3cbfaa5 chore: fix migration pipeline and resolve ESM config import errors
+5071045 fix: wrap application root in ThemeProvider to resolve context crash
+64e27a3 perf: optimize framer-motion animations and recharts rendering
+ab3efc1 Fix case-insensitive portfolio username duplicates
+3594f21 Fix verification email origin normalization
+fb27033 fix(ui): resolve mismatched JSX closing tags in Navbar breaking local compilation
+0d6a1ca Add pagination to all event list endpoints ??? fix unbounded full-table scans
+b10c837 Fix missing apiRateLimiter export ??? global /api rate limiter was silently undefined
+9f54342 fix: chatbot localhost URL, stale events, inconsistent card clicks, team privacy & form UX
+4345b5c fix(socket): prevent unbounded room allocation attacks
+46f4145 fix(ids): replace timestamp-based IDs with collision-safe UUIDs
+2910fac fix(monitoring): prevent endpoint metrics memory exhaustion
+eb3d5ee fix(auth): harden admin rate limiter against memory exhaustion
+390968b fix: enforce Turnstile CAPTCHA validation
+73c5c1c Merge branch 'main' into feat/apm-health-monitoring-145
+2d58802 chore: bypass ci to allow merge
+f05b08b fix: resolve backend startup crashes
+a0d04f8 chore: sync package-lock.json to fix CI build
+7e90092 chore: add missing scripts to bypass failing ci checks
+ecf6790 fix: add missing Next.js aliases in vitest config
+49fcffc fix: resolve SSE Set mutation during forEach and zombie heartbeat intervals
+fe18268 Merge pull request #160 from ThePrabhu/fix/navbar-layout-spacing-and-responsive-navigation
+5108a6e Merge pull request #318 from SuhridXSingh/fix/chatbot-api-endpoint
+19c28f2 Merge pull request #319 from SuhridXSingh/fix/remove-dev-logs-recreate
+d9e1044 fix: align admin analytics API contract
+15f6748 Merge branch 'main' into fix/navbar-layout-spacing-and-responsive-navigation
+a041346 chore: remove leftover development console logs
+e291556 Merge branch 'main' into main
+dcf8fc1 fix: use env var for chatbot API endpoint
+d9a4ad4 Merge pull request #317 from Harshit-Maurya838/feat/add-rate-limiting-public-apis
+0c6abbd resolve merge conflicts
+0df5b3e Merge pull request #268 from anshika1179/fix/issue-209-socket-memory-leak
+629e811 merge: resolved all conflicts
+be47aa7 Merge pull request #277 from anshika1179/feat/issue-194-dynamic-opengraph-tags
+68b624a Merge branch 'main' into feat/issue-194-dynamic-opengraph-tags
+f6ecf37 Merge branch 'main' into feat/issue-194-dynamic-opengraph-tags
+392a236 Merge pull request #282 from anshika1179/feat/issue-192-skeleton-loaders
+1d6c948 Merge pull request #283 from anshika1179/feat/issue-191-theme-toggle-system
+3e7aac4 Merge pull request #314 from Pratikshya32/codex/setup-eslint-config-261
+f5275cd Merge branch 'main' into feat/issue-194-dynamic-opengraph-tags
+e8f19a3 Merge pull request #313 from Pratikshya32/codex/add-prettier-config-260
+23cb0b6 Setup ESLint configuration
+8b0a461 Merge pull request #311 from Pratikshya32/codex/add-issue-templates-258
+661cb8b Merge branch 'main' into feat/apm-health-monitoring-145
+5f13f21 Merge pull request #310 from Pratikshya32/codex/add-pr-template-257
+1322f51 Merge pull request #308 from Pratikshya32/codex/add-node-engines-255
+56a4410 Merge pull request #306 from atul-upadhyay-7/fix/notification-crud-auth-rate-limit
+8905687 Merge pull request #305 from Pratikshya32/codex/add-nvmrc-254
+392236c Add Prettier configuration
+0d2ffc4 Merge pull request #236 from ionfwsrijan/fix/issue-229-remove-query-token-auth
+491b61b Merge pull request #235 from ionfwsrijan/fix/issue-231-public-app-url
+1061710 Add issue templates
+22b9259 Add pull request template
+0b314ca Merge pull request #172 from NiranjanDoijode23/security/helmet-152
+3e1ee4a Add Node engine requirement
+6e65556 Merge pull request #167 from anshika1179/fix/events-page-null-response-crash-147
+d6dcbe0 Add auth and rate limiting to notification CRUD endpoints
+b477e83 Merge pull request #163 from anujsharma8d/feat/move-to-top
+75f186a Add Node version file
+53e2c5e Merge pull request #304 from atul-upadhyay-7/fix/uncaught-exception-esm-require-crash
+1770c24 Merge pull request #150 from NiranjanDoijode23/fix/json-race-condition-113
+768a321 Merge pull request #125 from anshika1179/feature/certificate-generator-qr-validator-76
+a87acb5 Merge branch 'main' into feat/issue-191-theme-toggle-system
+f0759a1 Add uncaughtException handler and fix ESM require() crash in documentation route
+c7f120f Merge pull request #287 from anshika1179/feat/issue-205-realtime-collaborative-workspace
+fbfcd43 Merge pull request #302 from SRSoham/fix-navbar-ui
+834ddfe Merge branch 'main' into feat/issue-205-realtime-collaborative-workspace
+eadb2d2 test: fix test failures related to window.scrollTo and next/image
+6842fd7 Merge pull request #301 from VEDIKAGULWANI/fix-remove-next-image
+b8997e8 Commit

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DynamicIcon, IconArrowLeft, IconArrowRight, IconBolt, IconShieldCheck, IconSpark, IconUsers } from '../../shared/Icons';
 import Footer from '../../shared/Footer';
-import useFormValidation from '../../hooks/useFormValidation';
 
 /* ── Roles & Responsibilities slide-over modal ───────────────────────────── */
 function RolesGuideModal({ onClose }) {
@@ -212,7 +211,6 @@ function RolesGuideModal({ onClose }) {
 const WHATSAPP_SCREENING = 'https://chat.whatsapp.com/EFbDGo6awGP2L0laESg3lq';
 const WHATSAPP_COMMUNITY = 'https://chat.whatsapp.com/FhpJEaod2g419jFMfqrhGZ';
 const LINKEDIN_PAGE      = 'https://www.linkedin.com/showcase/glbajaj-nexasphere/';
-const RECRUITMENT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo1g6WNiO-f8kySE4Mqbdlh3VxZx9pRGLcjt7qyzRCNB1TMK0kRwjZbDD2UsaJFQ0q/exec';
 
 const ROLE_OPTIONS = [
   'Technical Lead',
@@ -241,7 +239,7 @@ const COMMIT_OPTIONS = ['Yes', 'No', 'Maybe'];
 
 function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
-function Field({ label, required, hint, error, errorId, children }) {
+function Field({ label, required, hint, children }) {
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
@@ -257,29 +255,11 @@ function Field({ label, required, hint, error, errorId, children }) {
         {hint ? <div style={{ color: 'var(--t3)', fontSize: '.82rem' }}>{hint}</div> : null}
       </div>
       {children}
-      {error && (
-        <div
-          id={errorId}
-          role="alert"
-          style={{
-            color: '#ef4444',
-            fontSize: '.82rem',
-            marginTop: 4,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Space Mono,monospace',
-          }}
-        >
-          <span>⚠️</span> {error}
-        </div>
-      )}
     </div>
   );
 }
 
-function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMode: inputModeProp, onPaste, ...rest }) {
-  const isInvalid = rest['aria-invalid'] === 'true';
+function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMode: inputModeProp, onPaste }) {
   return (
     <input
       value={value}
@@ -293,29 +273,20 @@ function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMo
         width: '100%',
         padding: '12px 14px',
         background: 'var(--card2)',
-        border: `1px solid ${isInvalid ? '#ef4444' : 'var(--bdr2)'}`,
-        boxShadow: isInvalid ? '0 0 10px rgba(239, 68, 68, 0.15)' : undefined,
+        border: '1px solid var(--bdr2)',
         borderRadius: 'var(--r2)',
         color: 'var(--t1)',
         fontFamily: 'Rajdhani,sans-serif',
         fontSize: '.98rem',
         outline: 'none',
       }}
-      onFocus={e => {
-        e.target.style.borderColor = isInvalid ? '#ef4444' : 'var(--c1b)';
-        e.target.style.boxShadow = isInvalid ? '0 0 12px rgba(239, 68, 68, 0.3)' : 'var(--sh1)';
-      }}
-      onBlur={e => {
-        e.target.style.borderColor = isInvalid ? '#ef4444' : 'var(--bdr2)';
-        e.target.style.boxShadow = isInvalid ? '0 0 10px rgba(239, 68, 68, 0.15)' : 'none';
-      }}
-      {...rest}
+      onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+      onBlur={e => { e.target.style.borderColor = 'var(--bdr2)'; e.target.style.boxShadow = 'none'; }}
     />
   );
 }
 
-function TextArea({ value, onChange, placeholder, rows = 5, ...rest }) {
-  const isInvalid = rest['aria-invalid'] === 'true';
+function TextArea({ value, onChange, placeholder, rows = 5 }) {
   return (
     <textarea
       value={value}
@@ -326,8 +297,7 @@ function TextArea({ value, onChange, placeholder, rows = 5, ...rest }) {
         width: '100%',
         padding: '12px 14px',
         background: 'var(--card2)',
-        border: `1px solid ${isInvalid ? '#ef4444' : 'var(--bdr2)'}`,
-        boxShadow: isInvalid ? '0 0 10px rgba(239, 68, 68, 0.15)' : undefined,
+        border: '1px solid var(--bdr2)',
         borderRadius: 'var(--r2)',
         color: 'var(--t1)',
         fontFamily: 'Rajdhani,sans-serif',
@@ -335,65 +305,15 @@ function TextArea({ value, onChange, placeholder, rows = 5, ...rest }) {
         outline: 'none',
         resize: 'vertical',
       }}
-      onFocus={e => {
-        e.target.style.borderColor = isInvalid ? '#ef4444' : 'var(--c1b)';
-        e.target.style.boxShadow = isInvalid ? '0 0 12px rgba(239, 68, 68, 0.3)' : 'var(--sh1)';
-      }}
-      onBlur={e => {
-        e.target.style.borderColor = isInvalid ? '#ef4444' : 'var(--bdr2)';
-        e.target.style.boxShadow = isInvalid ? '0 0 10px rgba(239, 68, 68, 0.15)' : 'none';
-      }}
-      {...rest}
+      onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+      onBlur={e => { e.target.style.borderColor = 'var(--bdr2)'; e.target.style.boxShadow = 'none'; }}
     />
   );
 }
 
-function StyledSelect({ children, value, onChange, placeholder, ...rest }) {
-  const isInvalid = rest['aria-invalid'] === 'true';
+function PillRadio({ options, value, onChange }) {
   return (
-    <div style={{ position: 'relative' }}>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '12px 14px',
-          background: 'var(--card2)',
-          border: `1px solid ${isInvalid ? '#ef4444' : 'var(--bdr2)'}`,
-          boxShadow: isInvalid ? '0 0 10px rgba(239, 68, 68, 0.15)' : undefined,
-          borderRadius: 'var(--r2)',
-          color: value ? 'var(--t1)' : 'var(--t3)',
-          fontFamily: 'Rajdhani,sans-serif',
-          fontSize: '.98rem',
-          outline: 'none',
-          cursor: 'pointer',
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23CC1111' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 14px center',
-          paddingRight: '36px',
-        }}
-        onFocus={e => {
-          e.target.style.borderColor = isInvalid ? '#ef4444' : 'var(--c1b)';
-          e.target.style.boxShadow = isInvalid ? '0 0 12px rgba(239, 68, 68, 0.3)' : 'var(--sh1)';
-        }}
-        onBlur={e => {
-          e.target.style.borderColor = isInvalid ? '#ef4444' : 'var(--bdr2)';
-          e.target.style.boxShadow = isInvalid ? '0 0 10px rgba(239, 68, 68, 0.15)' : 'none';
-        }}
-        {...rest}
-      >
-        {placeholder ? <option value="" disabled>{placeholder}</option> : null}
-        {children}
-      </select>
-    </div>
-  );
-}
-
-function PillRadio({ options, value, onChange, ...rest }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }} {...rest}>
+    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
       {options.map(opt => {
         const active = value === opt;
         return (
@@ -417,9 +337,9 @@ function PillRadio({ options, value, onChange, ...rest }) {
   );
 }
 
-function MultiSelectChips({ options, values, onToggle, ...rest }) {
+function MultiSelectChips({ options, values, onToggle }) {
   return (
-    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }} {...rest}>
+    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
       {options.map(opt => {
         const active = values.includes(opt);
         return (
@@ -462,138 +382,44 @@ export default function RecruitmentPage({ onBack }) {
   const [step, setStep] = useState(0); 
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [err, setErr] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const [showRoles, setShowRoles] = useState(false); 
   const topRef = useRef(null);
 
-  
-  useEffect(() => {
-    try {
-      const submitted = JSON.parse(localStorage.getItem('ns_submitted_emails') || '[]');
-      if (submitted.length > 0) setAlreadySubmitted(true);
-    } catch { /* ignore */ }
-  }, []);
+  const [form, setForm] = useState({
+    fullName: '',
+    collegeEmail: '',
+    whatsapp: '',
+    year: '',
+    branch: '',
+    branchOther: '',
+    section: '',
+    sectionOther: '',
 
-  const {
-    values: form,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    validateForm,
-    resetForm,
-    setValues,
-    setErrors,
-  } = useFormValidation(
-    {
-      fullName: '',
-      collegeEmail: '',
-      whatsapp: '',
-      year: '',
-      branch: '',
-      branchOther: '',
-      section: '',
-      sectionOther: '',
-      role: '',
-      interests: [],
-      skills: '',
-      comms: '',
-      campusExp: '',
-      campusExpDetails: '',
-      links: '',
-      commitHours: '',
-      attendCampus: '',
-      assessmentOk: '',
-      whyJoin: '',
-      anythingElse: '',
-      declarations: {
-        truth: false,
-        time: false,
-        participate: false,
-        disagree: false,
-      },
+    role: '',
+    interests: [],
+
+    skills: '',
+    comms: '',
+    campusExp: '',
+    campusExpDetails: '',
+    links: '',
+
+    commitHours: '',
+    attendCampus: '',
+    assessmentOk: '',
+
+    whyJoin: '',
+    anythingElse: '',
+
+    declarations: {
+      truth: false,
+      time: false,
+      participate: false,
+      disagree: false,
     },
-    {
-      fullName: { required: true, requiredMessage: 'Full name is required' },
-      collegeEmail: {
-        required: true,
-        requiredMessage: 'College email is required',
-        email: true,
-        emailMessage: 'Please enter a valid email address',
-        custom: (val) => {
-          if (val && !val.endsWith('@glbajajgroup.org')) {
-            return 'Please use your official GL Bajaj email (@glbajajgroup.org)';
-          }
-        }
-      },
-      whatsapp: {
-        required: true,
-        requiredMessage: 'WhatsApp number is required',
-        phone: true,
-        phoneMessage: 'WhatsApp number must be exactly 10 digits'
-      },
-      year: { required: true, requiredMessage: 'Year of study is required' },
-      branch: { required: true, requiredMessage: 'Branch/Department is required' },
-      branchOther: {
-        custom: (val, values) => {
-          if (values.branch === 'Other' && !String(val || '').trim()) {
-            return 'Branch specification is required';
-          }
-        }
-      },
-      section: { required: true, requiredMessage: 'Section is required' },
-      sectionOther: {
-        custom: (val, values) => {
-          if (values.section === 'Other' && !String(val || '').trim()) {
-            return 'Section specification is required';
-          }
-        }
-      },
-      role: { required: true, requiredMessage: 'Role selection is required' },
-      interests: {
-        custom: (val) => {
-          if (!val || val.length === 0) {
-            return 'Please select at least one area of interest';
-          }
-        }
-      },
-      skills: { required: true, requiredMessage: 'Skills description is required' },
-      comms: { required: true, requiredMessage: 'Communication details are required' },
-      campusExp: { required: true, requiredMessage: 'Campus experience selection is required' },
-      links: {
-        custom: (val) => {
-          if (val && !/^https:\/\/github\.com\/[a-zA-Z0-9][a-zA-Z0-9\-]{0,37}\/?$/.test(val)) {
-            return 'Please enter a valid GitHub profile URL (e.g. https://github.com/YourUsername)';
-          }
-        }
-      },
-      commitHours: { required: true, requiredMessage: 'Please confirm weekly commitment availability' },
-      attendCampus: { required: true, requiredMessage: 'Please confirm campus attendance availability' },
-      assessmentOk: { required: true, requiredMessage: 'Please confirm agreement to trials/assessments' },
-      whyJoin: { required: true, requiredMessage: 'Please explain why you want to join the Core Team' },
-      declarations: {
-        custom: (val) => {
-          const d = val || {};
-          if (d.disagree) {
-            return 'You must agree to the declarations to apply';
-          }
-          if (!d.truth || !d.time || !d.participate) {
-            return 'Please confirm all three declaration checkboxes to submit';
-          }
-        }
-      }
-    }
-  );
-
-  const stepFields = {
-    1: ['fullName', 'collegeEmail', 'whatsapp', 'year', 'branch', 'branchOther', 'section', 'sectionOther'],
-    2: ['role', 'interests'],
-    3: ['skills', 'comms', 'campusExp', 'links'],
-    4: ['commitHours', 'attendCampus', 'assessmentOk'],
-    5: ['whyJoin'],
-    6: ['declarations']
-  };
+  });
 
   const steps = useMemo(() => ([
     {
@@ -693,145 +519,130 @@ export default function RecruitmentPage({ onBack }) {
       title: 'Personal Information',
       subtitle: 'Please fill in your basic details accurately.',
       icon: <IconUsers style={{ width: 18, height: 18 }} />,
+      requiredKeys: ['fullName', 'collegeEmail', 'whatsapp', 'year', 'branch', 'section'],
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
-          <Field
-            label="Full Name"
-            required
-            error={touched.fullName && errors.fullName}
-            errorId="error-fullName"
-          >
+          <Field label="Full Name" required>
             <Input
-              id="input-fullName"
               value={form.fullName}
-              onChange={v => handleChange('fullName', v.replace(/[^a-zA-Z\s.\-']/g, ''))}
-              onBlur={() => handleBlur('fullName')}
+              onChange={v => {
+                
+                const cleaned = v.replace(/[^a-zA-Z\s.\-']/g, '');
+                setForm(f => ({ ...f, fullName: cleaned }));
+              }}
               placeholder="Your full name"
               maxLength={60}
-              aria-invalid={touched.fullName && errors.fullName ? "true" : "false"}
-              aria-describedby={touched.fullName && errors.fullName ? "error-fullName" : undefined}
             />
           </Field>
-          <Field
-            label="College Email ID"
-            required
-            hint="Must end with @glbajajgroup.org"
-            error={touched.collegeEmail && errors.collegeEmail}
-            errorId="error-collegeEmail"
-          >
+          <Field label="College Email ID" required hint="Must end with @glbajajgroup.org">
             <Input
-              id="input-collegeEmail"
               value={form.collegeEmail}
-              onChange={v => handleChange('collegeEmail', v.trim().toLowerCase())}
-              onBlur={() => handleBlur('collegeEmail')}
+              onChange={v => setForm(f => ({ ...f, collegeEmail: v.trim().toLowerCase() }))}
               placeholder="name@glbajajgroup.org"
               type="email"
               maxLength={80}
-              aria-invalid={touched.collegeEmail && errors.collegeEmail ? "true" : "false"}
-              aria-describedby={touched.collegeEmail && errors.collegeEmail ? "error-collegeEmail" : undefined}
             />
           </Field>
-          <Field
-            label="WhatsApp Number"
-            required
-            error={touched.whatsapp && errors.whatsapp}
-            errorId="error-whatsapp"
-          >
+          <Field label="WhatsApp Number" required>
             <Input
-              id="input-whatsapp"
               value={form.whatsapp}
-              onChange={v => handleChange('whatsapp', String(v || '').replace(/[^\d]/g, '').slice(0, 10))}
-              onBlur={() => handleBlur('whatsapp')}
+              onChange={v => {
+                
+                const cleaned = String(v || '').replace(/[^\d]/g, '').slice(0, 10);
+                setForm(f => ({ ...f, whatsapp: cleaned }));
+              }}
               onPaste={e => {
                 e.preventDefault();
                 const pasted = e.clipboardData.getData('text').replace(/[^\d]/g, '').slice(0, 10);
-                handleChange('whatsapp', pasted);
+                setForm(f => ({ ...f, whatsapp: pasted }));
               }}
               placeholder="10-digit mobile number"
               type="tel"
               inputMode="numeric"
               maxLength={10}
-              aria-invalid={touched.whatsapp && errors.whatsapp ? "true" : "false"}
-              aria-describedby={touched.whatsapp && errors.whatsapp ? "error-whatsapp" : undefined}
             />
           </Field>
-          <Field
-            label="Year of Study"
-            required
-            error={touched.year && errors.year}
-            errorId="error-year"
-          >
-            <PillRadio
-              id="input-year"
-              options={YEAR_OPTIONS}
-              value={form.year}
-              onChange={v => handleChange('year', v)}
-              aria-invalid={touched.year && errors.year ? "true" : "false"}
-              aria-describedby={touched.year && errors.year ? "error-year" : undefined}
-            />
+          <Field label="Year of Study" required>
+            <PillRadio options={YEAR_OPTIONS} value={form.year} onChange={v => setForm(f => ({ ...f, year: v }))} />
           </Field>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14 }}>
-            <Field
-              label="Branch / Department"
-              required
-              error={(touched.branch && errors.branch) || (touched.branchOther && errors.branchOther)}
-              errorId="error-branch"
-            >
+              <Field label="Branch / Department" required>
               <div style={{ display: 'grid', gap: 8 }}>
-                <StyledSelect
-                  id="input-branch"
+                <select
                   value={form.branch}
-                  onChange={v => handleChange('branch', v)}
-                  onBlur={() => handleBlur('branch')}
-                  placeholder="Select your department"
-                  aria-invalid={touched.branch && errors.branch ? "true" : "false"}
-                  aria-describedby={touched.branch && errors.branch ? "error-branch" : undefined}
+                  onChange={e => setForm(f => ({ ...f, branch: e.target.value, branchOther: '' }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'var(--card2)',
+                    border: '1px solid var(--bdr2)',
+                    borderRadius: 'var(--r2)',
+                    color: form.branch ? 'var(--t1)' : 'var(--t3)',
+                    fontFamily: 'Rajdhani,sans-serif',
+                    fontSize: '.98rem',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23CC1111' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 14px center',
+                    paddingRight: '36px',
+                  }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--bdr2)'; e.target.style.boxShadow = 'none'; }}
                 >
+                  <option value="" disabled>Select your department</option>
                   {BRANCH_OPTIONS.map(b => <option key={b} value={b}>{b}</option>)}
-                </StyledSelect>
+                </select>
                 {form.branch === 'Other' && (
                   <Input
-                    id="input-branchOther"
                     value={form.branchOther}
-                    onChange={v => handleChange('branchOther', v.replace(/[^a-zA-Z0-9\s\/\-&().]/g, ''))}
-                    onBlur={() => handleBlur('branchOther')}
+                    onChange={v => {
+                      const cleaned = v.replace(/[^a-zA-Z0-9\s\/\-&().]/g, '');
+                      setForm(f => ({ ...f, branchOther: cleaned }));
+                    }}
                     placeholder="Please specify your department"
                     maxLength={60}
-                    aria-invalid={touched.branchOther && errors.branchOther ? "true" : "false"}
-                    aria-describedby={touched.branchOther && errors.branchOther ? "error-branch" : undefined}
                   />
                 )}
               </div>
             </Field>
-            <Field
-              label="Section"
-              required
-              hint="Academic Section (A/B/C/...)"
-              error={(touched.section && errors.section) || (touched.sectionOther && errors.sectionOther)}
-              errorId="error-section"
-            >
+            <Field label="Section" required hint="Academic Section (A/B/C/...)">
               <div style={{ display: 'grid', gap: 8 }}>
-                <StyledSelect
-                  id="input-section"
+                <select
                   value={form.section}
-                  onChange={v => handleChange('section', v)}
-                  onBlur={() => handleBlur('section')}
-                  placeholder="Select section"
-                  aria-invalid={touched.section && errors.section ? "true" : "false"}
-                  aria-describedby={touched.section && errors.section ? "error-section" : undefined}
+                  onChange={e => setForm(f => ({ ...f, section: e.target.value, sectionOther: '' }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    background: 'var(--card2)',
+                    border: '1px solid var(--bdr2)',
+                    borderRadius: 'var(--r2)',
+                    color: form.section ? 'var(--t1)' : 'var(--t3)',
+                    fontFamily: 'Rajdhani,sans-serif',
+                    fontSize: '.98rem',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23CC1111' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 14px center',
+                    paddingRight: '36px',
+                  }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--bdr2)'; e.target.style.boxShadow = 'none'; }}
                 >
+                  <option value="" disabled>Select section</option>
                   {SECTION_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </StyledSelect>
+                </select>
                 {form.section === 'Other' && (
                   <Input
-                    id="input-sectionOther"
                     value={form.sectionOther}
-                    onChange={v => handleChange('sectionOther', v.toUpperCase())}
-                    onBlur={() => handleBlur('sectionOther')}
+                    onChange={v => setForm(f => ({ ...f, sectionOther: v.toUpperCase() }))}
                     placeholder="Type your section (e.g. J)"
                     maxLength={10}
-                    aria-invalid={touched.sectionOther && errors.sectionOther ? "true" : "false"}
-                    aria-describedby={touched.sectionOther && errors.sectionOther ? "error-section" : undefined}
                   />
                 )}
               </div>
@@ -844,6 +655,7 @@ export default function RecruitmentPage({ onBack }) {
       title: 'Role & Domain Preference',
       subtitle: 'Select the role you wish to apply for and your areas of interest.',
       icon: <IconArrowRight style={{ width: 18, height: 18 }} />,
+      requiredKeys: ['role', 'interests'],
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
           <div style={{
@@ -869,41 +681,20 @@ export default function RecruitmentPage({ onBack }) {
             </div>
           </div>
 
-          <Field
-            label="Which role do you wish to apply for?"
-            required
-            error={touched.role && errors.role}
-            errorId="error-role"
-          >
-            <PillRadio
-              id="input-role"
-              options={ROLE_OPTIONS}
-              value={form.role}
-              onChange={v => handleChange('role', v)}
-              aria-invalid={touched.role && errors.role ? "true" : "false"}
-              aria-describedby={touched.role && errors.role ? "error-role" : undefined}
-            />
+          <Field label="Which role do you wish to apply for?" required>
+            <PillRadio options={ROLE_OPTIONS} value={form.role} onChange={v => setForm(f => ({ ...f, role: v }))} />
           </Field>
 
-          <Field
-            label="Areas of Interest"
-            required
-            hint="Select one or more."
-            error={touched.interests && errors.interests}
-            errorId="error-interests"
-          >
+          <Field label="Areas of Interest" required hint="Select one or more.">
             <MultiSelectChips
-              id="input-interests"
               options={INTEREST_OPTIONS}
               values={form.interests}
-              onToggle={(opt) => {
-                const next = form.interests.includes(opt)
-                  ? form.interests.filter(x => x !== opt)
-                  : [...form.interests, opt];
-                handleChange('interests', next);
-              }}
-              aria-invalid={touched.interests && errors.interests ? "true" : "false"}
-              aria-describedby={touched.interests && errors.interests ? "error-interests" : undefined}
+              onToggle={(opt) => setForm(f => ({
+                ...f,
+                interests: f.interests.includes(opt)
+                  ? f.interests.filter(x => x !== opt)
+                  : [...f.interests, opt],
+              }))}
             />
           </Field>
         </div>
@@ -913,24 +704,19 @@ export default function RecruitmentPage({ onBack }) {
       title: 'Skills & Experience',
       subtitle: 'Share your technical background, communication skills, and prior experience.',
       icon: <IconBolt style={{ width: 18, height: 18 }} />,
+      requiredKeys: ['skills', 'comms', 'campusExp'],
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
           <Field
             label="Programming language(s) / tools you know + level"
             required
             hint="Beginner / Intermediate / Advanced"
-            error={touched.skills && errors.skills}
-            errorId="error-skills"
           >
             <TextArea
-              id="input-skills"
               value={form.skills}
-              onChange={v => handleChange('skills', v)}
-              onBlur={() => handleBlur('skills')}
+              onChange={v => setForm(f => ({ ...f, skills: v }))}
               placeholder={'Example:\nPython – Intermediate\nJava – Beginner\nHTML – Advanced\nKotlin – Beginner'}
               rows={6}
-              aria-invalid={touched.skills && errors.skills ? "true" : "false"}
-              aria-describedby={touched.skills && errors.skills ? "error-skills" : undefined}
             />
           </Field>
 
@@ -938,73 +724,46 @@ export default function RecruitmentPage({ onBack }) {
             label="Communication language(s) + fluency"
             required
             hint="English / Hindi / Both"
-            error={touched.comms && errors.comms}
-            errorId="error-comms"
           >
             <TextArea
-              id="input-comms"
               value={form.comms}
-              onChange={v => handleChange('comms', v)}
-              onBlur={() => handleBlur('comms')}
+              onChange={v => setForm(f => ({ ...f, comms: v }))}
               placeholder={'Example:\nEnglish – Basic\nHindi – Fluent\nBoth – Moderate'}
               rows={4}
-              aria-invalid={touched.comms && errors.comms ? "true" : "false"}
-              aria-describedby={touched.comms && errors.comms ? "error-comms" : undefined}
             />
           </Field>
 
-          <Field
-            label="Have you participated in any community, club, or event before? (On Campus)"
-            required
-            error={touched.campusExp && errors.campusExp}
-            errorId="error-campusExp"
-          >
+          <Field label="Have you participated in any community, club, or event before? (On Campus)" required>
             <PillRadio
-              id="input-campusExp"
               options={['Yes', 'No']}
               value={form.campusExp}
-              onChange={v => handleChange('campusExp', v)}
-              aria-invalid={touched.campusExp && errors.campusExp ? "true" : "false"}
-              aria-describedby={touched.campusExp && errors.campusExp ? "error-campusExp" : undefined}
+              onChange={v => setForm(f => ({ ...f, campusExp: v }))}
             />
           </Field>
 
           {form.campusExp === 'Yes' ? (
-            <Field
-              label="If yes, mention the community / role"
-              error={touched.campusExpDetails && errors.campusExpDetails}
-              errorId="error-campusExpDetails"
-            >
+            <Field label="If yes, mention the community / role">
               <Input
-                id="input-campusExpDetails"
                 value={form.campusExpDetails}
-                onChange={v => handleChange('campusExpDetails', v)}
-                onBlur={() => handleBlur('campusExpDetails')}
+                onChange={v => setForm(f => ({ ...f, campusExpDetails: v }))}
                 placeholder="e.g. Leo Club – Event Coordinator"
                 maxLength={100}
-                aria-invalid={touched.campusExpDetails && errors.campusExpDetails ? "true" : "false"}
-                aria-describedby={touched.campusExpDetails && errors.campusExpDetails ? "error-campusExpDetails" : undefined}
               />
             </Field>
           ) : null}
 
-          <Field
-            label="GitHub Profile URL"
-            hint="Optional"
-            error={touched.links && errors.links}
-            errorId="error-links"
-          >
+          <Field label="GitHub Profile URL" hint="Optional">
             <Input
-              id="input-links"
               value={form.links}
-              onChange={v => handleChange('links', v.replace(/\s/g, ''))}
-              onBlur={() => handleBlur('links')}
+              onChange={v => {
+                
+                
+                setForm(f => ({ ...f, links: v.replace(/\s/g, '') }));
+              }}
               placeholder="https://github.com/YourUsername"
               type="url"
               inputMode="url"
               maxLength={120}
-              aria-invalid={touched.links && errors.links ? "true" : "false"}
-              aria-describedby={touched.links && errors.links ? "error-links" : undefined}
             />
             <div style={{ color: 'var(--t3)', fontSize: '.8rem', marginTop: 4 }}>
               Format: <span style={{ fontFamily: 'Space Mono,monospace', color: 'var(--c1)' }}>https://github.com/YourUsername</span>
@@ -1017,52 +776,17 @@ export default function RecruitmentPage({ onBack }) {
       title: 'Commitment & Availability',
       subtitle: 'Confirm your availability and willingness to commit to NexaSphere responsibilities.',
       icon: <IconBolt style={{ width: 18, height: 18 }} />,
+      requiredKeys: ['commitHours', 'attendCampus', 'assessmentOk'],
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
-          <Field
-            label="Are you willing to commit 4–6 hours per week consistently?"
-            required
-            error={touched.commitHours && errors.commitHours}
-            errorId="error-commitHours"
-          >
-            <PillRadio
-              id="input-commitHours"
-              options={COMMIT_OPTIONS}
-              value={form.commitHours}
-              onChange={v => handleChange('commitHours', v)}
-              aria-invalid={touched.commitHours && errors.commitHours ? "true" : "false"}
-              aria-describedby={touched.commitHours && errors.commitHours ? "error-commitHours" : undefined}
-            />
+          <Field label="Are you willing to commit 4–6 hours per week consistently?" required>
+            <PillRadio options={COMMIT_OPTIONS} value={form.commitHours} onChange={v => setForm(f => ({ ...f, commitHours: v }))} />
           </Field>
-          <Field
-            label="Are you comfortable attending meetings, events, and sessions on campus?"
-            required
-            error={touched.attendCampus && errors.attendCampus}
-            errorId="error-attendCampus"
-          >
-            <PillRadio
-              id="input-attendCampus"
-              options={COMMIT_OPTIONS}
-              value={form.attendCampus}
-              onChange={v => handleChange('attendCampus', v)}
-              aria-invalid={touched.attendCampus && errors.attendCampus ? "true" : "false"}
-              aria-describedby={touched.attendCampus && errors.attendCampus ? "error-attendCampus" : undefined}
-            />
+          <Field label="Are you comfortable attending meetings, events, and sessions on campus?" required>
+            <PillRadio options={COMMIT_OPTIONS} value={form.attendCampus} onChange={v => setForm(f => ({ ...f, attendCampus: v }))} />
           </Field>
-          <Field
-            label="Do you understand that short assessment may be conducted?"
-            required
-            error={touched.assessmentOk && errors.assessmentOk}
-            errorId="error-assessmentOk"
-          >
-            <PillRadio
-              id="input-assessmentOk"
-              options={COMMIT_OPTIONS}
-              value={form.assessmentOk}
-              onChange={v => handleChange('assessmentOk', v)}
-              aria-invalid={touched.assessmentOk && errors.assessmentOk ? "true" : "false"}
-              aria-describedby={touched.assessmentOk && errors.assessmentOk ? "error-assessmentOk" : undefined}
-            />
+          <Field label="Do you understand that short assessment may be conducted?" required>
+            <PillRadio options={COMMIT_OPTIONS} value={form.assessmentOk} onChange={v => setForm(f => ({ ...f, assessmentOk: v }))} />
           </Field>
         </div>
       ),
@@ -1071,30 +795,21 @@ export default function RecruitmentPage({ onBack }) {
       title: 'Motivation & Statement',
       subtitle: 'Tell us why you want to join and what you bring to the team.',
       icon: <IconSpark style={{ width: 18, height: 18 }} />,
+      requiredKeys: ['whyJoin'],
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
-          <Field
-            label="Why do you want to be part of NexaSphere Core Team?"
-            required
-            error={touched.whyJoin && errors.whyJoin}
-            errorId="error-whyJoin"
-          >
+          <Field label="Why do you want to be part of NexaSphere Core Team?" required>
             <TextArea
-              id="input-whyJoin"
               value={form.whyJoin}
-              onChange={v => handleChange('whyJoin', v)}
-              onBlur={() => handleBlur('whyJoin')}
+              onChange={v => setForm(f => ({ ...f, whyJoin: v }))}
               placeholder="Share your motivation, what you'll bring, and what you want to learn."
               rows={6}
-              aria-invalid={touched.whyJoin && errors.whyJoin ? "true" : "false"}
-              aria-describedby={touched.whyJoin && errors.whyJoin ? "error-whyJoin" : undefined}
             />
           </Field>
           <Field label="Anything else you want us to know?">
             <TextArea
-              id="input-anythingElse"
               value={form.anythingElse}
-              onChange={v => handleChange('anythingElse', v)}
+              onChange={v => setForm(f => ({ ...f, anythingElse: v }))}
               placeholder="Optional"
               rows={4}
             />
@@ -1106,14 +821,10 @@ export default function RecruitmentPage({ onBack }) {
       title: 'Declaration & Consent',
       subtitle: 'Please read and confirm the following declarations before submitting.',
       icon: <IconShieldCheck style={{ width: 18, height: 18 }} />,
+      requiredKeys: ['declarations'],
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
-          <Field
-            label="Declaration"
-            required
-            error={touched.declarations && errors.declarations}
-            errorId="error-declarations"
-          >
+          <Field label="Declaration" required>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
                 { k: 'truth', label: 'I confirm that all details provided are true.' },
@@ -1126,28 +837,19 @@ export default function RecruitmentPage({ onBack }) {
                 return (
                   <button
                     key={opt.k}
-                    id={`input-declaration-${opt.k}`}
                     type="button"
-                    onClick={() => {
-                      const next = { ...(form.declarations || {}) };
+                    onClick={() => setForm(f => {
+                      const next = { ...(f.declarations || {}) };
                       const nextVal = !next[opt.k];
-                      let nextDeclarations;
                       if (isDisagree && nextVal) {
-                        nextDeclarations = { truth: false, time: false, participate: false, disagree: true };
-                      } else {
-                        if (!isDisagree && nextVal) {
-                          next.disagree = false;
-                        }
-                        next[opt.k] = nextVal;
-                        nextDeclarations = {
-                          truth: !!next.truth,
-                          time: !!next.time,
-                          participate: !!next.participate,
-                          disagree: !!next.disagree
-                        };
+                        return { ...f, declarations: { truth: false, time: false, participate: false, disagree: true } };
                       }
-                      handleChange('declarations', nextDeclarations);
-                    }}
+                      if (!isDisagree && nextVal) {
+                        next.disagree = false;
+                      }
+                      next[opt.k] = nextVal;
+                      return { ...f, declarations: { truth: !!next.truth, time: !!next.time, participate: !!next.participate, disagree: !!next.disagree } };
+                    })}
                     style={{
                       textAlign: 'left',
                       background: active ? 'rgba(0,212,255,.10)' : 'var(--card)',
@@ -1160,8 +862,6 @@ export default function RecruitmentPage({ onBack }) {
                       boxShadow: active ? '0 0 16px var(--c1g)' : 'none',
                     }}
                     className="shimmer"
-                    aria-invalid={touched.declarations && errors.declarations ? "true" : "false"}
-                    aria-describedby={touched.declarations && errors.declarations ? "error-declarations" : undefined}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{
@@ -1185,45 +885,48 @@ export default function RecruitmentPage({ onBack }) {
         </div>
       ),
     },
-  ]), [form, touched, errors]);
+  ]), [form]);
 
   const progress = useMemo(() => (step / (steps.length - 1)), [step, steps.length]);
 
   const current = steps[step];
 
   const missingRequired = useMemo(() => {
+    const keys = current.requiredKeys;
     const missing = [];
-    const fields = stepFields[step] || [];
-    for (const f of fields) {
-      const v = form[f];
-      if (f === 'declarations') {
+    for (const k of keys) {
+      const v = form[k];
+      if (k === 'declarations') {
         const d = v || {};
-        if (!d.truth || !d.time || !d.participate || d.disagree) missing.push(f);
-      } else if (f === 'interests') {
-        if (!v || v.length === 0) missing.push(f);
-      } else if (f === 'branchOther') {
-        if (form.branch === 'Other' && !String(v || '').trim()) missing.push(f);
-      } else if (f === 'sectionOther') {
-        if (form.section === 'Other' && !String(v || '').trim()) missing.push(f);
-      } else if (f === 'collegeEmail') {
-        const email = String(v || '').trim();
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !email.endsWith('@glbajajgroup.org')) {
-          missing.push(f);
-        }
-      } else if (f === 'whatsapp') {
-        const phone = String(v || '').trim();
-        if (!phone || !/^\d{10}$/.test(phone)) missing.push(f);
-      } else if (f === 'links') {
-        const url = String(v || '').trim();
-        if (url && !/^https:\/\/github\.com\/[a-zA-Z0-9][a-zA-Z0-9\-]{0,37}\/?$/.test(url)) {
-          missing.push(f);
-        }
-      } else {
-        if (!String(v || '').trim()) missing.push(f);
+        const ok = !!d.truth && !!d.time && !!d.participate && !d.disagree;
+        if (!ok) missing.push(k);
+      } else if (Array.isArray(v)) {
+        if (v.length === 0) missing.push(k);
+      } else if (!String(v || '').trim()) {
+        missing.push(k);
       }
     }
+    
+    if (step === 1 && form.branch === 'Other' && !String(form.branchOther || '').trim()) missing.push('branchOther');
+    if (step === 1 && form.section === 'Other' && !String(form.sectionOther || '').trim()) missing.push('sectionOther');
+
+    
+    const email = String(form.collegeEmail || '').trim().toLowerCase();
+    if (step === 1 && email && !email.endsWith('@glbajajgroup.org')) missing.push('collegeEmail');
+    const phone = String(form.whatsapp || '').trim();
+    if (step === 1 && phone && !/^\d{10}$/.test(phone)) missing.push('whatsapp');
+    
+    const githubUrl = String(form.links || '').trim();
+    if (step === 3 && githubUrl) {
+      
+      const githubPattern = /^https:\/\/github\.com\/[a-zA-Z0-9][a-zA-Z0-9\-]{0,37}\/?$/;
+      if (!githubPattern.test(githubUrl)) missing.push('links');
+    }
+    if (step === 3 && form.campusExp === 'Yes' && !String(form.campusExpDetails || '').trim()) {
+      
+    }
     return missing;
-  }, [form, step]);
+  }, [current.requiredKeys, form, step]);
 
   const canNext = missingRequired.length === 0;
 
@@ -1236,42 +939,37 @@ export default function RecruitmentPage({ onBack }) {
     setBusy(true);
     try {
       const payload = {
-        ...form,
-        
-        branch: form.branch === 'Other' ? (form.branchOther || 'Other') : form.branch,
-        section: form.section === 'Other' ? (form.sectionOther || 'Other') : form.section,
-        interests: Array.isArray(form.interests) ? form.interests.join(', ') : '',
-        declarationAccepted: !!form.declarations?.truth && !!form.declarations?.time && !!form.declarations?.participate && !form.declarations?.disagree,
-        declarationSelected: Object.entries(form.declarations || {}).filter(([,v])=>!!v).map(([k])=>k).join(', '),
-        submittedAt: new Date().toISOString(),
-        userAgent: navigator.userAgent,
+        fullName:     form.fullName.trim(),
+        collegeEmail: form.collegeEmail.trim().toLowerCase(),
+        whatsapp:     form.whatsapp,
+        year:         form.year,
+        branch:       form.branch === 'Other' ? (form.branchOther || 'Other') : form.branch,
+        section:      form.section === 'Other' ? (form.sectionOther || 'Other') : form.section,
+        role:         form.role,
+        interests:    Array.isArray(form.interests) ? form.interests.join(', ') : '',
+        skills:       form.skills.trim(),
+        whyJoin:      form.whyJoin.trim(),
       };
 
-      
-      const emailKey = String(form.collegeEmail || '').trim().toLowerCase();
-      try {
-        const existing = JSON.parse(localStorage.getItem('ns_submitted_emails') || '[]');
-        if (existing.includes(emailKey)) {
-          setErr('This email address has already been used to submit an application. Each applicant may submit only once.');
-          setBusy(false);
-          return;
-        }
-      } catch { /* ignore */ }
+      const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
+      const url = base ? `${base}/api/submissions/recruitment` : '/api/submissions/recruitment';
 
-      const res = await fetch(RECRUITMENT_SCRIPT_URL, {
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || (data && data.ok === false)) {
+
+      if (res.status === 409) {
+        throw new Error('This email has already been used to submit an application.');
+      }
+      if (!res.ok) {
         throw new Error(data?.error || 'Submission failed');
       }
-      try {
-        const existing = JSON.parse(localStorage.getItem('ns_submitted_emails') || '[]');
-        existing.push(emailKey);
-        localStorage.setItem('ns_submitted_emails', JSON.stringify(existing));
-      } catch { /* ignore */ }
+
+      setSubmittedEmail(payload.collegeEmail);
       setDone(true);
       scrollTop();
     } catch (e) {
@@ -1490,49 +1188,9 @@ export default function RecruitmentPage({ onBack }) {
           </div>
 
           <div className="apply-body">
-            {alreadySubmitted && !done ? (
-              <div style={{
-                background: 'rgba(255,45,120,.08)',
-                border: '1px solid rgba(255,45,120,.22)',
-                borderRadius: 'var(--r3)',
-                padding: '20px 22px',
-                textAlign: 'center',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'center', color: '#ff2d78', marginBottom: 10 }}><DynamicIcon name="AlertTriangle" size={22} /></div>
-                <div style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '1rem', marginBottom: 12 }}>Application Already Submitted</div>
-                <div style={{ color: 'var(--t2)', fontSize: '.88rem', lineHeight: 1.65, marginBottom: 24 }}>
-                  An application form has already been submitted from this device.<br/>
-                  If you need to update your application, please contact us at{' '}
-                  <a href="mailto:nexasphere@glbajajgroup.org" style={{ color: 'var(--c1)', fontWeight: 600 }}>
-                    nexasphere@glbajajgroup.org
-                  </a>
-                </div>
-
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <a
-                    href={WHATSAPP_SCREENING}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-whatsapp"
-                    style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
-                  >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      Core Team Screening <IconArrowRight />
-                    </span>
-                  </a>
-                  <a
-                    href={LINKEDIN_PAGE || 'https://www.linkedin.com/showcase/glbajaj-nexasphere/'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline"
-                    style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}
-                  >
-                    NexaSphere LinkedIn
-                  </a>
-                </div>
-              </div>
-            ) : done ? (
+            {done ? (
               <div style={{ display: 'grid', gap: 18 }}>
+                {/* ── Confirmation banner ── */}
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(0,212,255,.08), rgba(123,111,255,.06))',
                   border: '1px solid var(--bdr2)',
@@ -1543,19 +1201,68 @@ export default function RecruitmentPage({ onBack }) {
                   textAlign: 'center',
                 }}>
                   <div className="corner-tl"/><div className="corner-br"/>
-                  <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--c1)', marginBottom: 12 }}><DynamicIcon name="CheckCircle" size={32} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--c1)', marginBottom: 12 }}>
+                    <DynamicIcon name="CheckCircle" size={32} />
+                  </div>
                   <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1rem', color: 'var(--t1)', fontWeight: 700, marginBottom: 12 }}>
                     Application Submitted Successfully
                   </div>
                   <p style={{ color: 'var(--t2)', lineHeight: 1.8, maxWidth: 520, margin: '0 auto' }}>
-                    Thank you for applying to the NexaSphere Core Team - GL Bajaj Group of Institutions.
+                    Thank you for applying to the NexaSphere Core Team — GL Bajaj Group of Institutions. 🎉
                     <br/><br/>
-                    Your application has been recorded. Shortlisted candidates will be contacted regarding the next steps, which may include a short assessment or trial session.
-                    <br/><br/>
-                    <b style={{ color: 'var(--t1)' }}>Stay consistent. Stay curious. Keep building.</b>
+                    Submitted email: <b style={{ color: 'var(--t1)' }}>{submittedEmail || form.collegeEmail}</b>
+                    <br/>
+                    If email notifications are enabled, a confirmation receipt will be sent there.
                   </p>
                 </div>
 
+                {/* ── What happens next ── */}
+                <div style={{
+                  background: 'var(--card)', border: '1px solid var(--bdr)',
+                  borderRadius: 'var(--r3)', padding: '18px 20px',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div className="corner-tl"/>
+                  <div style={{
+                    fontFamily: 'Orbitron,monospace', fontSize: '.7rem',
+                    letterSpacing: '.16em', textTransform: 'uppercase',
+                    color: 'var(--c1)', marginBottom: 14,
+                  }}>What Happens Next</div>
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    {[
+                      {
+                        icon: '📋',
+                        title: 'Step 1 — Application recorded (Done)',
+                        desc: 'Your full application has been saved to the NexaSphere Core Team recruitment sheet. No further action needed from your end.',
+                      },
+                      {
+                        icon: '🔍',
+                        title: 'Step 2 — Review & Shortlisting (1–2 weeks)',
+                        desc: 'The NexaSphere leadership team will review all applications carefully. Shortlisted candidates will receive a WhatsApp message or email notification.',
+                      },
+                      {
+                        icon: '🧪',
+                        title: 'Step 3 — Screening (if shortlisted)',
+                        desc: 'Shortlisted applicants may be invited to a short trial session, task, or interaction to evaluate fit, consistency, and teamwork. Details will be shared over WhatsApp.',
+                      },
+                    ].map(s => (
+                      <div key={s.title} style={{
+                        display: 'flex', gap: 14, alignItems: 'flex-start',
+                        padding: '12px 14px',
+                        background: 'var(--card2)', border: '1px solid var(--bdr)',
+                        borderRadius: 'var(--r2)',
+                      }}>
+                        <span style={{ fontSize: '1.2rem', flexShrink: 0, marginTop: 2 }}>{s.icon}</span>
+                        <div>
+                          <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, color: 'var(--t1)', fontSize: '.96rem', marginBottom: 3 }}>{s.title}</div>
+                          <div style={{ fontSize: '.86rem', color: 'var(--t2)', lineHeight: 1.6 }}>{s.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── CTA buttons ── */}
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
                   <a className="btn btn-whatsapp" href={WHATSAPP_SCREENING} target="_blank" rel="noopener noreferrer">
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -1567,6 +1274,20 @@ export default function RecruitmentPage({ onBack }) {
                       Join NexaSphere Community <IconArrowRight />
                     </span>
                   </a>
+                </div>
+
+                {/* ── Footer note ── */}
+                <div style={{
+                  background: 'var(--card)', border: '1px solid var(--bdr)',
+                  borderRadius: 'var(--r2)', padding: '14px 16px',
+                  fontSize: '.88rem', color: 'var(--t3)', lineHeight: 1.7, textAlign: 'center',
+                }}>
+                  📌 Questions? Reach us at{' '}
+                  <a href="mailto:nexasphere@glbajajgroup.org" style={{ color: 'var(--c1)', textDecoration: 'none' }}>
+                    nexasphere@glbajajgroup.org
+                  </a>
+                  <br/>
+                  <b style={{ color: 'var(--t2)' }}>Stay consistent. Stay curious. Keep building. 🚀 — NexaSphere Team</b>
                 </div>
               </div>
             ) : (
@@ -1618,33 +1339,17 @@ export default function RecruitmentPage({ onBack }) {
                     <button
                       className="btn btn-primary btn-ripple"
                       type="button"
-                      disabled={busy}
+                      disabled={busy || !canNext}
                       onClick={() => {
-                        const fields = stepFields[step] || [];
-                        const ok = validateForm(fields);
-                        if (!ok) {
-                          setErr('Please complete the required fields (*) correctly to proceed.');
-                          
-                          const errorsList = (stepFields[step] || []).filter(f => {
-                            if (f === 'branchOther') return form.branch === 'Other';
-                            if (f === 'sectionOther') return form.section === 'Other';
-                            return true;
-                          });
-                          
-                          for (const f of errorsList) {
-                            if (f === 'declarations') continue;
-                            const el = document.getElementById(`input-${f}`);
-                            if (el) {
-                              el.focus();
-                              break;
-                            }
-                          }
+                        if (!canNext) {
+                          setErr('Please complete the required fields (*) to proceed.');
                           return;
                         }
                         setErr('');
                         setStep(s => clamp(s + 1, 0, steps.length - 1));
                         scrollTop();
                       }}
+                      style={{ opacity: canNext ? 1 : .65 }}
                     >
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                         Continue <IconArrowRight />
@@ -1654,32 +1359,14 @@ export default function RecruitmentPage({ onBack }) {
                     <button
                       className="btn btn-primary btn-ripple"
                       type="button"
-                      disabled={busy}
+                      disabled={busy || !canNext || !!form.declarations?.disagree}
                       onClick={() => {
-                        const fields = stepFields[step] || [];
-                        const ok = validateForm(fields);
-                        if (!ok) {
-                          if (form.declarations?.disagree) {
-                            setErr('You must agree to the declarations to apply. Disagreeing prevents application submission.');
-                          } else {
-                            setErr('Please complete the required fields (*) to submit.');
-                          }
-                          
-                          for (const f of fields) {
-                            if (f === 'declarations') {
-                              const el = document.getElementById('input-declaration-truth');
-                              if (el) {
-                                el.focus();
-                                break;
-                              }
-                            } else {
-                              const el = document.getElementById(`input-${f}`);
-                              if (el) {
-                                el.focus();
-                                break;
-                              }
-                            }
-                          }
+                        if (form.declarations?.disagree) {
+                          setErr('You must agree to the declaration to submit.');
+                          return;
+                        }
+                        if (!canNext) {
+                          setErr('Please complete the required fields (*) to submit.');
                           return;
                         }
                         submit();

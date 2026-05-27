@@ -1,0 +1,3 @@
+  main       57f94ef [origin/main] Merge pull request #213 from diyamajee-spec/feature/i18n-hindi-language-support
+  nexa       74f1c0a fix: chatbot localhost URL, stale events, inconsistent card clicks, team privacy & form UX
+* nexa-gssoc d85d794 [gssoc/main: ahead 61] merge: resolve all backend, modular routing, and frontend UI conflicts with upstream

@@ -1,5 +1,9 @@
-import { coreTeamRepository } from '../repositories/coreTeamRepository.js';
-import { manageActivityGateSchema } from '../validators/coreTeamSchemas.js';
+import { supabaseRequest, HAS_SUPABASE } from '../storage/supabaseClient.js';
+import { readContent, writeContent } from '../storage/contentFileStore.js';
+import { sanitizeCoreTeamMemberRecord } from '../utils/sanitize.js';
+import crypto from 'crypto';
+import { coreTeamMemberSchema, normalizeCoreTeamGate } from '../schemas/coreTeamMemberSchema.js';
+import { UnauthorizedError } from '../utils/errors.js';
 
 const fallbackMembers = [
   { name: 'Ayush Sharma', email: 'ayush.sharmaa@hotmail.com', phone: '8923995135' },
@@ -17,45 +21,117 @@ function normalizePhone(value) {
 
 export const coreTeamService = {
   async listMembers() {
-    return coreTeamRepository.listMembers();
+    if (HAS_SUPABASE) {
+      const rows = await supabaseRequest('core_team_members?select=*&order=created_at.asc');
+      return rows.map((row) => sanitizeCoreTeamMemberRecord({
+        id: row.id,
+        name: row.name,
+        role: row.role,
+        year: row.year,
+        branch: row.branch,
+        section: row.section,
+        email: row.email,
+        whatsapp: row.whatsapp,
+        linkedin: row.linkedin,
+        instagram: row.instagram,
+        photoUrl: row.photo_url,
+        createdAt: row.created_at,
+      }));
+    }
+
+    const content = await readContent();
+    return (content.coreTeam || []).map((member) => sanitizeCoreTeamMemberRecord(member));
   },
 
   async addMember(input) {
-    const member = manageActivityGateSchema.parse({
-      ...input,
-      // repurpose schema fields: name/email/phone are validated there
-      password: undefined,
-    });
-    return coreTeamRepository.addMember(member);
+    const member = coreTeamMemberSchema.parse(input);
+
+    if (HAS_SUPABASE) {
+      const [row] = await supabaseRequest('core_team_members', {
+        method: 'POST',
+        body: [{
+          name: member.name,
+          role: member.role,
+          year: member.year,
+          branch: member.branch,
+          section: member.section,
+          email: member.email,
+          whatsapp: member.whatsapp,
+          linkedin: member.linkedin,
+          instagram: member.instagram,
+          photo_url: member.photoUrl,
+        }],
+      });
+
+      return sanitizeCoreTeamMemberRecord({
+        id: row.id,
+        name: row.name,
+        role: row.role,
+        year: row.year,
+        branch: row.branch,
+        section: row.section,
+        email: row.email,
+        whatsapp: row.whatsapp,
+        linkedin: row.linkedin,
+        instagram: row.instagram,
+        photoUrl: row.photo_url,
+        createdAt: row.created_at,
+      });
+    }
+
+    const content = await readContent();
+    content.coreTeam = content.coreTeam || [];
+    const createdAt = new Date().toISOString();
+    const newMember = { ...member, id: crypto.randomUUID(), createdAt };
+    content.coreTeam.push(newMember);
+    await writeContent(content);
+    return sanitizeCoreTeamMemberRecord(newMember);
   },
 
   async deleteMember(id) {
-    return coreTeamRepository.deleteMember(id);
+    if (HAS_SUPABASE) {
+      const rows = await supabaseRequest(`core_team_members?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+      return Array.isArray(rows) && rows.length > 0;
+    }
+
+    const content = await readContent();
+    content.coreTeam = content.coreTeam || [];
+    const before = content.coreTeam.length;
+    content.coreTeam = content.coreTeam.filter((member) => String(member.id) !== String(id));
+    if (content.coreTeam.length === before) return false;
+    await writeContent(content);
+    return true;
   },
 
   async assertCanManageActivityEvent(body) {
-    const gate = manageActivityGateSchema.parse(body);
-    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD;
-    if (String(gate.password || '') !== expectedPassword) {
-      throw new Error('Unauthorized. Core team details or password did not match.');
+    const gate = normalizeCoreTeamGate(body);
+    const expectedPassword = process.env.ADMIN_EVENT_PASSWORD || 'Admin@123';
+    if (gate.password !== expectedPassword) {
+      throw new UnauthorizedError('Unauthorized. Core team details or password did not match.');
     }
 
     const name = String(gate.name || '').trim().toLowerCase();
     const email = String(gate.email || '').trim().toLowerCase();
     const phone = normalizePhone(gate.phone);
 
-    // Prefer DB if configured; fallback to hardcoded list.
-    const dbAllowed = await coreTeamRepository.isMember({ name, email, phone }).catch(() => false);
-    if (dbAllowed) return true;
-
-    const allowed = fallbackMembers.some((m) =>
-      m.name.toLowerCase() === name &&
-      m.email.toLowerCase() === email &&
-      normalizePhone(m.phone) === phone
+    const members = await this.listMembers();
+    const allowed = members.some((member) =>
+      String(member.name || '').trim().toLowerCase() === name &&
+      String(member.email || '').trim().toLowerCase() === email &&
+      normalizePhone(member.whatsapp) === phone
     );
 
-    if (!allowed) throw new Error('Unauthorized. Core team details or password did not match.');
+    if (!allowed) {
+      const fallbackAllowed = fallbackMembers.some((member) =>
+        member.name.toLowerCase() === name &&
+        member.email.toLowerCase() === email &&
+        normalizePhone(member.phone) === phone
+      );
+      if (!fallbackAllowed) {
+        throw new UnauthorizedError('Unauthorized. Core team details or password did not match.');
+      }
+    }
+
     return true;
   },
 };
-

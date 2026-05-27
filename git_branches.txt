@@ -1,0 +1,19 @@
+  main
+  nexa
+* nexa-gssoc
+  remotes/ayushh/HEAD -> ayushh/main
+  remotes/ayushh/main
+  remotes/ayushh/revert-195-feat/404-not-found-page
+  remotes/gssoc/HEAD -> gssoc/main
+  remotes/gssoc/main
+  remotes/gssoc/nexa-gssoc
+  remotes/gssoc/ui
+  remotes/gssoc/ui-gssoc
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+  remotes/origin/nexa
+  remotes/origin/ui
+  remotes/origin/ui-gssoc
+  remotes/upstream/HEAD -> upstream/main
+  remotes/upstream/copilot/issue-4-core-team-member-management
+  remotes/upstream/main

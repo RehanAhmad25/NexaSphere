@@ -209,7 +209,7 @@ jobs:
       - name: Verify configuration files
         run: |
           echo "Checking Node.js migration config..."
-          [ -f "server/.postgres_migrations_config.js" ] && echo "✓ Found" || echo "⚠ Missing"
+          [ -f "server/.postgres_migrations_config.json" ] && echo "✓ Found" || echo "⚠ Missing"
           
           echo "Checking Java pom.xml has Flyway..."
           grep -q "flyway" server-java/pom.xml && echo "✓ Flyway configured" || echo "❌ Flyway not found"

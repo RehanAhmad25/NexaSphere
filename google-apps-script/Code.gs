@@ -99,7 +99,7 @@ function _styleHeader(sheet) {
   }
 }
 
-// ── GET/POST handler — Fetch data for Admin Dashboard or health check ────────────────
+// ── GET/POST handler ── Fetch data for Admin Dashboard or health check ────────────────
 function doGet(e) {
   return _respond({
     ok: true,
@@ -190,6 +190,95 @@ function doPost(e) {
     ];
 
     sheet.appendRow(row);
+
+    // ── Send confirmation receipt email to the applicant ──────────────────
+    var recipientEmail = data.collegeEmail || '';
+    var recipientName  = data.fullName      || 'NexaSphere Member';
+
+    if (recipientEmail && recipientEmail.indexOf('@') > -1) {
+      try {
+        var subject = '✅ NexaSphere Membership Form — Submission Confirmed';
+
+        var groupsText = Array.isArray(data.groups)
+          ? data.groups.join(', ')
+          : (data.groups || 'Not specified');
+
+        var htmlBody = [
+          '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0f0f1a;color:#e2e8f0;border-radius:12px;overflow:hidden;border:1px solid #1e293b;">',
+          '  <div style="background:linear-gradient(135deg,#7b6fff,#00d4ff);padding:28px 32px;text-align:center;">',
+          '    <div style="font-size:2rem;margin-bottom:8px;">🚀</div>',
+          '    <h1 style="margin:0;font-size:1.3rem;color:#fff;font-weight:700;letter-spacing:.04em;">NexaSphere Membership</h1>',
+          '    <p style="margin:6px 0 0;color:rgba(255,255,255,.8);font-size:.9rem;">GL Bajaj Group of Institutions, Mathura</p>',
+          '  </div>',
+          '  <div style="padding:28px 32px;">',
+          '    <p style="font-size:1rem;color:#e2e8f0;margin-top:0;">Hi <strong>' + recipientName + '</strong>,</p>',
+          '    <p style="color:#94a3b8;line-height:1.7;">',
+          '      Your <strong style="color:#00d4ff;">NexaSphere Membership Form</strong> has been successfully received. 🎉<br/>',
+          '      Here is a summary of your submission:',
+          '    </p>',
+          '    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:.88rem;">',
+          '      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px 4px;color:#64748b;width:42%;">Full Name</td><td style="padding:8px 4px;color:#e2e8f0;font-weight:600;">' + (data.fullName || '—') + '</td></tr>',
+          '      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px 4px;color:#64748b;">Roll Number</td><td style="padding:8px 4px;color:#e2e8f0;font-weight:600;">' + (data.rollNumber || '—') + '</td></tr>',
+          '      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px 4px;color:#64748b;">Branch</td><td style="padding:8px 4px;color:#e2e8f0;font-weight:600;">' + (data.branch || '—') + '</td></tr>',
+          '      <tr style="border-bottom:1px solid #1e293b;"><td style="padding:8px 4px;color:#64748b;">Semester</td><td style="padding:8px 4px;color:#e2e8f0;font-weight:600;">' + (data.semester || '—') + '</td></tr>',
+          '      <tr><td style="padding:8px 4px;color:#64748b;">Groups Selected</td><td style="padding:8px 4px;color:#e2e8f0;font-weight:600;">' + groupsText + '</td></tr>',
+          '    </table>',
+          '    <div style="background:#1e293b;border-left:3px solid #7b6fff;border-radius:6px;padding:14px 18px;margin:20px 0;">',
+          '      <strong style="color:#a78bfa;display:block;margin-bottom:6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;">What Happens Next</strong>',
+          '      <ol style="margin:0;padding-left:18px;color:#94a3b8;font-size:.88rem;line-height:1.8;">',
+          '        <li>Join the <a href="https://chat.whatsapp.com/FhpJEaod2g419jFMfqrhGZ" style="color:#00d4ff;">NexaSphere WhatsApp Community</a> and mention you have filled the form.</li>',
+          '        <li>Our team will verify your submission within <strong style="color:#e2e8f0;">3–5 working days</strong>.</li>',
+          '        <li>Once verified, you will be added to your chosen NexaSphere domain groups.</li>',
+          '      </ol>',
+          '    </div>',
+          '    <p style="color:#64748b;font-size:.85rem;line-height:1.7;">',
+          '      Questions? Reply to this email or write to us at<br/>',
+          '      <a href="mailto:nexasphere@glbajajgroup.org" style="color:#00d4ff;">nexasphere@glbajajgroup.org</a>',
+          '    </p>',
+          '  </div>',
+          '  <div style="padding:16px 32px;text-align:center;border-top:1px solid #1e293b;background:#0a0a14;">',
+          '    <p style="margin:0;color:#475569;font-size:.8rem;">NexaSphere · GL Bajaj Group of Institutions, Mathura · This is an automated confirmation.</p>',
+          '  </div>',
+          '</div>',
+        ].join('\n');
+
+        var plainBody = [
+          'Hi ' + recipientName + ',',
+          '',
+          'Your NexaSphere Membership Form has been successfully received.',
+          '',
+          'Submission Summary:',
+          '  Full Name    : ' + (data.fullName || '—'),
+          '  Roll Number  : ' + (data.rollNumber || '—'),
+          '  Branch       : ' + (data.branch || '—'),
+          '  Semester     : ' + (data.semester || '—'),
+          '  Groups       : ' + groupsText,
+          '',
+          'What Happens Next:',
+          '  1. Join the NexaSphere WhatsApp Community and mention you have filled the form.',
+          '  2. Our team will verify your submission within 3-5 working days.',
+          '  3. Once verified, you will be added to your chosen NexaSphere domain groups.',
+          '',
+          'Questions? Write to us at nexasphere@glbajajgroup.org',
+          '',
+          '— NexaSphere Team',
+          '  GL Bajaj Group of Institutions, Mathura',
+        ].join('\n');
+
+        MailApp.sendEmail({
+          to: recipientEmail,
+          subject: subject,
+          body: plainBody,
+          htmlBody: htmlBody,
+          name: 'NexaSphere — GL Bajaj Group of Institutions',
+          noReply: false,
+        });
+      } catch (mailErr) {
+        // Email failure should never block the form submission — log and continue.
+        console.warn('Confirmation email failed:', mailErr.message);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
 
     return _respond({ ok: true, message: 'Membership response recorded.' });
 

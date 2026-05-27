@@ -1,0 +1,20 @@
+31a3051 Merge pull request #325 from Tanish-Solanki/fix-vitest-next-aliases
+3eb5844 Merge pull request #326 from Tanish-Solanki/fix-backend-startup-bugs
+0d0784c Merge pull request #357 from advikdivekar/perf/paginate-event-list-endpoints
+39b8147 Merge pull request #355 from advikdivekar/security/api-rate-limiter-missing-export
+0de7bdd fix: remove duplicate navbar actions
+0b867c5 fix: remove socket lifecycle console logs
+e36ee29 chore: add standard prettier configuration file for code style consistency
+e89cbba chore: add standard github pull request template
+4fb2a17 chore: add standard SECURITY.md vulnerability disclosure policy
+f967f01 Merge pull request #375 from SuhridXSingh/fix-socket-client-prod-logs
+91e4203 Merge pull request #374 from Pratikshya32/chore/security-policy-v2
+8924758 Merge pull request #371 from SuhridXSingh/fix-navbar-actions-duplicate
+29a5a05 Merge pull request #373 from Pratikshya32/chore/pull-request-template-v2
+a0b952c Merge pull request #372 from Pratikshya32/chore/prettier-config-v2
+3d90b90 Merge pull request #332 from KRUSHAL2956/fix/socket-room-allocation-exhaustion
+d03b06a Merge pull request #330 from KRUSHAL2956/fix/collision-safe-uuid-generation
+6f46c7a Merge pull request #329 from KRUSHAL2956/fix/performance-monitor-memory-leak
+2a4414d Merge pull request #328 from KRUSHAL2956/fix/auth-rate-limiter-memory-leak
+e57d10a Merge pull request #327 from Tanish-Solanki/fix-turnstile-verification
+d85d794 merge: resolve all backend, modular routing, and frontend UI conflicts with upstream

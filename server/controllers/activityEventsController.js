@@ -1,12 +1,7 @@
 import { activityEventsService } from '../services/activityEventsService.js';
+import { wrapAsync } from '../middleware/asyncHandler.js';
+import { NotFoundError } from '../utils/errors.js';
 import { paginationSchema } from '../validators/eventSchemas.js';
-
-function wrapAsync(fn) {
-  return (req, res) =>
-    Promise.resolve(fn(req, res)).catch((e) => {
-      res.status(500).json({ error: e?.message || 'Internal server error' });
-    });
-}
 
 function parsePagination(query) {
   const { page, limit } = paginationSchema.parse(query);
@@ -33,8 +28,7 @@ export const addActivityEvent = wrapAsync(async (req, res) => {
 export const deleteActivityEvent = wrapAsync(async (req, res) => {
   const activityKey = String(req.params.activityKey || '').trim();
   const eventId = String(req.params.eventId || '').trim();
-  await activityEventsService.assertCanManage(req.body);
-  const deleted = await activityEventsService.deleteActivityEvent(activityKey, eventId);
-  if (!deleted) return res.status(404).json({ error: 'Event not found in manual activity events.' });
+  const deleted = await activityEventsService.deleteActivityEvent(activityKey, eventId, req.body);
+  if (!deleted) throw new NotFoundError('Event not found in manual activity events.');
   return res.json({ ok: true });
 });

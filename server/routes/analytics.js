@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { supabaseRequest, HAS_SUPABASE } from '../index.js';
+import { supabaseRequest, HAS_SUPABASE } from '../storage/supabaseClient.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +19,10 @@ async function readContentSafe() {
   }
 }
 
+router.get('/', (req, res) => {
+  res.json({ ok: true, message: 'Analytics endpoint is available.' });
+});
+
 router.get('/stats', async (_req, res) => {
   try {
     let totalUsers = null;
@@ -28,13 +32,13 @@ router.get('/stats', async (_req, res) => {
 
     if (HAS_SUPABASE) {
       const [events, submissions] = await Promise.all([
-        supabaseRequest("events?select=status"),
-        supabaseRequest("form_submissions?select=id,college_email")
+        supabaseRequest('events?select=status'),
+        supabaseRequest('form_submissions?select=id,college_email'),
       ]);
-      
+
       upcomingEvents = events.filter(e => e.status === 'upcoming').length;
       activeRegistrations = submissions.length;
-      
+
       const uniqueEmails = new Set(submissions.map(s => s.college_email).filter(Boolean));
       totalUsers = uniqueEmails.size > 0 ? uniqueEmails.size : submissions.length;
     } else {
@@ -53,18 +57,18 @@ router.get('/growth', async (_req, res) => {
     let growth = [];
 
     if (HAS_SUPABASE) {
-      const submissions = await supabaseRequest("form_submissions?select=created_at&order=created_at.asc");
+      const submissions = await supabaseRequest('form_submissions?select=created_at&order=created_at.asc');
       const dailyCounts = {};
-      
+
       for (const sub of submissions) {
         if (!sub.created_at) continue;
         const date = sub.created_at.split('T')[0];
         dailyCounts[date] = (dailyCounts[date] || 0) + 1;
       }
-      
+
       growth = Object.keys(dailyCounts).sort().map(date => ({
         date,
-        registrations: dailyCounts[date]
+        registrations: dailyCounts[date],
       }));
     }
 
@@ -80,10 +84,10 @@ router.get('/events', async (_req, res) => {
 
     if (HAS_SUPABASE) {
       const [events, submissions] = await Promise.all([
-        supabaseRequest("events?select=id,name"),
-        supabaseRequest("form_submissions?select=form_type")
+        supabaseRequest('events?select=id,name'),
+        supabaseRequest('form_submissions?select=form_type'),
       ]);
-      
+
       const countsByFormType = {};
       for (const sub of submissions) {
         if (!sub.form_type) continue;
@@ -94,7 +98,7 @@ router.get('/events', async (_req, res) => {
         name: e.name,
         capacity: null,
         attendance: countsByFormType[e.id] || 0,
-        waitlist: null
+        waitlist: null,
       }));
     }
 

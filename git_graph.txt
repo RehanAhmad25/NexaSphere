@@ -1,0 +1,37 @@
+* 7afa760 chore(deps-dev): bump @testing-library/react from 14.3.1 to 16.3.2
+| * 2ccce23 chore(deps): bump lucide-react from 0.460.0 to 1.16.0
+|/  
+| * b762ca7 chore(deps-dev): bump jsdom from 22.1.0 to 29.1.1
+|/  
+| * 33736de chore(deps-dev): bump @vitest/ui from 0.34.7 to 4.1.7
+|/  
+| * 3b7eaa3 chore(deps): bump framer-motion from 12.38.0 to 12.40.0
+|/  
+| * ba056a8 Merge pull request #408 from rajesh-puripanda/feat/real-time-team-sync-kanban
+|/| 
+| * b147c95 chore(sync): force trigger gssoc automation re-check
+| * de3a1e9 feat(sync): implement real-time room-scoped Kanban board with optimistic state rollbacks
+* |   7034bf8 Merge pull request #383 from atul-upadhyay-7/fix/plaintext-password-and-token-hashing
+|\ \  
+| * | e906115 Hash passwords with bcrypt and session tokens with SHA-256
+| |/  
+* |   55e18f8 Merge pull request #412 from KRUSHAL2956/fix/admin-session-cleanup-serverless-mitigation
+|\ \  
+| * | f0a0ab2 fix(auth): prevent infinite admin session growth in serverless
+| |/  
+* |   fadf80a Merge pull request #421 from pithva007/chore/issue-347-dependabot
+|\ \  
+| * | d9bfe95 chore: configure Dependabot for automated dependency updates (#347)
+| |/  
+* |   c2cdc81 Merge pull request #422 from pithva007/perf/issue-348-db-pooling
+|\ \  
+| * | d1cbc78 perf: implement database connection pooling singleton (#348)
+| |/  
+* |   89e955a Merge pull request #382 from atul-upadhyay-7/fix/remove-hardcoded-admin-secret
+|\ \  
+| * | f75c37b Remove hardcoded default admin secret from certificate API
+| |/  
+* |   f15b54d Merge pull request #381 from atul-upadhyay-7/fix/workspace-room-access-control
+|\ \  
+| * | 41c7722 fix: prevent unauthenticated workspace room access and event relay
+| |/  

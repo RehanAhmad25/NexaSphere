@@ -1,0 +1,10 @@
+57f94ef Merge pull request #213 from diyamajee-spec/feature/i18n-hindi-language-support
+8fc48ff fix: resolve merge conflicts and fix HeroSection test setup
+769e5cf Merge branch 'main' into feature/i18n-hindi-language-support
+096d74b Merge pull request #214 from himansirajgor8/main
+0d7f2a5 Merge pull request #215 from Itzzavdheshh/ui
+7825b98 fix: center section headings across all landing page sections ??? wrapper class + CSS align-self fix
+a817bde fix: resolve coreTeamService.js conflict
+0f21f9d feat(i18n): add Hindi language support with react-i18next closes #207
+a450050 Merge pull request #206 from Saranyadharani/feature/gamification-system
+a22d2aa Merge pull request #195 from Aditya8369/185

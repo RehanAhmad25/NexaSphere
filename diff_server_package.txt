@@ -1,0 +1,36 @@
+diff --git a/server/package.json b/server/package.json
+index 3d6c490..534fa0c 100644
+--- a/server/package.json
++++ b/server/package.json
+@@ -7,7 +7,11 @@
+     "dev": "node index.js",
+     "build": "echo \"server build step not required\"",
+     "test": "jest --coverage",
+-    "test:watch": "jest --watch"
++    "test:watch": "jest --watch",
++    "migrate": "node-pg-migrate -f .postgres_migrations_config.json",
++    "migrate:latest": "node-pg-migrate -f .postgres_migrations_config.json up",
++    "migrate:rollback": "node-pg-migrate -f .postgres_migrations_config.json down",
++    "migrate:create": "node-pg-migrate -f .postgres_migrations_config.json create"
+   },
+   "dependencies": {
+     "@sendgrid/mail": "^8.1.3",
+@@ -21,12 +25,15 @@
+     "firebase-admin": "^12.0.0",
+     "googleapis": "^140.0.1",
+     "morgan": "^1.10.0",
++    "node-pg-migrate": "^8.0.4",
+     "nodemailer": "^8.0.7",
++    "pg": "^8.21.0",
+     "redoc-express": "^1.0.0",
+     "socket.io": "^4.7.2",
+     "swagger-jsdoc": "^6.2.8",
+     "swagger-ui-express": "^5.0.0",
+     "winston": "^3.11.0",
+-    "yaml": "^2.3.4"
++    "yaml": "^2.3.4",
++    "zod": "^4.4.3"
+   }
+-}
++}
+\ No newline at end of file

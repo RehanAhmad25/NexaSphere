@@ -1,0 +1,8 @@
+ayushh	https://github.com/Ayushh-Sharmaa/NexaSphere.git (fetch)
+ayushh	https://github.com/Ayushh-Sharmaa/NexaSphere.git (push)
+gssoc	https://github.com/Itzzavdheshh/NexaSphere-gssoc.git (fetch)
+gssoc	https://github.com/Itzzavdheshh/NexaSphere-gssoc.git (push)
+origin	https://github.com/Itzzavdheshh/NexaSphere.git (fetch)
+origin	https://github.com/Itzzavdheshh/NexaSphere.git (push)
+upstream	https://github.com/ayush-sharma07/NexaSphere.git (fetch)
+upstream	https://github.com/ayush-sharma07/NexaSphere.git (push)

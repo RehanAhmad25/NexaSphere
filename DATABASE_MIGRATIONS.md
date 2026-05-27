@@ -18,7 +18,7 @@ NexaSphere adopts a **versioned, coordinated database migration strategy** to en
 ### Node.js Backend (`server/`)
 **Tool**: [node-pg-migrate](https://github.com/salsita/node-pg-migrate)
 - **Location**: `server/migrations/`
-- **Config**: `server/.postgres_migrations_config.js`
+- **Config**: `server/.postgres_migrations_config.json`
 - **Naming**: `{timestamp}_{description}.js`
 - **Format**: JavaScript (supports async/await)
 

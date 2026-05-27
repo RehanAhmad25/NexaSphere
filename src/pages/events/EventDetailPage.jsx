@@ -231,6 +231,10 @@ export default function EventDetailPage({ event, activityColor, activityIcon, on
 
   const color = activityColor || '#a855f7';
   const rgb = hexToRgb(color);
+  const status = event.status === 'upcoming' ? 'upcoming' : 'completed';
+  const overview = event.overview || event.description || 'More details for this event will be shared soon.';
+  const location = event.location || 'GL Bajaj Group of Institutions, Mathura';
+  const hasTopics = Array.isArray(event.topics) && event.topics.length > 0;
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
@@ -305,15 +309,16 @@ export default function EventDetailPage({ event, activityColor, activityIcon, on
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '28px', marginTop: '12px' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="Calendar" size={14} /> {event.date}</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="MapPin" size={14} /> GL Bajaj Group of Institutions, Mathura</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="Calendar" size={14} /> {event.dateText ?? event.date}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><DynamicIcon name="MapPin" size={14} /> {location}</span>
               <span style={{
                 fontSize: '0.72rem', padding: '3px 12px', borderRadius: '20px',
-                background: 'rgba(34,197,94,0.12)', color: '#22c55e',
-                border: '1px solid rgba(34,197,94,0.3)', fontWeight: 700,
+                background: status === 'completed' ? 'rgba(34,197,94,0.12)' : 'rgba(0,212,255,0.12)',
+                color: status === 'completed' ? '#22c55e' : 'var(--c1)',
+                border: status === 'completed' ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(0,212,255,0.3)', fontWeight: 700,
                 textTransform: 'uppercase', letterSpacing: '0.05em',
                 display: 'flex', alignItems: 'center', gap: '4px'
-              }}><DynamicIcon name="CheckCircle" size={12} /> Completed</span>
+              }}><DynamicIcon name={status === 'completed' ? 'CheckCircle' : 'Calendar'} size={12} /> {status === 'completed' ? 'Completed' : 'Upcoming'}</span>
             </div>
 
             
@@ -343,28 +348,28 @@ export default function EventDetailPage({ event, activityColor, activityIcon, on
                 pointerEvents: 'none',
               }} />
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.85, fontSize: '0.98rem', margin: 0, whiteSpace: 'pre-line' }}>
-                <Typewriter text={event.overview} speed={6} />
+                <Typewriter text={overview} speed={6} />
               </p>
             </div>
           </section>
 
           
-          <section>
+          {hasTopics && <section>
             <SectionHeader icon="Mic2" title="Presenters" color={color} />
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {event.topics?.map((t, i) => (
                 <PersonChip key={i} name={t.speaker} role="Presenter" color={color} icon="Code2" />
               ))}
             </div>
-          </section>
+          </section>}
 
           
-          <section>
+          {hasTopics && <section>
             <SectionHeader icon="Target" title="Topics Covered" color={color} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {event.topics?.map((t, i) => <TopicCard key={i} topic={t} index={i} color={color} />)}
             </div>
-          </section>
+          </section>}
 
           
           {(event.videoPresenter?.length > 0 || event.anchor) && (
@@ -412,7 +417,7 @@ export default function EventDetailPage({ event, activityColor, activityIcon, on
             </div>
             {!event.photoLink && !event.videoLink && (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '12px', fontStyle: 'italic' }}>
-                Add links in <code style={{ color }}>src/data/activityPagesData.js</code> → KSS #153 → <code style={{ color }}>photoLink</code> / <code style={{ color }}>videoLink</code>
+                Photos and recordings are not available for this event yet.
               </p>
             )}
           </section>

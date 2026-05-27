@@ -3,11 +3,39 @@ import { events as fallbackEvents } from '../../data/eventsData';
 import { BannerOrbs } from '../../shared/MotionLayer';
 import Footer from '../../shared/Footer';
 import { DynamicIcon } from '../../shared/Icons';
-import BookmarkButton from '../../components/common/BookmarkButton';
-import ErrorBoundary from '../../components/common/ErrorBoundary';
+import PersonalizedFeed from '../../components/recommendation/PersonalizedFeed';
+import EventCalendarView from '../../components/calendar/EventCalendarView';
 
-function EventsPageContent({ onBack, onEventClick, events = fallbackEvents }) {
-  const safeEvents = Array.isArray(events) ? events : [];
+export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
+  const [view, setView] = useState('timeline');
+  const [recommendationView, setRecommendationView] = useState(false);
+
+  // Auto-detect: if date has passed, treat as completed regardless of stored status
+  const now = Date.now();
+  const parseDate = ev => {
+    const raw = ev.dateText ?? ev.date ?? '';
+    const d = new Date(raw);
+    return isNaN(d) ? null : d;
+  };
+  const getEffectiveStatus = ev => {
+    if (ev.status === 'completed') return 'completed';
+    const d = parseDate(ev);
+    if (d && d.getTime() < now) return 'completed'; // date passed → auto-complete
+    return ev.status || 'upcoming';
+  };
+
+  // Sort: upcoming first (earliest date first), then completed (most recent first)
+  const sortedEvents = [...events]
+    .map(ev => ({ ...ev, status: getEffectiveStatus(ev) }))
+    .sort((a, b) => {
+      const aIsUpcoming = a.status !== 'completed';
+      const bIsUpcoming = b.status !== 'completed';
+      if (aIsUpcoming !== bIsUpcoming) return bIsUpcoming ? 1 : -1;
+      const da = parseDate(a)?.getTime() ?? 0;
+      const db = parseDate(b)?.getTime() ?? 0;
+      return aIsUpcoming ? da - db : db - da;
+    });
+
   useEffect(() => {
     window.scrollTo({ top: 0 });
     const obs = new IntersectionObserver(entries => {
@@ -44,63 +72,99 @@ function EventsPageContent({ onBack, onEventClick, events = fallbackEvents }) {
         <p className="section-subtitle pop-in" style={{ animationDelay: '.1s', maxWidth: '520px', margin: '0 auto', position:'relative',zIndex:1 }}>
           Where ideas come to life. Every event is a milestone in the NexaSphere journey.
         </p>
-      </div>
 
-      <div className="container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'flex', background: 'var(--card)', borderRadius: '30px', padding: '4px', border: '1px solid var(--bdr)', backdropFilter: 'blur(10px)' }}>
-          <button 
-            onClick={() => setViewMode('list')}
-            style={{ 
-              padding: '8px 24px', 
-              borderRadius: '26px', 
-              border: 'none', 
-              background: viewMode === 'list' ? 'var(--c1a)' : 'transparent',
-              color: viewMode === 'list' ? 'var(--c1)' : 'var(--t2)',
-              fontWeight: 600,
+        {/* View Toggle Buttons */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '12px', 
+          marginTop: '32px',
+          position: 'relative',
+          zIndex: 2,
+          flexWrap: 'wrap'
+        }}>
+          <button
+            onClick={() => {
+              setView('timeline');
+              setRecommendationView(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 20px',
+              background: !recommendationView && view === 'timeline' ? 'var(--c1)' : 'transparent',
+              border: !recommendationView && view === 'timeline' ? 'none' : '1px solid var(--bdr)',
+              borderRadius: '100px',
+              color: !recommendationView && view === 'timeline' ? 'white' : 'var(--t2)',
               cursor: 'pointer',
-              transition: 'all .2s'
-            }}>
-            List View
+              fontSize: '13px',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              fontFamily: "'Rajdhani', sans-serif"
+            }}
+          >
+            <DynamicIcon name="List" size={16} />
+            Timeline View
           </button>
-          <button 
-            onClick={() => setViewMode('calendar')}
-            style={{ 
-              padding: '8px 24px', 
-              borderRadius: '26px', 
-              border: 'none', 
-              background: viewMode === 'calendar' ? 'var(--c1a)' : 'transparent',
-              color: viewMode === 'calendar' ? 'var(--c1)' : 'var(--t2)',
-              fontWeight: 600,
+          <button
+            onClick={() => {
+              setView('calendar');
+              setRecommendationView(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 20px',
+              background: !recommendationView && view === 'calendar' ? 'var(--c1)' : 'transparent',
+              border: !recommendationView && view === 'calendar' ? 'none' : '1px solid var(--bdr)',
+              borderRadius: '100px',
+              color: !recommendationView && view === 'calendar' ? 'white' : 'var(--t2)',
               cursor: 'pointer',
-              transition: 'all .2s'
-            }}>
+              fontSize: '13px',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              fontFamily: "'Rajdhani', sans-serif"
+            }}
+          >
+            <DynamicIcon name="Calendar" size={16} />
             Calendar View
+          </button>
+          <button
+            onClick={() => {
+              setRecommendationView(true);
+              setView('timeline');
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 20px',
+              background: recommendationView ? 'var(--c1)' : 'transparent',
+              border: recommendationView ? 'none' : '1px solid var(--bdr)',
+              borderRadius: '100px',
+              color: recommendationView ? 'white' : 'var(--t2)',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+              fontFamily: "'Rajdhani', sans-serif"
+            }}
+          >
+            <DynamicIcon name="Sparkles" size={16} />
+            For You
           </button>
         </div>
       </div>
 
       <div className="container">
-        <div className="events-timeline ns-reveal">
-          {safeEvents.length === 0 ? (
-            <div style={{
-              textAlign: 'center', padding: '80px 24px', margin: '40px auto', maxWidth: '500px',
-              background: 'var(--card)', borderRadius: '16px', border: '1px solid var(--bdr)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
-            }}>
-              <div style={{ color: 'var(--c1)', marginBottom: '20px', opacity: 0.8 }}>
-                <DynamicIcon name="Calendar" size={56} />
-              </div>
-              <h3 style={{ fontSize: '1.4rem', marginBottom: '12px', color: 'var(--t1)', fontWeight: 600 }}>No upcoming events found</h3>
-              <p style={{ color: 'var(--t2)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '24px' }}>
-                We currently don't have any events to show. Please check back later for new updates and exciting activities!
-              </p>
-              <button onClick={() => window.location.reload()} className="btn btn-primary" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                <DynamicIcon name="RefreshCw" size={16} /> Refresh
-              </button>
-            </div>
-          ) : (
-            safeEvents.map((ev, i) => {
-              const isKSS = ev.id === 1 || ev.id === 'kss-153' || String(ev.shortName || '').toLowerCase().includes('kss');
+        {recommendationView ? (
+          <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
+        ) : view === 'timeline' ? (
+          <div className="events-timeline ns-reveal">
+            {sortedEvents.map((ev, i) => {
+              const hasDetailPage = !!ev.hasDetailPage;
               return (
                 <div className="timeline-item" key={ev.id}>
                   <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
@@ -108,30 +172,25 @@ function EventsPageContent({ onBack, onEventClick, events = fallbackEvents }) {
                     className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
                     style={{
                       animationDelay: `${i * .11}s`,
-                      cursor: isKSS ? 'none' : 'default',
+                      cursor: hasDetailPage ? 'pointer' : 'default',
                       transition: 'all .28s ease',
-                      position: 'relative'
                     }}
-                    onClick={isKSS ? () => onEventClick(ev) : undefined}
-                    onMouseEnter={isKSS ? e => {
+                    onClick={hasDetailPage ? () => onEventClick(ev) : undefined}
+                    onMouseEnter={hasDetailPage ? e => {
                       e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
                       e.currentTarget.style.transform = 'translateY(-4px)';
                     } : undefined}
-                    onMouseLeave={isKSS ? e => {
+                    onMouseLeave={hasDetailPage ? e => {
                       e.currentTarget.style.borderColor = '';
                       e.currentTarget.style.boxShadow = '';
                       e.currentTarget.style.transform = '';
                     } : undefined}
                   >
-                    <BookmarkButton
-                      item={{ id: `event-${ev.id}`, type: 'Event', title: ev.name, date: ev.date }}
-                      style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 20 }}
-                    />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
                       <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
-                      <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>
-                      {isKSS && (
+                      <div className="timeline-event-name" style={hasDetailPage ? { color: '#a855f7' } : {}}>{ev.name}</div>
+                      {hasDetailPage && (
                         <span style={{
                           marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
                           borderRadius: '10px', background: 'rgba(168,85,247,.12)',
@@ -162,30 +221,22 @@ function EventsPageContent({ onBack, onEventClick, events = fallbackEvents }) {
                   </div>
                 </div>
               );
-            })
-          )}
+            })}
 
-          {safeEvents.length > 0 && (
             <div className="timeline-item">
               <div className="timeline-dot upcoming" />
-              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${safeEvents.length * .11}s` }}>
+              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${sortedEvents.length * .11}s` }}>
                 <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
                 <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <EventCalendarView events={sortedEvents} onEventClick={onEventClick} />
+        )}
       </div>
 
       <Footer />
     </div>
-  );
-}
-
-export default function EventsPage(props) {
-  return (
-    <ErrorBoundary>
-      <EventsPageContent {...props} />
-    </ErrorBoundary>
   );
 }

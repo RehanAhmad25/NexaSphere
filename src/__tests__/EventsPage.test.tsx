@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import EventsPage from '../pages/events/EventsPage';
-import { BookmarkProvider } from '../context/BookmarkContext';
 
 describe('EventsPage Component', () => {
   const mockEvents = [
@@ -19,7 +18,7 @@ describe('EventsPage Component', () => {
       id: 'kss-154',
       name: 'KSS #154 — Web Dev',
       shortName: 'KSS #154',
-      date: 'May 1, 2025',
+      date: 'May 1, 2099',
       description: 'Modern web development',
       status: 'upcoming',
       icon: '🌐',
@@ -34,51 +33,74 @@ describe('EventsPage Component', () => {
     vi.clearAllMocks();
   });
 
-  const renderEventsPage = (events = mockEvents) => {
-    return render(
-      <BookmarkProvider>
-        <EventsPage
-          events={events}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
-      </BookmarkProvider>
-    );
-  };
-
   it('renders events page with title', () => {
-    renderEventsPage();
+    render(
+      <EventsPage
+        events={mockEvents}
+        onBack={mockOnBack}
+        onEventClick={mockOnEventClick}
+      />
+    );
     expect(screen.getByText(/Our Events/i)).toBeInTheDocument();
   });
 
   it('displays all events in timeline', () => {
-    renderEventsPage();
+    render(
+      <EventsPage
+        events={mockEvents}
+        onBack={mockOnBack}
+        onEventClick={mockOnEventClick}
+      />
+    );
     expect(screen.getByText(/KSS #153 — AI Workshop/i)).toBeInTheDocument();
     expect(screen.getByText(/KSS #154 — Web Dev/i)).toBeInTheDocument();
   });
 
   it('shows completed and upcoming status badges', () => {
-    renderEventsPage();
+    render(
+      <EventsPage
+        events={mockEvents}
+        onBack={mockOnBack}
+        onEventClick={mockOnEventClick}
+      />
+    );
     expect(screen.getByText(/Completed/i)).toBeInTheDocument();
     expect(screen.getByText(/Upcoming/i)).toBeInTheDocument();
   });
 
   it('renders back button', () => {
-    renderEventsPage();
+    render(
+      <EventsPage
+        events={mockEvents}
+        onBack={mockOnBack}
+        onEventClick={mockOnEventClick}
+      />
+    );
     const backBtn = screen.getByText(/← Back/);
     expect(backBtn).toBeInTheDocument();
   });
 
   it('renders event tags', () => {
-    renderEventsPage();
+    render(
+      <EventsPage
+        events={mockEvents}
+        onBack={mockOnBack}
+        onEventClick={mockOnEventClick}
+      />
+    );
     expect(screen.getByText('AI')).toBeInTheDocument();
     expect(screen.getByText('ML')).toBeInTheDocument();
     expect(screen.getByText('Web')).toBeInTheDocument();
   });
 
   it('renders coming soon message', () => {
-    renderEventsPage();
+    render(
+      <EventsPage
+        events={mockEvents}
+        onBack={mockOnBack}
+        onEventClick={mockOnEventClick}
+      />
+    );
     expect(screen.getByText(/More events coming soon/i)).toBeInTheDocument();
   });
 });
-

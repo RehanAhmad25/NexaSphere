@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import useFormValidation from '../../hooks/useFormValidation';
 import { DynamicIcon, IconArrowLeft, IconArrowRight, IconBolt, IconShieldCheck, IconUsers } from '../../shared/Icons';
 import Footer from '../../shared/Footer';
-import { Turnstile } from '@marsidev/react-turnstile';
 
 const WHATSAPP_COMMUNITY = 'https://chat.whatsapp.com/Jjc5cuUKENu0RC1vWSEs20';
 const LINKEDIN_PAGE      = 'https://www.linkedin.com/showcase/glbajaj-nexasphere/';
@@ -30,11 +28,10 @@ const GROUP_OPTIONS    = [
   'NexaSphere Career & Placement',
 ];
 
-const MEMBERSHIP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRQOW3Xjv13vXvft8ezD9sJdvjV3kf-VHm1l_mImHRDUAEqsilK0wb5QBD5GOkixwe/exec';
 
 function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
-function Field({ label, required, hint, error, errorId, children }) {
+function Field({ label, required, hint, children }) {
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
@@ -50,26 +47,11 @@ function Field({ label, required, hint, error, errorId, children }) {
         {hint ? <div style={{ color: 'var(--t3)', fontSize: '.82rem' }}>{hint}</div> : null}
       </div>
       {children}
-      {error && (
-        <div
-          id={errorId}
-          role="alert"
-          style={{
-            color: '#ef4444',
-            fontSize: '.85rem',
-            marginTop: 4,
-            fontWeight: 600,
-            animation: 'fadeIn .25s ease'
-          }}
-        >
-          {error}
-        </div>
-      )}
     </div>
   );
 }
 
-function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMode: inputModeProp, onPaste, onBlur, ...rest }) {
+function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMode: inputModeProp, onPaste }) {
   return (
     <input
       value={value}
@@ -83,7 +65,7 @@ function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMo
         width: '100%',
         padding: '12px 14px',
         background: 'var(--card2)',
-        border: rest['aria-invalid'] === 'true' ? '1px solid #ef4444' : '1px solid var(--bdr2)',
+        border: '1px solid var(--bdr2)',
         borderRadius: 'var(--r2)',
         color: 'var(--t1)',
         fontFamily: 'Rajdhani,sans-serif',
@@ -91,18 +73,13 @@ function Input({ value, onChange, placeholder, type = 'text', maxLength, inputMo
         outline: 'none',
         boxSizing: 'border-box',
       }}
-      onFocus={e => { e.target.style.borderColor = rest['aria-invalid'] === 'true' ? '#ef4444' : 'var(--c1b)'; e.target.style.boxShadow = rest['aria-invalid'] === 'true' ? '0 0 0 2px rgba(239, 68, 68, 0.2)' : 'var(--sh1)'; }}
-      onBlur={e  => {
-        e.target.style.borderColor = rest['aria-invalid'] === 'true' ? '#ef4444' : 'var(--bdr2)';
-        e.target.style.boxShadow = 'none';
-        if (onBlur) onBlur(e);
-      }}
-      {...rest}
+      onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+      onBlur={e  => { e.target.style.borderColor = 'var(--bdr2)';  e.target.style.boxShadow = 'none'; }}
     />
   );
 }
 
-function TextArea({ value, onChange, placeholder, rows = 5, onBlur, ...rest }) {
+function TextArea({ value, onChange, placeholder, rows = 5 }) {
   return (
     <textarea
       value={value}
@@ -113,7 +90,7 @@ function TextArea({ value, onChange, placeholder, rows = 5, onBlur, ...rest }) {
         width: '100%',
         padding: '12px 14px',
         background: 'var(--card2)',
-        border: rest['aria-invalid'] === 'true' ? '1px solid #ef4444' : '1px solid var(--bdr2)',
+        border: '1px solid var(--bdr2)',
         borderRadius: 'var(--r2)',
         color: 'var(--t1)',
         fontFamily: 'Rajdhani,sans-serif',
@@ -122,20 +99,15 @@ function TextArea({ value, onChange, placeholder, rows = 5, onBlur, ...rest }) {
         resize: 'vertical',
         boxSizing: 'border-box',
       }}
-      onFocus={e => { e.target.style.borderColor = rest['aria-invalid'] === 'true' ? '#ef4444' : 'var(--c1b)'; e.target.style.boxShadow = rest['aria-invalid'] === 'true' ? '0 0 0 2px rgba(239, 68, 68, 0.2)' : 'var(--sh1)'; }}
-      onBlur={e  => {
-        e.target.style.borderColor = rest['aria-invalid'] === 'true' ? '#ef4444' : 'var(--bdr2)';
-        e.target.style.boxShadow = 'none';
-        if (onBlur) onBlur(e);
-      }}
-      {...rest}
+      onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+      onBlur={e  => { e.target.style.borderColor = 'var(--bdr2)';  e.target.style.boxShadow = 'none'; }}
     />
   );
 }
 
 const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23CC1111' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`;
 
-function StyledSelect({ value, onChange, children, placeholder, onBlur, ...rest }) {
+function StyledSelect({ value, onChange, children, placeholder }) {
   return (
     <select
       value={value}
@@ -144,7 +116,7 @@ function StyledSelect({ value, onChange, children, placeholder, onBlur, ...rest 
         width: '100%',
         padding: '12px 14px',
         background: 'var(--card2)',
-        border: rest['aria-invalid'] === 'true' ? '1px solid #ef4444' : '1px solid var(--bdr2)',
+        border: '1px solid var(--bdr2)',
         borderRadius: 'var(--r2)',
         color: value ? 'var(--t1)' : 'var(--t3)',
         fontFamily: 'Rajdhani,sans-serif',
@@ -159,13 +131,8 @@ function StyledSelect({ value, onChange, children, placeholder, onBlur, ...rest 
         paddingRight: '36px',
         boxSizing: 'border-box',
       }}
-      onFocus={e => { e.target.style.borderColor = rest['aria-invalid'] === 'true' ? '#ef4444' : 'var(--c1b)'; e.target.style.boxShadow = rest['aria-invalid'] === 'true' ? '0 0 0 2px rgba(239, 68, 68, 0.2)' : 'var(--sh1)'; }}
-      onBlur={e  => {
-        e.target.style.borderColor = rest['aria-invalid'] === 'true' ? '#ef4444' : 'var(--bdr2)';
-        e.target.style.boxShadow = 'none';
-        if (onBlur) onBlur(e);
-      }}
-      {...rest}
+      onFocus={e => { e.target.style.borderColor = 'var(--c1b)'; e.target.style.boxShadow = 'var(--sh1)'; }}
+      onBlur={e  => { e.target.style.borderColor = 'var(--bdr2)';  e.target.style.boxShadow = 'none'; }}
     >
       {placeholder && <option value="" disabled>{placeholder}</option>}
       {children}
@@ -199,9 +166,9 @@ function PillRadio({ options, value, onChange }) {
   );
 }
 
-function MultiSelectChips({ options, values, onToggle, ...rest }) {
+function MultiSelectChips({ options, values, onToggle }) {
   return (
-    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }} {...rest}>
+    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
       {options.map(opt => {
         const active = values.includes(opt);
         return (
@@ -210,7 +177,6 @@ function MultiSelectChips({ options, values, onToggle, ...rest }) {
             type="button"
             onClick={() => onToggle(opt)}
             className="btn btn-outline btn-sm"
-            aria-pressed={active}
             style={{
               background:  active ? 'rgba(0,212,255,.12)' : undefined,
               borderColor: active ? 'var(--c1)' : undefined,
@@ -234,128 +200,54 @@ export default function MembershipPage({ onBack }) {
   const [busy, setBusy]   = useState(false);
   const [done, setDone]   = useState(false);
   const [err,  setErr]    = useState('');
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const topRef = useRef(null);
-  const [captchaToken, setCaptchaToken] = useState('');
+
+  const [form, setForm] = useState({
+    
+    fullName:     '',
+    collegeEmail: '',
+    rollNumber:   '',
+    course:       '',
+    courseOther:  '',
+    branch:       '',
+    branchOther:  '',
+    section:      '',
+    sectionOther: '',
+    semester:     '',
+    whatsapp:     '',
+    
+    groups:       [],
+    whyJoin:      '',
+  });
+
+  function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
+
   
-  useEffect(() => {
-    try {
-      const submitted = JSON.parse(localStorage.getItem('ns_member_emails') || '[]');
-      if (submitted.length > 0) setAlreadySubmitted(true);
-    } catch { /* ignore */ }
-  }, []);
-
-  const {
-    values: form,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    validateForm,
-    resetForm,
-    setValues,
-    setErrors,
-  } = useFormValidation(
-    {
-      fullName:     '',
-      collegeEmail: '',
-      rollNumber:   '',
-      course:       '',
-      courseOther:  '',
-      branch:       '',
-      branchOther:  '',
-      section:      '',
-      sectionOther: '',
-      semester:     '',
-      whatsapp:     '',
-      groups:       [],
-      whyJoin:      '',
-    },
-    {
-      fullName: { required: true, requiredMessage: 'Full name is required' },
-      collegeEmail: {
-        required: true,
-        requiredMessage: 'College email is required',
-        email: true,
-        emailMessage: 'Please enter a valid email address',
-        custom: (val) => {
-          if (val && !val.endsWith('@glbajajgroup.org')) {
-            return 'Please use your official GL Bajaj email (@glbajajgroup.org)';
-          }
-        }
-      },
-      rollNumber: { required: true, requiredMessage: 'University roll number is required' },
-      course: { required: true, requiredMessage: 'Course is required' },
-      courseOther: {
-        custom: (val, values) => {
-          if (values.course === 'Other' && !String(val || '').trim()) {
-            return 'Course specification is required';
-          }
-        }
-      },
-      branch: { required: true, requiredMessage: 'Branch/Department is required' },
-      branchOther: {
-        custom: (val, values) => {
-          if (values.branch === 'Other' && !String(val || '').trim()) {
-            return 'Branch specification is required';
-          }
-        }
-      },
-      section: { required: true, requiredMessage: 'Section is required' },
-      sectionOther: {
-        custom: (val, values) => {
-          if (values.section === 'Other' && !String(val || '').trim()) {
-            return 'Section specification is required';
-          }
-        }
-      },
-      semester: { required: true, requiredMessage: 'Semester is required' },
-      whatsapp: {
-        required: true,
-        requiredMessage: 'WhatsApp number is required',
-        phone: true,
-        phoneMessage: 'WhatsApp number must be exactly 10 digits'
-      },
-      groups: {
-        custom: (val) => {
-          if (!val || val.length === 0) {
-            return 'Please select at least one group';
-          }
-        }
-      },
-      whyJoin: { required: true, requiredMessage: 'Please explain why you want to join' },
-    }
-  );
-
-  const stepFields = {
-    1: ['fullName', 'collegeEmail', 'rollNumber', 'course', 'courseOther', 'branch', 'branchOther', 'section', 'sectionOther', 'semester', 'whatsapp'],
-    2: ['groups', 'whyJoin']
-  };
-
   const missingRequired = useMemo(() => {
     const missing = [];
-    const fields = stepFields[step] || [];
-    for (const f of fields) {
-      const v = form[f];
-      if (f === 'groups') {
-        if (!v || v.length === 0) missing.push(f);
-      } else if (f === 'courseOther') {
-        if (form.course === 'Other' && !String(v || '').trim()) missing.push(f);
-      } else if (f === 'branchOther') {
-        if (form.branch === 'Other' && !String(v || '').trim()) missing.push(f);
-      } else if (f === 'sectionOther') {
-        if (form.section === 'Other' && !String(v || '').trim()) missing.push(f);
-      } else if (f === 'collegeEmail') {
-        const email = String(v || '').trim();
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !email.endsWith('@glbajajgroup.org')) {
-          missing.push(f);
-        }
-      } else if (f === 'whatsapp') {
-        const phone = String(v || '').trim();
-        if (!phone || !/^\d{10}$/.test(phone)) missing.push(f);
-      } else {
-        if (!String(v || '').trim()) missing.push(f);
-      }
+    
+    if (step === 1) {
+      if (!form.fullName.trim())     missing.push('fullName');
+      if (!form.collegeEmail.trim()) missing.push('collegeEmail');
+      if (!form.rollNumber.trim())   missing.push('rollNumber');
+      if (!form.course)              missing.push('course');
+      if (form.course === 'Other' && !form.courseOther.trim()) missing.push('courseOther');
+      if (!form.branch)              missing.push('branch');
+      if (form.branch === 'Other' && !form.branchOther.trim()) missing.push('branchOther');
+      if (!form.section)             missing.push('section');
+      if (form.section === 'Other' && !form.sectionOther.trim()) missing.push('sectionOther');
+      if (!form.semester)            missing.push('semester');
+      const phone = String(form.whatsapp || '').trim();
+      if (!phone || !/^\d{10}$/.test(phone)) missing.push('whatsapp');
+      
+      const email = form.collegeEmail.trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) missing.push('collegeEmail');
+      if (email && !email.endsWith('@glbajajgroup.org')) missing.push('collegeEmail');
+    }
+    if (step === 2) {
+      if (form.groups.length === 0) missing.push('groups');
+      if (!form.whyJoin.trim())     missing.push('whyJoin');
     }
     return missing;
   }, [form, step]);
@@ -371,50 +263,39 @@ export default function MembershipPage({ onBack }) {
     setErr('');
     setBusy(true);
     try {
-      const emailKey = String(form.whatsapp || '').trim(); 
-      try {
-        const existing = JSON.parse(localStorage.getItem('ns_member_emails') || '[]');
-        if (existing.includes(emailKey)) {
-          setErr('This number has already been used to submit a membership form. Each member may submit only once.');
-          setBusy(false);
-          return;
-        }
-      } catch { /* ignore */ }
-
       const payload = {
-        fullName:     form.fullName.trim(),
-        collegeEmail: form.collegeEmail.trim().toLowerCase(),
-        rollNumber:   form.rollNumber.trim(),
-        course:       form.course === 'Other' ? (form.courseOther.trim() || 'Other') : form.course,
-        branch:       form.branch === 'Other' ? (form.branchOther.trim() || 'Other') : form.branch,
-        section:      form.section === 'Other' ? form.sectionOther : form.section,
-        semester:     form.semester,
-        whatsapp:     form.whatsapp,
-        groups:       form.groups.join(', '),
-        whyJoin:      form.whyJoin.trim(),
-        submittedAt:  new Date().toISOString(),
-        userAgent:    navigator.userAgent,
-        formType:     'membership',
-        captchaToken: captchaToken
+        fullName:       form.fullName.trim(),
+        collegeEmail:   form.collegeEmail.trim().toLowerCase(),
+        rollNumber:     form.rollNumber.trim(),
+        course:         form.course === 'Other' ? (form.courseOther.trim() || 'Other') : form.course,
+        branch:         form.branch === 'Other' ? (form.branchOther.trim() || 'Other') : form.branch,
+        section:        form.section === 'Other' ? form.sectionOther : form.section,
+        semester:       form.semester,
+        whatsapp:       form.whatsapp,
+        groupsSelected: form.groups.join(', '),
+        whyJoin:        form.whyJoin.trim(),
       };
 
-      const res = await fetch(MEMBERSHIP_SCRIPT_URL, {
+      const base = (import.meta?.env?.VITE_API_BASE || '').replace(/\/+$/, '');
+      const url = base ? `${base}/api/submissions/membership` : '/api/submissions/membership';
+
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || (data && data.ok === false)) {
+
+      if (res.status === 409) {
+        throw new Error('This email has already been used to submit a membership form.');
+      }
+
+      if (!res.ok) {
         throw new Error(data?.error || 'Membership form submission failed');
       }
 
-      
-      try {
-        const existing = JSON.parse(localStorage.getItem('ns_member_emails') || '[]');
-        existing.push(emailKey);
-        localStorage.setItem('ns_member_emails', JSON.stringify(existing));
-      } catch { /* ignore */ }
-
+      setSubmittedEmail(payload.collegeEmail);
       setDone(true);
       scrollTop();
     } catch (e) {
@@ -549,132 +430,76 @@ export default function MembershipPage({ onBack }) {
             >Follow on LinkedIn</a>
           </div>
         </div>
-      )
+      ),
     },
+    
     {
-        title:    'Personal Details',
-        subtitle: 'Fill in your basic information accurately using your college details.',
-        icon:     <IconUsers style={{ width: 18, height: 18 }} />,
+      title:    'Personal Details',
+      subtitle: 'Fill in your basic information accurately using your college details.',
+      icon:     <IconUsers style={{ width: 18, height: 18 }} />,
       render: () => (
         <div style={{ display: 'grid', gap: 18 }}>
-          <Field
-            label="Full Name"
-            required
-            error={touched.fullName && errors.fullName}
-            errorId="error-fullName"
-          >
+          <Field label="Full Name" required>
             <Input
-              id="input-fullName"
               value={form.fullName}
-              onChange={v => handleChange('fullName', v.replace(/[^a-zA-Z\s.\-']/g, ''))}
-              onBlur={() => handleBlur('fullName')}
+              onChange={v => set('fullName', v.replace(/[^a-zA-Z\s.\-']/g, ''))}
               placeholder="Your full name"
               maxLength={60}
-              aria-invalid={touched.fullName && errors.fullName ? "true" : "false"}
-              aria-describedby={touched.fullName && errors.fullName ? "error-fullName" : undefined}
             />
           </Field>
 
-          <Field
-            label="College Email ID"
-            required
-            hint="Use your official college email"
-            error={touched.collegeEmail && errors.collegeEmail}
-            errorId="error-collegeEmail"
-          >
+          <Field label="College Email ID" required hint="Use your official college email">
             <Input
-              id="input-collegeEmail"
               value={form.collegeEmail}
-              onChange={v => handleChange('collegeEmail', v.trim().toLowerCase())}
-              onBlur={() => handleBlur('collegeEmail')}
+              onChange={v => set('collegeEmail', v.trim().toLowerCase())}
               placeholder="yourname@glbajajgroup.org"
               type="email"
               maxLength={100}
-              aria-invalid={touched.collegeEmail && errors.collegeEmail ? "true" : "false"}
-              aria-describedby={touched.collegeEmail && errors.collegeEmail ? "error-collegeEmail" : undefined}
             />
+            {form.collegeEmail && !form.collegeEmail.endsWith('@glbajajgroup.org') && (
+              <div style={{ color: '#ef4444', fontSize: '.82rem', marginTop: 4 }}>
+                Please use your official GL Bajaj email (@glbajajgroup.org)
+              </div>
+            )}
           </Field>
 
-          <Field
-            label="University Roll Number"
-            required
-            error={touched.rollNumber && errors.rollNumber}
-            errorId="error-rollNumber"
-          >
+          <Field label="University Roll Number" required>
             <Input
-              id="input-rollNumber"
               value={form.rollNumber}
-              onChange={v => handleChange('rollNumber', v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15))}
-              onBlur={() => handleBlur('rollNumber')}
+              onChange={v => set('rollNumber', v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15))}
               placeholder="e.g. 2301234"
               maxLength={15}
-              aria-invalid={touched.rollNumber && errors.rollNumber ? "true" : "false"}
-              aria-describedby={touched.rollNumber && errors.rollNumber ? "error-rollNumber" : undefined}
             />
           </Field>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 14 }}>
-            <Field
-              label="Course"
-              required
-              error={(touched.course && errors.course) || (touched.courseOther && errors.courseOther)}
-              errorId="error-course"
-            >
+            <Field label="Course" required>
               <div style={{ display: 'grid', gap: 8 }}>
-                <StyledSelect
-                  id="input-course"
-                  value={form.course}
-                  onChange={v => handleChange('course', v)}
-                  onBlur={() => handleBlur('course')}
-                  placeholder="Select course"
-                  aria-invalid={touched.course && errors.course ? "true" : "false"}
-                  aria-describedby={touched.course && errors.course ? "error-course" : undefined}
-                >
+                <StyledSelect value={form.course} onChange={v => set('course', v)} placeholder="Select course">
                   {COURSE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </StyledSelect>
                 {form.course === 'Other' && (
                   <Input
-                    id="input-courseOther"
                     value={form.courseOther}
-                    onChange={v => handleChange('courseOther', v.replace(/[^a-zA-Z0-9\s\-&().]/g, ''))}
-                    onBlur={() => handleBlur('courseOther')}
+                    onChange={v => set('courseOther', v.replace(/[^a-zA-Z0-9\s\-&().]/g, ''))}
                     placeholder="Specify your course"
                     maxLength={60}
-                    aria-invalid={touched.courseOther && errors.courseOther ? "true" : "false"}
-                    aria-describedby={touched.courseOther && errors.courseOther ? "error-course" : undefined}
                   />
                 )}
               </div>
             </Field>
 
-            <Field
-              label="Branch / Department"
-              required
-              error={(touched.branch && errors.branch) || (touched.branchOther && errors.branchOther)}
-              errorId="error-branch"
-            >
+            <Field label="Branch / Department" required>
               <div style={{ display: 'grid', gap: 8 }}>
-                <StyledSelect
-                  id="input-branch"
-                  value={form.branch}
-                  onChange={v => handleChange('branch', v)}
-                  onBlur={() => handleBlur('branch')}
-                  placeholder="Select branch"
-                  aria-invalid={touched.branch && errors.branch ? "true" : "false"}
-                  aria-describedby={touched.branch && errors.branch ? "error-branch" : undefined}
-                >
+                <StyledSelect value={form.branch} onChange={v => set('branch', v)} placeholder="Select branch">
                   {BRANCH_OPTIONS.map(b => <option key={b} value={b}>{b}</option>)}
                 </StyledSelect>
                 {form.branch === 'Other' && (
                   <Input
-                    id="input-branchOther"
                     value={form.branchOther}
-                    onChange={v => handleChange('branchOther', v.replace(/[^a-zA-Z0-9\s\-&().]/g, ''))}
-                    onBlur={() => handleBlur('branchOther')}
+                    onChange={v => set('branchOther', v.replace(/[^a-zA-Z0-9\s\-&().]/g, ''))}
                     placeholder="Specify your branch"
                     maxLength={60}
-                    aria-invalid={touched.branchOther && errors.branchOther ? "true" : "false"}
-                    aria-describedby={touched.branchOther && errors.branchOther ? "error-branch" : undefined}
                   />
                 )}
               </div>
@@ -682,139 +507,76 @@ export default function MembershipPage({ onBack }) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14 }}>
-            <Field
-              label="Section"
-              required
-              hint="Academic Section (A/B/C/...)"
-              error={(touched.section && errors.section) || (touched.sectionOther && errors.sectionOther)}
-              errorId="error-section"
-            >
-              <div style={{ display: 'grid', gap: 8 }}>
-                <StyledSelect
-                  id="input-section"
-                  value={form.section}
-                  onChange={v => handleChange('section', v)}
-                  onBlur={() => handleBlur('section')}
-                  placeholder="-- Select Section --"
-                  aria-invalid={touched.section && errors.section ? "true" : "false"}
-                  aria-describedby={touched.section && errors.section ? "error-section" : undefined}
-                >
-                  {SECTION_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </StyledSelect>
-                {form.section === 'Other' && (
-                  <div style={{ marginTop: 10 }}>
-                    <Input
-                      id="input-sectionOther"
-                      value={form.sectionOther}
-                      onChange={v => handleChange('sectionOther', v)}
-                      onBlur={() => handleBlur('sectionOther')}
-                      placeholder="Type your section manually..."
-                      aria-invalid={touched.sectionOther && errors.sectionOther ? "true" : "false"}
-                      aria-describedby={touched.sectionOther && errors.sectionOther ? "error-section" : undefined}
-                    />
-                  </div>
-                )}
-              </div>
+            <Field label="Section" required hint="Academic Section (A/B/C/...)">
+              <StyledSelect value={form.section} onChange={v => set('section', v)} placeholder="-- Select Section --">
+                {SECTION_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </StyledSelect>
+              {form.section === 'Other' && (
+                <div style={{ marginTop: 10 }}>
+                  <Input
+                    value={form.sectionOther}
+                    onChange={v => set('sectionOther', v)}
+                    placeholder="Type your section manually..."
+                  />
+                </div>
+              )}
             </Field>
 
-            <Field
-              label="Semester"
-              required
-              error={touched.semester && errors.semester}
-              errorId="error-semester"
-            >
-              <StyledSelect
-                id="input-semester"
-                value={form.semester}
-                onChange={v => handleChange('semester', v)}
-                onBlur={() => handleBlur('semester')}
-                placeholder="Select semester"
-                aria-invalid={touched.semester && errors.semester ? "true" : "false"}
-                aria-describedby={touched.semester && errors.semester ? "error-semester" : undefined}
-              >
+            <Field label="Semester" required>
+              <StyledSelect value={form.semester} onChange={v => set('semester', v)} placeholder="Select semester">
                 {SEMESTER_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </StyledSelect>
             </Field>
           </div>
 
-          <Field
-            label="WhatsApp Number"
-            required
-            hint="10-digit mobile number"
-            error={touched.whatsapp && errors.whatsapp}
-            errorId="error-whatsapp"
-          >
+          <Field label="WhatsApp Number" required hint="10-digit mobile number">
             <Input
-              id="input-whatsapp"
               value={form.whatsapp}
-              onChange={v => handleChange('whatsapp', String(v || '').replace(/[^\d]/g, '').slice(0, 10))}
-              onBlur={() => handleBlur('whatsapp')}
+              onChange={v => set('whatsapp', String(v || '').replace(/[^\d]/g, '').slice(0, 10))}
               onPaste={e => {
                 e.preventDefault();
                 const pasted = e.clipboardData.getData('text').replace(/[^\d]/g, '').slice(0, 10);
-                handleChange('whatsapp', pasted);
+                set('whatsapp', pasted);
               }}
               placeholder="10-digit mobile number"
               type="tel"
               inputMode="numeric"
               maxLength={10}
-              aria-invalid={touched.whatsapp && errors.whatsapp ? "true" : "false"}
-              aria-describedby={touched.whatsapp && errors.whatsapp ? "error-whatsapp" : undefined}
             />
           </Field>
         </div>
       ),
     },
-
+    
     {
       title:    'Domain Selection',
       subtitle: 'Choose the NexaSphere groups you want to join and share your motivation.',
       icon:     <IconBolt style={{ width: 18, height: 18 }} />,
       render: () => (
         <div style={{ display: 'grid', gap: 20 }}>
-          <Field
-            label="Which NexaSphere groups would you like to join?"
-            required
-            hint="Select one or more."
-            error={touched.groups && errors.groups}
-            errorId="error-groups"
-          >
+          <Field label="Which NexaSphere groups would you like to join?" required hint="Select one or more.">
             <MultiSelectChips
-              id="input-groups"
               options={GROUP_OPTIONS}
               values={form.groups}
-              onToggle={opt => {
-                const nextVal = form.groups.includes(opt)
-                  ? form.groups.filter(x => x !== opt)
-                  : [...form.groups, opt];
-                handleChange('groups', nextVal);
-              }}
-              aria-invalid={touched.groups && errors.groups ? "true" : "false"}
-              aria-describedby={touched.groups && errors.groups ? "error-groups" : undefined}
+              onToggle={opt => set('groups', form.groups.includes(opt)
+                ? form.groups.filter(x => x !== opt)
+                : [...form.groups, opt]
+              )}
             />
           </Field>
 
-          <Field
-            label="Why do you want to join NexaSphere?"
-            required
-            error={touched.whyJoin && errors.whyJoin}
-            errorId="error-whyJoin"
-          >
+          <Field label="Why do you want to join NexaSphere?" required>
             <TextArea
-              id="input-whyJoin"
               value={form.whyJoin}
-              onChange={v => handleChange('whyJoin', v)}
-              onBlur={() => handleBlur('whyJoin')}
+              onChange={v => set('whyJoin', v)}
               placeholder="Share your motivation and what you hope to learn or contribute."
               rows={6}
-              aria-invalid={touched.whyJoin && errors.whyJoin ? "true" : "false"}
-              aria-describedby={touched.whyJoin && errors.whyJoin ? "error-whyJoin" : undefined}
             />
           </Field>
         </div>
       ),
     },
-  ], [form, errors, touched]);
+  ], [form]);
 
   const current  = steps[step];
   const progress = step / (steps.length - 1);
@@ -971,47 +733,10 @@ export default function MembershipPage({ onBack }) {
 
           
           <div className="member-body">
-            {alreadySubmitted && !done ? (
-              <div style={{
-                background:'rgba(255,45,120,.08)', border:'1px solid rgba(255,45,120,.22)',
-                borderRadius:'var(--r3)', padding:'20px 22px', textAlign:'center',
-              }}>
-                <div style={{ display:'flex', justifyContent:'center', color:'#ff2d78', marginBottom:10 }}><DynamicIcon name="AlertTriangle" size={22} /></div>
-                <div style={{ color:'var(--t1)', fontSize:'.98rem', fontWeight:600, marginBottom:16 }}>
-                  Membership Form Already Submitted
-                </div>
-                <div style={{ color:'var(--t2)', fontSize:'.88rem', lineHeight:1.6, marginBottom:24 }}>
-                  A membership form has already been submitted from this device.<br/>
-                  If you need to update your application, please contact us at{' '}
-                  <a href="mailto:nexasphere@glbajajgroup.org" style={{ color:'var(--c1)', fontWeight:600 }}>
-                    nexasphere@glbajajgroup.org
-                  </a>
-                </div>
-
-                <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
-                  <a
-                    href={WHATSAPP_COMMUNITY}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-whatsapp"
-                    style={{ flex:1, minWidth:0, justifyContent:'center' }}
-                  >
-                    Join WhatsApp Community
-                  </a>
-                  <a
-                    href={LINKEDIN_PAGE}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline"
-                    style={{ flex:1, minWidth:0, justifyContent:'center' }}
-                  >
-                    NexaSphere LinkedIn
-                  </a>
-                </div>
-              </div>
-            ) : done ? (
+            {done ? (
               /* ── Success screen ── */
               <div style={{ display:'grid', gap:18 }}>
+                {/* ── Confirmation banner ── */}
                 <div style={{
                   background:'linear-gradient(135deg,rgba(123,111,255,.08),rgba(0,212,255,.06))',
                   border:'1px solid var(--bdr2)', borderRadius:'var(--r3)',
@@ -1020,19 +745,51 @@ export default function MembershipPage({ onBack }) {
                   <div className="corner-tl"/><div className="corner-br"/>
                   <div style={{ fontSize:'2.4rem', marginBottom:14 }}>🚀</div>
                   <div style={{ fontFamily:'Orbitron,monospace', fontSize:'1rem', color:'var(--t1)', fontWeight:700, marginBottom:12 }}>
-                    Thank you for filling the NexaSphere Membership Form!
+                    Membership Form Submitted Successfully!
                   </div>
                   <p style={{ color:'var(--t2)', lineHeight:1.8, maxWidth:540, margin:'0 auto' }}>
-                    Your form has been successfully submitted. 🎉
-                    <br/><br/>
-                    Now request to join the NexaSphere WhatsApp group using the link below — and
-                    <b style={{ color:'var(--t1)' }}> mention that you have already filled the NexaSphere form</b>.
-                    <br/><br/>
-                    Our team will verify your responses and add you to the respective NexaSphere spaces/groups.
+                    Your response has been recorded. 🎉<br/>
+                    Submitted email: <b style={{ color:'var(--t1)' }}>{submittedEmail || form.collegeEmail}</b>
+                    <br/>
+                    If email notifications are enabled, a confirmation receipt will be sent there.
                   </p>
                 </div>
 
-                
+                {/* ── What happens next ── */}
+                <div style={{
+                  background:'var(--card)', border:'1px solid var(--bdr)',
+                  borderRadius:'var(--r3)', padding:'18px 20px',
+                  position:'relative', overflow:'hidden',
+                }}>
+                  <div className="corner-tl"/>
+                  <div style={{
+                    fontFamily:'Orbitron,monospace', fontSize:'.7rem',
+                    letterSpacing:'.16em', textTransform:'uppercase',
+                    color:'var(--c1)', marginBottom:14,
+                  }}>What Happens Next</div>
+                  <div style={{ display:'grid', gap:12 }}>
+                    {[
+                      { icon:'✅', title:'Step 1 — Join the community (Now)', desc:'Click the WhatsApp button below and request to join. When asked, mention you have already filled the NexaSphere Membership Form.' },
+                      { icon:'🔍', title:'Step 2 — Verification (3–5 working days)', desc:'Our team reviews your submission and verifies your college email. No action needed on your end.' },
+                      { icon:'💬', title:'Step 3 — You\'re added to domain groups', desc:'Once verified, you will be added to the respective NexaSphere WhatsApp domain groups you selected.' },
+                    ].map(s => (
+                      <div key={s.title} style={{
+                        display:'flex', gap:14, alignItems:'flex-start',
+                        padding:'12px 14px',
+                        background:'var(--card2)', border:'1px solid var(--bdr)',
+                        borderRadius:'var(--r2)',
+                      }}>
+                        <span style={{ fontSize:'1.2rem', flexShrink:0, marginTop:2 }}>{s.icon}</span>
+                        <div>
+                          <div style={{ fontFamily:'Rajdhani,sans-serif', fontWeight:700, color:'var(--t1)', fontSize:'.96rem', marginBottom:3 }}>{s.title}</div>
+                          <div style={{ fontSize:'.86rem', color:'var(--t2)', lineHeight:1.6 }}>{s.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── CTA buttons ── */}
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
                   <a
                     className="btn btn-whatsapp"
@@ -1056,12 +813,17 @@ export default function MembershipPage({ onBack }) {
                   </a>
                 </div>
 
+                {/* ── Footer note ── */}
                 <div style={{
                   background:'var(--card)', border:'1px solid var(--bdr)',
                   borderRadius:'var(--r2)', padding:'14px 16px',
                   fontSize:'.88rem', color:'var(--t3)', lineHeight:1.7, textAlign:'center',
                 }}>
-                  📌 Also make sure to follow the official NexaSphere LinkedIn page for updates.<br/>
+                  📌 Questions? Reach us at{' '}
+                  <a href="mailto:nexasphere@glbajajgroup.org" style={{ color:'var(--c1)', textDecoration:'none' }}>
+                    nexasphere@glbajajgroup.org
+                  </a>
+                  <br/>
                   <b style={{ color:'var(--t2)' }}>Stay connected and keep building 🚀 — NexaSphere Team</b>
                 </div>
               </div>
@@ -1080,7 +842,7 @@ export default function MembershipPage({ onBack }) {
                 ) : null}
 
                 
-                 <div style={{ marginTop:22, display:'flex', justifyContent:'space-between', gap:10, flexWrap:'wrap' }}>
+                <div style={{ marginTop:22, display:'flex', justifyContent:'space-between', gap:10, flexWrap:'wrap' }}>
                   <button
                     className="btn btn-outline"
                     type="button"
@@ -1100,96 +862,31 @@ export default function MembershipPage({ onBack }) {
                     <button
                       className="btn btn-primary btn-ripple"
                       type="button"
-                      disabled={busy}
+                      disabled={busy || !canNext}
                       onClick={() => {
-                        const fields = stepFields[step];
-                        if (fields) {
-                          const isStepValid = validateForm(fields);
-                          if (!isStepValid) {
-                            setErr('Please complete all required fields (*) with valid details to proceed.');
-                            const firstInvalid = fields.find(f => {
-                              const v = form[f];
-                              if (f === 'groups') return !v || v.length === 0;
-                              if (f === 'courseOther') return form.course === 'Other' && !String(v || '').trim();
-                              if (f === 'branchOther') return form.branch === 'Other' && !String(v || '').trim();
-                              if (f === 'sectionOther') return form.section === 'Other' && !String(v || '').trim();
-                              if (f === 'collegeEmail') {
-                                const email = String(v || '').trim();
-                                return !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !email.endsWith('@glbajajgroup.org');
-                              }
-                              if (f === 'whatsapp') {
-                                const phone = String(v || '').trim();
-                                return !phone || !/^\d{10}$/.test(phone);
-                              }
-                              return !String(v || '').trim();
-                            });
-                            if (firstInvalid) {
-                              const el = document.getElementById(`input-${firstInvalid}`);
-                              if (el) {
-                                el.focus();
-                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              }
-                            }
-                            return;
-                          }
-                        }
+                        if (!canNext) { setErr('Please complete the required fields (*) to proceed.'); return; }
                         setErr('');
                         setStep(s => clamp(s + 1, 0, steps.length - 1));
                         scrollTop();
                       }}
+                      style={{ opacity: canNext ? 1 : .65 }}
                     >
                       <span style={{ display:'inline-flex', alignItems:'center', gap:8 }}>
                         Continue <IconArrowRight/>
                       </span>
                     </button>
                   ) : (
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
-                    <Turnstile
-                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                      onSuccess={(token) => {
-                        setCaptchaToken(token);
-                      }}
-                    />
                     <button
                       className="btn btn-primary btn-ripple"
                       type="button"
-                  disabled={busy || !captchaToken}
-                  onClick={() => {
-
-                    const fields = stepFields[step];
-                    if (fields) {
-                      const isStepValid = validateForm(fields);
-                      if (!isStepValid) {
-                        setErr('Please complete all required fields (*) with valid details to submit.');
-                        const firstInvalid = fields.find(f => {
-                          const v = form[f];
-                          if (f === 'groups') return !v || v.length === 0;
-                          if (f === 'whyJoin') return !String(v || '').trim();
-                          return false;
-                        });
-                        if (firstInvalid) {
-                          const el = document.getElementById(`input-${firstInvalid}`);
-                          if (el) {
-                            el.focus();
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }
-                        }
-                        return;
-                      }
-                    }
-
-                    if (!captchaToken) {
-                      setErr('Please complete the CAPTCHA to submit.');
-                      return;
-                    }
-
-                    submit();
-}}
+                      disabled={busy || !canNext}
+                      onClick={() => {
+                        if (!canNext) { setErr('Please complete the required fields (*) to submit.'); return; }
+                        submit();
+                      }}
                     >
                       {busy ? 'Submitting…' : 'Submit Membership Form'}
                     </button>
-                  </div>
                   )}
                 </div>
               </>

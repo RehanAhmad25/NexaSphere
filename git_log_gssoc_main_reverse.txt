@@ -1,0 +1,5 @@
+a041346 chore: remove leftover development console logs
+15f6748 Merge branch 'main' into fix/navbar-layout-spacing-and-responsive-navigation
+19c28f2 Merge pull request #319 from SuhridXSingh/fix/remove-dev-logs-recreate
+5108a6e Merge pull request #318 from SuhridXSingh/fix/chatbot-api-endpoint
+fe18268 Merge pull request #160 from ThePrabhu/fix/navbar-layout-spacing-and-responsive-navigation

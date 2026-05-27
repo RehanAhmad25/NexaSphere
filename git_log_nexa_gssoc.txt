@@ -1,0 +1,10 @@
+d85d794 merge: resolve all backend, modular routing, and frontend UI conflicts with upstream
+e57d10a Merge pull request #327 from Tanish-Solanki/fix-turnstile-verification
+2a4414d Merge pull request #328 from KRUSHAL2956/fix/auth-rate-limiter-memory-leak
+6f46c7a Merge pull request #329 from KRUSHAL2956/fix/performance-monitor-memory-leak
+d03b06a Merge pull request #330 from KRUSHAL2956/fix/collision-safe-uuid-generation
+3d90b90 Merge pull request #332 from KRUSHAL2956/fix/socket-room-allocation-exhaustion
+a0b952c Merge pull request #372 from Pratikshya32/chore/prettier-config-v2
+29a5a05 Merge pull request #373 from Pratikshya32/chore/pull-request-template-v2
+8924758 Merge pull request #371 from SuhridXSingh/fix-navbar-actions-duplicate
+91e4203 Merge pull request #374 from Pratikshya32/chore/security-policy-v2

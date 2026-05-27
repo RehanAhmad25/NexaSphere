@@ -1,0 +1,26 @@
+tree 90e76e8c792f55cd446553dcf5f11fd150d9d985
+parent 10ce2e28aed6baa52b7f7a1ee4018ea3c116b164
+parent ecf6790317e38c220cdd6b0734ba4576a196b8e7
+author Ayush Sharma <ayush.sharmaa@hotmail.com> 1779808708 +0530
+committer GitHub <noreply@github.com> 1779808708 +0530
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJqFbnECRC1aQ7uu5UhlAAApI0QAK93IGA600EVmc958DfHu1f/
+ ekrTNmQJ+WGOCrJ/HWWY0bkanKceJAv+9AgwgopqlC+OFFOvZw5/K/fCDWM7RR6g
+ YN4I6SBGTC0WVw3/J+QvilycS4G6PYfPJurcvdf48ZQLNOXYoPW8Fz1HeOghD5J0
+ 2oDIZkGcHkz7hbBVHZrewMf56686BTUNqGs7Oy4gD4YpjTQqBx/bbd2jgLCzQnce
+ NqL4pdNJCLaRABT0aYb0m5C8mNXWOrLWXoiv+dlWEXICykh3J2ingVbt79dxyKp0
+ hUOVmWgnnPeQGBiIbJxOPGOIYpq9z22QOD5ShKvnZkzXEUTNxOmDYkp9tupsPsEZ
+ ysPUQHUNdhSytEbfs9KEoObEs7JIq1vL0uNCkMbWvQiUOEZPgZxKyEOgi3G0FGtO
+ sz1B1G+yzfO6fzM4acGf9s/2hB/a5ACNCMcuaHC8RK5A05IE+BHJXFlQDZ9B6SXd
+ s5jvGECW82SYnLrC+KDfnzKmRwPfDorqmDvtP8OwOYLJf63quDe62MukdFhTWdmj
+ kzKe106YOQt8/YElEXd148QoXTH+x5lPqL//tqpJoV6xrxplwapkc7zDaTnVuuaw
+ +eiXsIEYqmvUIAUbi7YsT9c9mQjCyVmZrCYGiJWttAK+I03HSjaBdd7KeDmthtcv
+ DjtkaF6EJAtY3cr0zQUc
+ =KLXA
+ -----END PGP SIGNATURE-----
+ 
+
+Merge pull request #325 from Tanish-Solanki/fix-vitest-next-aliases
+
+fix: add missing Next.js aliases in vitest config

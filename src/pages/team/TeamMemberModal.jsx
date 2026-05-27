@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import SafeImage from '../../shared/SafeImage';
 
 // ── Copy Popup ──
 function CopyPopup({ value, onClose }) {
@@ -43,6 +42,7 @@ function getWhatsappDisplay(raw) {
 // ── Modal Content ──
 function ModalContent({ member, onClose }) {
   const [activePopup, setActivePopup] = useState(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -67,7 +67,12 @@ function ModalContent({ member, onClose }) {
         <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
 
         {/* Photo */}
-        <SafeImage src={member.photo} alt={member.name} className="modal-photo" loading="lazy" fallbackType="avatar" />
+        <img 
+          src={(!member.photo || imgError) ? 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(member.name) + '&backgroundColor=7b6fff&textColor=ffffff' : member.photo} 
+          alt={member.name} 
+          className="modal-photo" 
+          onError={() => setImgError(true)}
+        />
 
         {/* Name & Role */}
         <div className="modal-name">{member.name}</div>
@@ -105,17 +110,31 @@ function ModalContent({ member, onClose }) {
 
             {member.whatsapp && (
               <div style={{ position: 'relative' }}>
-                <button
-                  className="modal-social-btn btn-whatsapp"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActivePopup(activePopup === 'whatsapp' ? null : 'whatsapp');
-                  }}
-                >
-                  💬 WhatsApp
-                </button>
-                {activePopup === 'whatsapp' && (
-                  <CopyPopup value={whatsappValue} onClose={() => setActivePopup(null)} />
+                {whatsappValue.startsWith('http') ? (
+                  <a
+                    href={whatsappValue}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="modal-social-btn btn-whatsapp"
+                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    💬 WhatsApp
+                  </a>
+                ) : (
+                  <>
+                    <button
+                      className="modal-social-btn btn-whatsapp"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePopup(activePopup === 'whatsapp' ? null : 'whatsapp');
+                      }}
+                    >
+                      💬 WhatsApp
+                    </button>
+                    {activePopup === 'whatsapp' && (
+                      <CopyPopup value={whatsappValue} onClose={() => setActivePopup(null)} />
+                    )}
+                  </>
                 )}
               </div>
             )}
