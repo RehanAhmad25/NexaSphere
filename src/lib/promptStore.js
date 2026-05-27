@@ -3,10 +3,10 @@
  * Handles: save, load, search, delete, and workspace organization of prompts
  */
 
-import logger from './logger';
+import logger from "./logger";
 
-const DB_NAME = 'NexaSphereDB';
-const STORE_NAME = 'prompts';
+const DB_NAME = "NexaSphereDB";
+const STORE_NAME = "prompts";
 const DB_VERSION = 1;
 
 let db = null;
@@ -31,12 +31,15 @@ export const initializeDB = async () => {
 
     request.onupgradeneeded = (event) => {
       const database = event.target.result;
-      
+
       if (!database.objectStoreNames.contains(STORE_NAME)) {
-        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-        store.createIndex('timestamp', 'timestamp', { unique: false });
-        store.createIndex('workspace', 'workspace', { unique: false });
-        store.createIndex('pinned', 'pinned', { unique: false });
+        const store = database.createObjectStore(STORE_NAME, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        store.createIndex("timestamp", "timestamp", { unique: false });
+        store.createIndex("workspace", "workspace", { unique: false });
+        store.createIndex("pinned", "pinned", { unique: false });
       }
     };
   });
@@ -45,10 +48,10 @@ export const initializeDB = async () => {
 /**
  * Save a prompt-response pair to storage
  */
-export const savePrompt = async (prompt, response, workspace = 'default') => {
+export const savePrompt = async (prompt, response, workspace = "default") => {
   try {
     const database = await initializeDB();
-    
+
     const promptEntry = {
       userPrompt: prompt,
       botResponse: response,
@@ -59,7 +62,7 @@ export const savePrompt = async (prompt, response, workspace = 'default') => {
     };
 
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readwrite');
+      const transaction = database.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.add(promptEntry);
 
@@ -67,7 +70,7 @@ export const savePrompt = async (prompt, response, workspace = 'default') => {
       request.onsuccess = () => resolve(request.result);
     });
   } catch (error) {
-    logger.error('Error saving prompt to IndexedDB:', error);
+    logger.error("Error saving prompt to IndexedDB:", error);
     // Fallback to localStorage
     savePromptToLocalStorage(prompt, response, workspace);
   }
@@ -81,12 +84,12 @@ export const getAllPrompts = async (workspace = null) => {
     const database = await initializeDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readonly');
+      const transaction = database.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      
+
       let request;
       if (workspace) {
-        const index = store.index('workspace');
+        const index = store.index("workspace");
         request = index.getAll(workspace);
       } else {
         request = store.getAll();
@@ -94,12 +97,14 @@ export const getAllPrompts = async (workspace = null) => {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        const results = request.result.sort((a, b) => b.timestamp - a.timestamp);
+        const results = request.result.sort(
+          (a, b) => b.timestamp - a.timestamp
+        );
         resolve(results);
       };
     });
   } catch (error) {
-    logger.error('Error retrieving prompts from IndexedDB:', error);
+    logger.error("Error retrieving prompts from IndexedDB:", error);
     return getPromptsFromLocalStorage(workspace);
   }
 };
@@ -118,7 +123,7 @@ export const searchPrompts = async (keyword, workspace = null) => {
         p.botResponse.toLowerCase().includes(lowerKeyword)
     );
   } catch (error) {
-    logger.error('Error searching prompts:', error);
+    logger.error("Error searching prompts:", error);
     return [];
   }
 };
@@ -131,9 +136,9 @@ export const getPinnedPrompts = async (workspace = null) => {
     const database = await initializeDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readonly');
+      const transaction = database.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('pinned');
+      const index = store.index("pinned");
       const request = index.getAll(true);
 
       request.onerror = () => reject(request.error);
@@ -146,7 +151,7 @@ export const getPinnedPrompts = async (workspace = null) => {
       };
     });
   } catch (error) {
-    logger.error('Error retrieving pinned prompts:', error);
+    logger.error("Error retrieving pinned prompts:", error);
     return [];
   }
 };
@@ -159,7 +164,7 @@ export const togglePinPrompt = async (id, pinned) => {
     const database = await initializeDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readwrite');
+      const transaction = database.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const getRequest = store.get(id);
 
@@ -177,7 +182,7 @@ export const togglePinPrompt = async (id, pinned) => {
       getRequest.onerror = () => reject(getRequest.error);
     });
   } catch (error) {
-    logger.error('Error toggling pin status:', error);
+    logger.error("Error toggling pin status:", error);
   }
 };
 
@@ -189,7 +194,7 @@ export const deletePrompt = async (id) => {
     const database = await initializeDB();
 
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readwrite');
+      const transaction = database.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.delete(id);
 
@@ -197,14 +202,14 @@ export const deletePrompt = async (id) => {
       request.onsuccess = () => resolve(true);
     });
   } catch (error) {
-    logger.error('Error deleting prompt:', error);
+    logger.error("Error deleting prompt:", error);
   }
 };
 
 /**
  * Clear all prompts in a workspace
  */
-export const clearWorkspace = async (workspace = 'default') => {
+export const clearWorkspace = async (workspace = "default") => {
   try {
     const database = await initializeDB();
     const allPrompts = await getAllPrompts(workspace);
@@ -214,7 +219,7 @@ export const clearWorkspace = async (workspace = 'default') => {
     }
     return true;
   } catch (error) {
-    logger.error('Error clearing workspace:', error);
+    logger.error("Error clearing workspace:", error);
   }
 };
 
@@ -226,18 +231,18 @@ export const getRecentPrompts = async (limit = 10, workspace = null) => {
     const allPrompts = await getAllPrompts(workspace);
     return allPrompts.slice(0, limit);
   } catch (error) {
-    logger.error('Error retrieving recent prompts:', error);
+    logger.error("Error retrieving recent prompts:", error);
     return [];
   }
 };
 
 // ===== FALLBACK: LocalStorage Functions =====
 
-const LOCALSTORAGE_KEY = 'nexasphere_prompts';
+const LOCALSTORAGE_KEY = "nexasphere_prompts";
 
-const savePromptToLocalStorage = (prompt, response, workspace = 'default') => {
+const savePromptToLocalStorage = (prompt, response, workspace = "default") => {
   try {
-    const stored = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || '[]');
+    const stored = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || "[]");
     stored.push({
       id: Date.now(),
       userPrompt: prompt,
@@ -248,19 +253,19 @@ const savePromptToLocalStorage = (prompt, response, workspace = 'default') => {
     });
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(stored));
   } catch (error) {
-    logger.error('Error saving to localStorage:', error);
+    logger.error("Error saving to localStorage:", error);
   }
 };
 
 const getPromptsFromLocalStorage = (workspace = null) => {
   try {
-    const stored = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || '[]');
+    const stored = JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY) || "[]");
     if (workspace) {
       return stored.filter((p) => p.workspace === workspace);
     }
     return stored.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
-    logger.error('Error retrieving from localStorage:', error);
+    logger.error("Error retrieving from localStorage:", error);
     return [];
   }
 };
@@ -268,13 +273,15 @@ const getPromptsFromLocalStorage = (workspace = null) => {
 export const exportPrompts = async (workspace = null) => {
   const prompts = await getAllPrompts(workspace);
   const dataStr = JSON.stringify(prompts, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const dataBlob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(dataBlob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = `nexasphere-prompts-${Date.now()}.json`;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 };
 
 export const importPrompts = async (file) => {
@@ -284,7 +291,11 @@ export const importPrompts = async (file) => {
       try {
         const prompts = JSON.parse(e.target.result);
         for (const prompt of prompts) {
-          await savePrompt(prompt.userPrompt, prompt.botResponse, prompt.workspace);
+          await savePrompt(
+            prompt.userPrompt,
+            prompt.botResponse,
+            prompt.workspace
+          );
         }
         resolve(prompts.length);
       } catch (error) {
