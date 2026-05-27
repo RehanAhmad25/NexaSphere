@@ -1245,23 +1245,25 @@ function evictOldestSubscription() {
 
 app.post('/api/notifications/subscribe', requireNotificationAuth, notificationRateLimiter, (req, res) => {
   try {
-    const data = normalizeSubscription(req.body);
-    const key = JSON.stringify(data);
-    pushSubscriptions.add(key);
-    evictOldestSubscription();
-app.post("/api/notifications/subscribe", (req, res) => {
-  try {
     const { subscription } = req.body;
+
     if (subscription) {
-      pushSubscriptions.add(JSON.stringify(subscription));
-      // Prevent memory leak by capping maximum subscriptions to 10,000
+      // Normalize and stringify the subscription object to ensure consistent storage and comparison
+      const data = normalizeSubscription(subscription);
+      const key = JSON.stringify(data);
+
+      // Add the normalized subscription to the set
+      pushSubscriptions.add(key);
+
+      // Evict the oldest subscription if the limit is exceeded
       if (pushSubscriptions.size > 10000) {
         const oldest = pushSubscriptions.values().next().value;
         pushSubscriptions.delete(oldest);
       }
     }
+
     return res.json({ success: true });
-  } catch (err) {
+  }catch (err) {
     if (err.name === 'ZodError') {
       return res.status(400).json({
         error: 'Invalid subscription payload',
@@ -1273,7 +1275,6 @@ app.post("/api/notifications/subscribe", (req, res) => {
 });
 
 app.post('/api/notifications/unsubscribe', requireNotificationAuth, notificationRateLimiter, (req, res) => {
-app.post("/api/notifications/unsubscribe", (req, res) => {
   try {
     const data = normalizeSubscription(req.body);
     pushSubscriptions.delete(JSON.stringify(data));
