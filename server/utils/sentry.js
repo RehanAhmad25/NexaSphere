@@ -4,7 +4,16 @@
  */
 
 import * as Sentry from "@sentry/node";
-import { nodeProfilingIntegration } from "@sentry/profiling-node";
+
+let nodeProfilingIntegration = null;
+try {
+  // Optional dependency: native bindings may be unavailable on some platforms.
+  // If profiling cannot be loaded, fall back to Sentry without profiling.
+  const profiling = await import("@sentry/profiling-node");
+  nodeProfilingIntegration = profiling.nodeProfilingIntegration;
+} catch (error) {
+  nodeProfilingIntegration = null;
+}
 
 /**
  * Initialize Sentry for backend monitoring
@@ -29,7 +38,7 @@ function initializeSentry(app) {
         request: true,
         serverName: true,
       }),
-      nodeProfilingIntegration(),
+      ...(nodeProfilingIntegration ? [nodeProfilingIntegration()] : []),
     ],
     tracesSampleRate: isDevelopment ? 1.0 : 0.1,
     profilesSampleRate: isDevelopment ? 1.0 : 0.1,

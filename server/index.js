@@ -16,6 +16,8 @@ import analyticsRouter from "./routes/analytics.js";
 import { initializeSocketIO, emitToRoom, getRoom } from "./config/socket.js";
 import adminStreamRouter from "./routes/adminStream.js";
 import { broadcastSSEEvent } from "./services/sseService.js";
+import documentationRouter from "./routes/documentation.js";
+import monitoringRouter from "./routes/monitoring.js";
 import rateLimit from "express-rate-limit";
 import {
   apiRateLimiter,
@@ -85,6 +87,10 @@ function requestLogger(req, res, next) {
 
 app.use(requestLogger);
 app.use("/api", apiRateLimiter);
+
+// Mount monitoring + API documentation routes (previously implemented but never registered).
+app.use("/api/monitoring", monitoringRouter);
+app.use("/api", documentationRouter);
 
 const adminAuth = adminAuthMiddleware.requireAdmin;
 const adminEvents = new EventEmitter();
