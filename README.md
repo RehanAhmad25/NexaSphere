@@ -322,6 +322,7 @@ This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) 
 <a href="https://github.com/ionfwsrijan"><img src="https://github.com/ionfwsrijan.png" width="50px" alt="ionfwsrijan" title="ionfwsrijan" /></a>
 <a href="https://github.com/anshika1179"><img src="https://github.com/anshika1179.png" width="50px" alt="anshika1179" title="anshika1179" /></a>
 <a href="https://github.com/atul-upadhyay-7"><img src="https://github.com/atul-upadhyay-7.png" width="50px" alt="atul-upadhyay-7" title="atul-upadhyay-7" /></a>
+<a href="https://github.com/OmanshiRaj"><img src="https://github.com/OmanshiRaj.png" width="50px" alt="OmanshiRaj" title="OmanshiRaj" /></a>
 <!-- CONTRIBUTORS_END -->
 
 </div>
