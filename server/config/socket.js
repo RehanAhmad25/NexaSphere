@@ -24,6 +24,171 @@ const joinRoomAttempts = new Map();
 const MAX_JOIN_ROOM_ATTEMPTS = 20;
 const JOIN_ROOM_WINDOW_MS = 60000;
 
+// ==========================================
+// WEBSOCKET BACKPRESSURE & THROTTLING CONFIG
+// ==========================================
+const MAX_PENDING_PACKETS = parseInt(process.env.WS_MAX_PENDING_PACKETS) || 100;
+const SLOW_CONSUMER_TIMEOUT_MS = parseInt(process.env.WS_SLOW_CONSUMER_TIMEOUT_MS) || 5000;
+
+const EVENT_POLICIES = {
+  'cursor_moved': {
+    throttleMs: 50,       // Max 20 updates per second
+    coalesce: true,
+  },
+  'workspace_update': {
+    throttleMs: 100,      // Max 10 updates per second
+    coalesce: true,
+  },
+  'document_change': {
+    throttleMs: 100,
+    coalesce: true,
+  },
+  'admin:new-registration': {
+    throttleMs: 200,      // Max 5 updates per second
+    coalesce: true,
+  },
+  'registration-confirmed': {
+    throttleMs: 500,
+    coalesce: true,
+  }
+};
+
+/**
+ * Parse Socket.IO packet payload from raw Engine.IO transport string
+ */
+function parseSocketPacket(packetStr) {
+  if (typeof packetStr !== 'string') return null;
+  // Match Socket.IO message format: optional engine.io type (4) + socket.io message type (2) + JSON array
+  // E.g. "42[...]" or "2[...]"
+  const match = packetStr.match(/^(?:4)?2(\[.*\])$/);
+  if (!match) return null;
+  try {
+    const arr = JSON.parse(match[1]);
+    if (Array.isArray(arr) && arr.length >= 1) {
+      return {
+        event: arr[0],
+        payload: arr[1]
+      };
+    }
+  } catch (e) {
+    // Silent fail for bad JSON
+  }
+  return null;
+}
+
+/**
+ * Generate a unique qualifier to isolate event states (e.g. per-room or per-user)
+ */
+function getEventQualifier(event, payload) {
+  if (!payload || typeof payload !== 'object') return '';
+  let parts = [];
+  if (payload.roomId) parts.push(`room:${payload.roomId}`);
+  if (payload.teamRoomId) parts.push(`team:${payload.teamRoomId}`);
+  if (payload.taskId) parts.push(`task:${payload.taskId}`);
+  if (payload.socketId) parts.push(`socket:${payload.socketId}`);
+  if (payload.userId) parts.push(`user:${payload.userId}`);
+  return parts.join('|');
+}
+
+/**
+ * Apply real-time websocket backpressure, slow consumer protection and emit throttling
+ */
+export function applyBackpressureProtection(socket) {
+  if (!socket.conn) return;
+
+  socket.data ||= {};
+  if (socket.data.backpressureApplied) return;
+  socket.data.backpressureApplied = true;
+
+  socket.data.lastEmitTimes ||= {};
+  socket.data.firstQueuedTime = null;
+
+  // Listen to the transport drain event to clear the queued time
+  const onDrain = () => {
+    socket.data.firstQueuedTime = null;
+  };
+  socket.conn.on('drain', onDrain);
+  socket.data.drainListener = onDrain;
+
+  const origWrite = socket.conn.write;
+  socket.conn.write = function (packet, options) {
+    const pendingCount = socket.conn.writeBuffer ? socket.conn.writeBuffer.length : 0;
+
+    // A. Bounded Websocket Buffering (Hard Queue Limits)
+    if (pendingCount >= MAX_PENDING_PACKETS) {
+      logger.warn('WebSocket backpressure limit exceeded. Force disconnecting slow consumer.', {
+        socketId: socket.id,
+        pendingCount,
+        maxAllowed: MAX_PENDING_PACKETS
+      });
+      socket.disconnect(true);
+      return;
+    }
+
+    // B. Slow Consumer Detection via time-stalled queues
+    const now = Date.now();
+    if (!socket.data.firstQueuedTime) {
+      socket.data.firstQueuedTime = now;
+    } else if (now - socket.data.firstQueuedTime > SLOW_CONSUMER_TIMEOUT_MS) {
+      logger.warn('WebSocket consumer queue stalled. Force disconnecting slow consumer.', {
+        socketId: socket.id,
+        pendingCount,
+        queuedDurationMs: now - socket.data.firstQueuedTime
+      });
+      socket.disconnect(true);
+      return;
+    }
+
+    // C. Parser, Throttling & Coalescing
+    const parsed = parseSocketPacket(packet);
+    if (parsed) {
+      const { event, payload } = parsed;
+      const policy = EVENT_POLICIES[event];
+      if (policy) {
+        const lastEmit = socket.data.lastEmitTimes[event] || 0;
+
+        if (policy.coalesce && now - lastEmit < policy.throttleMs) {
+          const qualifier = getEventQualifier(event, payload);
+          
+          if (socket.conn.writeBuffer) {
+            const existingIdx = socket.conn.writeBuffer.findIndex(item => {
+              const itemParsed = parseSocketPacket(item.data);
+              return itemParsed && itemParsed.event === event && getEventQualifier(event, itemParsed.payload) === qualifier;
+            });
+
+            if (existingIdx !== -1) {
+              // Replace the old packet with the latest state (coalescing)
+              socket.conn.writeBuffer[existingIdx].data = packet;
+              return;
+            }
+          }
+        }
+
+        socket.data.lastEmitTimes[event] = now;
+      }
+    }
+
+    return origWrite.call(socket.conn, packet, options);
+  };
+}
+
+/**
+ * Retrieve queue pressure and active websocket backpressure statistics
+ */
+export function getQueuePressureMetrics() {
+  if (!io) return [];
+  const metrics = [];
+  for (const [id, socket] of io.sockets.sockets) {
+    metrics.push({
+      socketId: id,
+      pendingPackets: socket.conn && socket.conn.writeBuffer ? socket.conn.writeBuffer.length : 0,
+      firstQueuedTime: socket.data ? socket.data.firstQueuedTime : null,
+      adminAuthenticated: !!socket.adminAuthenticated,
+    });
+  }
+  return metrics;
+}
+
 /**
  * Parse Bearer token from auth header
  */
@@ -77,6 +242,9 @@ export function initializeSocketIO(httpServer) {
  * @param {Object} socket - Socket.io socket instance
  */
 export function _onConnection(socket) {
+  // Apply WebSocket backpressure, slow consumer protection and emit throttling
+  applyBackpressureProtection(socket);
+
   logger.info('User connected', { socketId: socket.id, admin: !!socket.adminAuthenticated });
 
   // Auto-join authenticated admin sockets to admin room
@@ -287,6 +455,13 @@ export function _onConnection(socket) {
     connectedUsers.delete(socket.id);
     _cleanupWorkspaceMembership(socket.id);
     joinRoomAttempts.delete(socket.id);
+    if (socket.data) {
+      socket.data.firstQueuedTime = null;
+      socket.data.lastEmitTimes = null;
+      if (socket.data.drainListener && socket.conn) {
+        socket.conn.off('drain', socket.data.drainListener);
+      }
+    }
     logger.info('User disconnected', { socketId: socket.id });
   });
 
@@ -391,4 +566,4 @@ function _cleanupWorkspaceMembership(socketId) {
   }
 }
 
-export default { initializeSocketIO, getIO, broadcastEvent, emitToRoom, emitToUser, _clearConnectedUsers, _clearWorkspaceRoomMembers, _clearJoinRoomAttempts, _onConnection };
+export default { initializeSocketIO, getIO, broadcastEvent, emitToRoom, emitToUser, _clearConnectedUsers, _clearWorkspaceRoomMembers, _clearJoinRoomAttempts, _onConnection, applyBackpressureProtection, getQueuePressureMetrics };
