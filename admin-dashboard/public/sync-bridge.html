@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexaSphere Sync Bridge</title>
+</head>
+<body>
+  <script>
+    /**
+     * Sync Bridge — runs in an iframe at the ADMIN DASHBOARD origin.
+     *
+     * Flow:
+     * 1. Admin dashboard (same origin) updates localStorage and posts
+     *    a message here with the key that changed.
+     * 2. This bridge reads the new value from localStorage and relays
+     *    it to the PARENT window (website) via postMessage.
+     * 3. The website receives the message, updates its own localStorage,
+     *    and fires the 'ns-content-updated' event for subscribers.
+     *
+     * Also watches for native 'storage' events (same-origin tab sync)
+     * and relays those too.
+     */
+
+    function relayToParent(key, value) {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'ns-content-updated',
+          key: key,
+          value: value,
+        }, '*');
+      }
+    }
+
+    // Listen for messages from the admin dashboard (same origin)
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'ns-sync' && event.data.key) {
+        // Read the current value from localStorage and relay it
+        const value = localStorage.getItem(event.data.key);
+        relayToParent(event.data.key, value);
+      }
+    });
+
+    // Also watch for native localStorage changes in this origin
+    window.addEventListener('storage', (event) => {
+      if (event.key && event.key.startsWith('ns_db_')) {
+        relayToParent(event.key, event.newValue);
+      }
+    });
+  </script>
+</body>
+</html>
