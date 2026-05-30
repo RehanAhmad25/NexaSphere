@@ -5,6 +5,9 @@ import org.nexasphere.model.entity.JoinRequestEntity;
 import org.nexasphere.repository.CollaborationTeamRepository;
 import org.nexasphere.repository.JoinRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,7 +25,12 @@ public class CollaborationService {
     private JoinRequestRepository requestRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String PYTHON_SERVICE_URL = "http://localhost:8000/notify/join-request";
+
+    @Value("${INTERNAL_SERVICE_URL:http://localhost:8000}")
+    private String internalServiceUrl;
+
+    @Value("${INTERNAL_SERVICE_SECRET:}")
+    private String internalServiceSecret;
 
     public List<CollaborationTeamEntity> getAllTeams() {
         return teamRepository.findAll();
@@ -39,7 +47,13 @@ public class CollaborationService {
 
         // Notify via Python microservice
         try {
-            restTemplate.postForObject(PYTHON_SERVICE_URL, saved, String.class);
+            String url = internalServiceUrl + "/notify/join-request";
+            HttpHeaders headers = new HttpHeaders();
+            if (internalServiceSecret != null && !internalServiceSecret.isEmpty()) {
+                headers.set("X-Service-Auth", internalServiceSecret);
+            }
+            HttpEntity<JoinRequestEntity> request = new HttpEntity<>(saved, headers);
+            restTemplate.postForObject(url, request, String.class);
         } catch (Exception e) {
             // Log error, continue execution
             System.err.println("Failed to notify python microservice: " + e.getMessage());
