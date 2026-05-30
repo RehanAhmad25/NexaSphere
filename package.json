@@ -33,7 +33,7 @@
     "prepare": "node -e \"try { require('husky'); require('child_process').execSync('husky', {stdio:'inherit'}) } catch(e) { console.log('husky not available, skipping') }\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "concurrently": "^10.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
     "prettier": "^3.8.3"
