@@ -10,13 +10,14 @@
     "strict": false,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["vitest/globals", "vite/client"]
   },
-  "include": ["src", "tests", "e2e", "vite.config.js", "vitest.config.ts", "playwright.config.ts"],
+  "include": ["src", "tests", "e2e"],
+  "exclude": ["node_modules", "dist", "src/middleware", "src/utils/redisCache.ts"],
   "references": []
 }

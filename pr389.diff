@@ -1,0 +1,769 @@
+diff --git a/index.html b/index.html
+index acf1c0db..d27d1695 100644
+--- a/index.html
++++ b/index.html
+@@ -4,7 +4,7 @@
+     <script>
+       (function () {
+         try {
+-          var stored = localStorage.getItem('ns-theme');
++          var stored = localStorage.getItem('nexasphere-theme');
+           if (stored === 'light' || stored === 'dark') {
+             document.documentElement.setAttribute('data-theme', stored);
+           } else {
+diff --git a/src/context/theme/ThemeProvider.tsx b/src/context/theme/ThemeProvider.tsx
+index 4ac91362..316d31a2 100644
+--- a/src/context/theme/ThemeProvider.tsx
++++ b/src/context/theme/ThemeProvider.tsx
+@@ -1,6 +1,11 @@
+-import React, { createContext, useState, useEffect } from 'react';
++import React, {
++  createContext,
++  useState,
++  useEffect,
++  useLayoutEffect,
++} from "react";
+ 
+-type Theme = 'light' | 'dark';
++type Theme = "light" | "dark";
+ 
+ interface ThemeContextType {
+   theme: Theme | null;
+@@ -10,32 +15,38 @@ interface ThemeContextType {
+   toggleTheme: () => void;
+ }
+ 
+-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
++export const ThemeContext = createContext<ThemeContextType | undefined>(
++  undefined
++);
+ 
+-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
++export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
++  children,
++}) => {
+   const [theme, setThemeState] = useState<Theme | null>(() => {
+-    // Check if user has explicitly set a preference
+-    const stored = localStorage.getItem('ns-theme') as Theme | null;
++    // Priority a: check localStorage
++    const stored = localStorage.getItem("nexasphere-theme") as Theme | null;
+     return stored || null;
+   });
+ 
+   const [systemTheme, setSystemTheme] = useState<Theme>(() => {
+-    if (typeof window !== 'undefined') {
+-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
++    if (typeof window !== "undefined") {
++      return window.matchMedia("(prefers-color-scheme: dark)").matches
++        ? "dark"
++        : "light";
+     }
+-    return 'dark'; // Fallback for SSR/safety
++    return "dark"; // Fallback for SSR/safety
+   });
+ 
+   // Keep system theme updated in real-time
+   useEffect(() => {
+-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
++    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+     const handleChange = (e: MediaQueryListEvent) => {
+-      setSystemTheme(e.matches ? 'dark' : 'light');
++      setSystemTheme(e.matches ? "dark" : "light");
+     };
+ 
+     // Modern API
+     if (mediaQuery.addEventListener) {
+-      mediaQuery.addEventListener('change', handleChange);
++      mediaQuery.addEventListener("change", handleChange);
+     } else {
+       // Fallback for older browsers
+       mediaQuery.addListener(handleChange);
+@@ -43,7 +54,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
+ 
+     return () => {
+       if (mediaQuery.removeEventListener) {
+-        mediaQuery.removeEventListener('change', handleChange);
++        mediaQuery.removeEventListener("change", handleChange);
+       } else {
+         mediaQuery.removeListener(handleChange);
+       }
+@@ -51,24 +62,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
+   }, []);
+ 
+   const resolvedTheme = theme || systemTheme;
+-  const isDark = resolvedTheme === 'dark';
++  const isDark = resolvedTheme === "dark";
+ 
+-  useEffect(() => {
+-    // Apply the resolved theme to documentElement
+-    document.documentElement.setAttribute('data-theme', resolvedTheme);
++  useLayoutEffect(() => {
++    // Apply the resolved theme to documentElement synchronously before paint
++    document.documentElement.setAttribute("data-theme", resolvedTheme);
+   }, [resolvedTheme]);
+ 
+   const setTheme = (newTheme: Theme) => {
+     setThemeState(newTheme);
+-    localStorage.setItem('ns-theme', newTheme);
++    localStorage.setItem("nexasphere-theme", newTheme);
+   };
+ 
+   const toggleTheme = () => {
+-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
++    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+   };
+ 
+   return (
+-    <ThemeContext.Provider value={{ theme, resolvedTheme, isDark, setTheme, toggleTheme }}>
++    <ThemeContext.Provider
++      value={{ theme, resolvedTheme, isDark, setTheme, toggleTheme }}
++    >
+       {children}
+     </ThemeContext.Provider>
+   );
+diff --git a/src/main.jsx b/src/main.jsx
+index ee41b647..ea4fc4f0 100644
+--- a/src/main.jsx
++++ b/src/main.jsx
+@@ -1,51 +1,11 @@
+-import { StrictMode } from 'react';
+-import { createRoot } from 'react-dom/client';
+-import App from './App.jsx';
+-import './i18n';
+-import { registerSW } from 'virtual:pwa-register';
+-import GlobalErrorBoundary from './components/GlobalErrorBoundary.jsx';
+-import { ThemeProvider } from './context/theme/ThemeProvider.tsx';
+-import { initializeSentry } from './utils/errorTracking.js';
+-import * as Sentry from '@sentry/react';
+-import { HelmetProvider } from 'react-helmet-async';
+-import { initSyncManager } from './utils/syncManager.js';
+-
+-// ── Sentry error tracking ─────────────────────────────────────────────────────
+-initializeSentry();
+-
+-window.addEventListener('unhandledrejection', (event) => {
+-  Sentry.captureException(event.reason, { tags: { type: 'unhandledrejection' } });
+-});
+-
+-window.addEventListener('error', (event) => {
+-  Sentry.captureException(event.error, { tags: { type: 'uncaughterror' } });
+-});
+-
+-// ── PWA Service Worker Registration ──────────────────────────────────────────
+-let _updateSW = null;
+-
+-_updateSW = registerSW({
+-  onNeedRefresh() {
+-    console.log('[PWA] New service worker available — notifying UI.');
+-    window.dispatchEvent(
+-      new CustomEvent('nexasphere:sw-update', { detail: { updateSW: _updateSW } })
+-    );
+-  },
+-
+-  onOfflineReady() {
+-    console.log('[PWA] App is ready to work offline.');
+-    window.dispatchEvent(new CustomEvent('nexasphere:sw-offline-ready'));
+-  },
+-
+-  onRegisterError(error) {
+-    console.error('[PWA] Service worker registration failed:', error);
+-    Sentry.captureException(error, { tags: { type: 'sw-register-error' } });
+-  },
+-});
+-
+-initSyncManager();
+-
+-createRoot(document.getElementById('root')).render(
++import { StrictMode } from "react";
++import { createRoot } from "react-dom/client";
++import App from "./App.jsx";
++import GlobalErrorBoundary from "./components/GlobalErrorBoundary.jsx";
++import { ThemeProvider } from "./context/theme/ThemeProvider.tsx";
++import { HelmetProvider } from "react-helmet-async";
++
++createRoot(document.getElementById("root")).render(
+   <StrictMode>
+     <HelmetProvider>
+       <ThemeProvider>
+diff --git a/src/pages/events/EventsPage.jsx b/src/pages/events/EventsPage.jsx
+index 191cbb57..fce2bf27 100644
+--- a/src/pages/events/EventsPage.jsx
++++ b/src/pages/events/EventsPage.jsx
+@@ -1,130 +1,165 @@
+-import { useState, useEffect } from 'react';
+-import { events as fallbackEvents } from '../../data/eventsData';
+-import { BannerOrbs } from '../../shared/MotionLayer';
+-import Footer from '../../shared/Footer';
+-import { DynamicIcon } from '../../shared/Icons';
+-import PersonalizedFeed from '../../components/recommendation/PersonalizedFeed';
+-import EventCalendarView from '../../components/calendar/EventCalendarView';
+-
+-export default function EventsPage({ onBack, onEventClick, events = fallbackEvents }) {
+-  const [view, setView] = useState('timeline');
+-  const [recommendationView, setRecommendationView] = useState(false);
+-
+-  const now = Date.now();
+-  const parseDate = ev => {
+-    const raw = ev.dateText ?? ev.date ?? '';
+-    const d = new Date(raw);
+-    return isNaN(d) ? null : d;
+-  };
+-  const getEffectiveStatus = ev => {
+-    if (ev.status === 'completed') return 'completed';
+-    const d = parseDate(ev);
+-    if (d && d.getTime() < now) return 'completed';
+-    return ev.status || 'upcoming';
+-  };
+-
+-  const sortedEvents = [...events]
+-    .map(ev => ({ ...ev, status: getEffectiveStatus(ev) }))
+-    .sort((a, b) => {
+-      const aIsUpcoming = a.status !== 'completed';
+-      const bIsUpcoming = b.status !== 'completed';
+-      if (aIsUpcoming !== bIsUpcoming) return bIsUpcoming ? 1 : -1;
+-      const da = parseDate(a)?.getTime() ?? 0;
+-      const db = parseDate(b)?.getTime() ?? 0;
+-      return aIsUpcoming ? da - db : db - da;
+-    });
++import { useState, useEffect } from "react";
++import { events as fallbackEvents } from "../../data/eventsData";
++import { BannerOrbs } from "../../shared/MotionLayer";
++import Footer from "../../shared/Footer";
++import { DynamicIcon } from "../../shared/Icons";
++import BookmarkButton from "../../components/common/BookmarkButton";
++import ErrorBoundary from "../../components/common/ErrorBoundary";
+ 
++function EventsPageContent({ onBack, onEventClick, events = fallbackEvents }) {
++  const [viewMode, setViewMode] = useState("list");
++  const safeEvents = Array.isArray(events) ? events : [];
+   useEffect(() => {
+     window.scrollTo({ top: 0 });
+-    const obs = new IntersectionObserver(entries => {
+-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('fired'); obs.unobserve(e.target); } });
+-    }, { threshold: 0, rootMargin: '0px 0px -10px 0px' });
+-    document.querySelectorAll('#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word').forEach(el => obs.observe(el));
++    const obs = new IntersectionObserver(
++      (entries) => {
++        entries.forEach((e) => {
++          if (e.isIntersecting) {
++            e.target.classList.add("fired");
++            obs.unobserve(e.target);
++          }
++        });
++      },
++      { threshold: 0, rootMargin: "0px 0px -10px 0px" }
++    );
++    document
++      .querySelectorAll(
++        "#events-page .pop-in, #events-page .pop-left, #events-page .pop-right, #events-page .pop-word"
++      )
++      .forEach((el) => obs.observe(el));
+     return () => obs.disconnect();
+   }, []);
+ 
+   return (
+-    <div id="events-page" style={{ minHeight: '100vh', padding: '0 0 100px' }}>
+-      <div className="page-banner" style={{
+-        background: 'linear-gradient(135deg, rgba(0,212,255,.06), rgba(123,111,255,.04))',
+-        borderBottom: '1px solid var(--bdr)',
+-        padding: '70px 0 50px',
+-        textAlign: 'center',
+-        marginBottom: '60px',
+-        position: 'relative', overflow: 'hidden',
+-      }}>
+-        <div className="page-banner-line" style={{ position:'absolute',top:0,left:0,right:0,height:'3px',background:'linear-gradient(90deg,var(--c1),var(--c2),var(--c3))' }}/>
+-        <BannerOrbs color="rgba(123,111,255,.06)"/>
+-        <button onClick={onBack} className="ns-back-btn" style={{
+-          position: 'absolute', top: '24px', left: '28px',
+-          background: 'var(--card)', border: '1px solid var(--bdr)',
+-          borderRadius: '50px', padding: '7px 16px',
+-          color: 'var(--t2)', fontSize: '.8rem', cursor: 'pointer',
+-          display: 'flex', alignItems: 'center', gap: '6px',
+-          fontFamily: "'Rajdhani', sans-serif", fontWeight: 600,
+-        }}>← Back</button>
++    <div id="events-page" style={{ minHeight: "100vh", padding: "0 0 100px" }}>
++      <div
++        className="page-banner"
++        style={{
++          background:
++            "linear-gradient(135deg, rgba(0,212,255,.06), rgba(123,111,255,.04))",
++          borderBottom: "1px solid var(--bdr)",
++          padding: "70px 0 50px",
++          textAlign: "center",
++          marginBottom: "60px",
++          position: "relative",
++          overflow: "hidden",
++        }}
++      >
++        <div
++          className="page-banner-line"
++          style={{
++            position: "absolute",
++            top: 0,
++            left: 0,
++            right: 0,
++            height: "3px",
++            background: "linear-gradient(90deg,var(--c1),var(--c2),var(--c3))",
++          }}
++        />
++        <BannerOrbs color="rgba(123,111,255,.06)" />
++        <button
++          onClick={onBack}
++          className="ns-back-btn"
++          style={{
++            position: "absolute",
++            top: "24px",
++            left: "28px",
++            background: "var(--card)",
++            border: "1px solid var(--bdr)",
++            borderRadius: "50px",
++            padding: "7px 16px",
++            color: "var(--t2)",
++            fontSize: ".8rem",
++            cursor: "pointer",
++            display: "flex",
++            alignItems: "center",
++            gap: "6px",
++            fontFamily: "'Rajdhani', sans-serif",
++            fontWeight: 600,
++          }}
++        >
++          ← Back
++        </button>
+ 
+-        <span className="cin-section-label pop-in" style={{position:'relative',zIndex:1}}>NexaSphere · GL Bajaj</span>
+-        <h1 className="section-title pop-word" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', position:'relative',zIndex:1 }}>Our Events</h1>
+-        <p className="section-subtitle pop-in" style={{ animationDelay: '.1s', maxWidth: '520px', margin: '0 auto', position:'relative',zIndex:1 }}>
+-          Where ideas come to life. Every event is a milestone in the NexaSphere journey.
++        <span
++          className="cin-section-label pop-in"
++          style={{ position: "relative", zIndex: 1 }}
++        >
++          NexaSphere · GL Bajaj
++        </span>
++        <h1
++          className="section-title pop-word"
++          style={{
++            fontSize: "clamp(2rem, 5vw, 3.2rem)",
++            position: "relative",
++            zIndex: 1,
++          }}
++        >
++          Our Events
++        </h1>
++        <p
++          className="section-subtitle pop-in"
++          style={{
++            animationDelay: ".1s",
++            maxWidth: "520px",
++            margin: "0 auto",
++            position: "relative",
++            zIndex: 1,
++          }}
++        >
++          Where ideas come to life. Every event is a milestone in the NexaSphere
++          journey.
+         </p>
+ 
+-        <div style={{ 
+-          display: 'flex', 
+-          justifyContent: 'center', 
+-          gap: '12px', 
+-          marginTop: '32px',
+-          position: 'relative',
+-          zIndex: 2,
+-          flexWrap: 'wrap'
+-        }}>
++      <div
++        className="container"
++        style={{
++          display: "flex",
++          justifyContent: "center",
++          marginBottom: "30px",
++          position: "relative",
++          zIndex: 10,
++        }}
++      >
++        <div
++          style={{
++            display: "flex",
++            background: "var(--card)",
++            borderRadius: "30px",
++            padding: "4px",
++            border: "1px solid var(--bdr)",
++            backdropFilter: "blur(10px)",
++          }}
++        >
+           <button
+-            onClick={() => {
+-              setView('timeline');
+-              setRecommendationView(false);
+-            }}
++            onClick={() => setViewMode("list")}
+             style={{
+-              display: 'flex',
+-              alignItems: 'center',
+-              gap: '6px',
+-              padding: '8px 20px',
+-              background: !recommendationView && view === 'timeline' ? 'var(--c1)' : 'transparent',
+-              border: !recommendationView && view === 'timeline' ? 'none' : '1px solid var(--bdr)',
+-              borderRadius: '100px',
+-              color: !recommendationView && view === 'timeline' ? 'white' : 'var(--t2)',
+-              cursor: 'pointer',
+-              fontSize: '13px',
+-              fontWeight: 500,
+-              transition: 'all 0.2s ease',
+-              fontFamily: "'Rajdhani', sans-serif"
++              padding: "8px 24px",
++              borderRadius: "26px",
++              border: "none",
++              background: viewMode === "list" ? "var(--c1a)" : "transparent",
++              color: viewMode === "list" ? "var(--c1)" : "var(--t2)",
++              fontWeight: 600,
++              cursor: "pointer",
++              transition: "all .2s",
+             }}
+           >
+-            <DynamicIcon name="List" size={16} />
+-            Timeline View
++            List View
+           </button>
+           <button
+-            onClick={() => {
+-              setView('calendar');
+-              setRecommendationView(false);
+-            }}
++            onClick={() => setViewMode("calendar")}
+             style={{
+-              display: 'flex',
+-              alignItems: 'center',
+-              gap: '6px',
+-              padding: '8px 20px',
+-              background: !recommendationView && view === 'calendar' ? 'var(--c1)' : 'transparent',
+-              border: !recommendationView && view === 'calendar' ? 'none' : '1px solid var(--bdr)',
+-              borderRadius: '100px',
+-              color: !recommendationView && view === 'calendar' ? 'white' : 'var(--t2)',
+-              cursor: 'pointer',
+-              fontSize: '13px',
+-              fontWeight: 500,
+-              transition: 'all 0.2s ease',
+-              fontFamily: "'Rajdhani', sans-serif"
++              padding: "8px 24px",
++              borderRadius: "26px",
++              border: "none",
++              background:
++                viewMode === "calendar" ? "var(--c1a)" : "transparent",
++              color: viewMode === "calendar" ? "var(--c1)" : "var(--t2)",
++              fontWeight: 600,
++              cursor: "pointer",
++              transition: "all .2s",
+             }}
+           >
+-            <DynamicIcon name="Calendar" size={16} />
+             Calendar View
+           </button>
+           <button
+@@ -155,63 +190,211 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
+       </div>
+ 
+       <div className="container">
+-        {recommendationView ? (
+-          <PersonalizedFeed events={sortedEvents} onEventClick={onEventClick} />
+-        ) : view === 'timeline' ? (
+-          <div className="events-timeline ns-reveal">
+-            {sortedEvents.map((ev, i) => {
+-              const hasDetailPage = !!ev.hasDetailPage;
++        <div className="events-timeline ns-reveal">
++          {safeEvents.length === 0 ? (
++            <div
++              style={{
++                textAlign: "center",
++                padding: "80px 24px",
++                margin: "40px auto",
++                maxWidth: "500px",
++                background: "var(--card)",
++                borderRadius: "16px",
++                border: "1px solid var(--bdr)",
++                boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
++              }}
++            >
++              <div
++                style={{
++                  color: "var(--c1)",
++                  marginBottom: "20px",
++                  opacity: 0.8,
++                }}
++              >
++                <DynamicIcon name="Calendar" size={56} />
++              </div>
++              <h3
++                style={{
++                  fontSize: "1.4rem",
++                  marginBottom: "12px",
++                  color: "var(--t1)",
++                  fontWeight: 600,
++                }}
++              >
++                No upcoming events found
++              </h3>
++              <p
++                style={{
++                  color: "var(--t2)",
++                  fontSize: "0.95rem",
++                  lineHeight: 1.6,
++                  marginBottom: "24px",
++                }}
++              >
++                We currently don't have any events to show. Please check back
++                later for new updates and exciting activities!
++              </p>
++              <button
++                onClick={() => window.location.reload()}
++                className="btn btn-primary"
++                style={{
++                  cursor: "pointer",
++                  display: "inline-flex",
++                  alignItems: "center",
++                  gap: "8px",
++                }}
++              >
++                <DynamicIcon name="RefreshCw" size={16} /> Refresh
++              </button>
++            </div>
++          ) : (
++            safeEvents.map((ev, i) => {
++              const isKSS =
++                ev.id === 1 ||
++                ev.id === "kss-153" ||
++                String(ev.shortName || "")
++                  .toLowerCase()
++                  .includes("kss");
+               return (
+                 <div className="timeline-item" key={ev.id}>
+-                  <div className={`timeline-dot${ev.status === 'upcoming' ? ' upcoming' : ''}`} />
+                   <div
+-                    className={`timeline-card shimmer ${i % 2 === 0 ? 'pop-left' : 'pop-right'} fired`}
++                    className={`timeline-dot${ev.status === "upcoming" ? " upcoming" : ""}`}
++                  />
++                  <div
++                    className={`timeline-card shimmer ${i % 2 === 0 ? "pop-left" : "pop-right"} fired`}
+                     style={{
+-                      animationDelay: `${i * .11}s`,
+-                      cursor: hasDetailPage ? 'pointer' : 'default',
+-                      transition: 'all .28s ease',
++                      animationDelay: `${i * 0.11}s`,
++                      cursor: isKSS ? "none" : "default",
++                      transition: "all .28s ease",
++                      position: "relative",
+                     }}
+-                    onClick={hasDetailPage ? () => onEventClick(ev) : undefined}
+-                    onMouseEnter={hasDetailPage ? e => {
+-                      e.currentTarget.style.borderColor = 'rgba(168,85,247,.45)';
+-                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(168,85,247,.15)';
+-                      e.currentTarget.style.transform = 'translateY(-4px)';
+-                    } : undefined}
+-                    onMouseLeave={hasDetailPage ? e => {
+-                      e.currentTarget.style.borderColor = '';
+-                      e.currentTarget.style.boxShadow = '';
+-                      e.currentTarget.style.transform = '';
+-                    } : undefined}
++                    onClick={isKSS ? () => onEventClick(ev) : undefined}
++                    onMouseEnter={
++                      isKSS
++                        ? (e) => {
++                            e.currentTarget.style.borderColor =
++                              "rgba(168,85,247,.45)";
++                            e.currentTarget.style.boxShadow =
++                              "0 8px 32px rgba(168,85,247,.15)";
++                            e.currentTarget.style.transform =
++                              "translateY(-4px)";
++                          }
++                        : undefined
++                    }
++                    onMouseLeave={
++                      isKSS
++                        ? (e) => {
++                            e.currentTarget.style.borderColor = "";
++                            e.currentTarget.style.boxShadow = "";
++                            e.currentTarget.style.transform = "";
++                          }
++                        : undefined
++                    }
+                   >
+-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '7px' }}>
+-                      <span style={{ display: 'flex', color: 'var(--c1)' }}><DynamicIcon name={ev.icon || 'Calendar'} size={24} /></span>
+-                      <div className="timeline-event-name" style={hasDetailPage ? { color: '#a855f7' } : {}}>{ev.name}</div>
+-                      {hasDetailPage && (
+-                        <span style={{
+-                          marginLeft: 'auto', fontSize: '.6rem', padding: '2px 8px',
+-                          borderRadius: '10px', background: 'rgba(168,85,247,.12)',
+-                          color: '#a855f7', border: '1px solid rgba(168,85,247,.3)',
+-                          fontFamily: "'Space Mono', monospace", whiteSpace: 'nowrap',
+-                        }}>View Details →</span>
++                    <BookmarkButton
++                      item={{
++                        id: `event-${ev.id}`,
++                        type: "Event",
++                        title: ev.name,
++                        date: ev.date,
++                      }}
++                      style={{
++                        position: "absolute",
++                        top: "12px",
++                        right: "12px",
++                        zIndex: 20,
++                      }}
++                    />
++                    <div
++                      style={{
++                        display: "flex",
++                        alignItems: "center",
++                        gap: "10px",
++                        marginBottom: "7px",
++                      }}
++                    >
++                      <span style={{ display: "flex", color: "var(--c1)" }}>
++                        <DynamicIcon name={ev.icon || "Calendar"} size={24} />
++                      </span>
++                      <div
++                        className="timeline-event-name"
++                        style={isKSS ? { color: "#a855f7" } : {}}
++                      >
++                        {ev.name}
++                      </div>
++                      {isKSS && (
++                        <span
++                          style={{
++                            marginLeft: "auto",
++                            fontSize: ".6rem",
++                            padding: "2px 8px",
++                            borderRadius: "10px",
++                            background: "rgba(168,85,247,.12)",
++                            color: "#a855f7",
++                            border: "1px solid rgba(168,85,247,.3)",
++                            fontFamily: "'Space Mono', monospace",
++                            whiteSpace: "nowrap",
++                          }}
++                        >
++                          View Details →
++                        </span>
+                       )}
+                     </div>
+-                    <div className="timeline-event-date" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
++                    <div
++                      className="timeline-event-date"
++                      style={{
++                        display: "flex",
++                        alignItems: "center",
++                        gap: "6px",
++                      }}
++                    >
+                       <DynamicIcon name="Calendar" size={14} /> {ev.date}
+                     </div>
+                     <p className="timeline-event-desc">{ev.description}</p>
+-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
++                    <div
++                      style={{
++                        display: "flex",
++                        alignItems: "center",
++                        gap: "7px",
++                        flexWrap: "wrap",
++                      }}
++                    >
+                       <span className={`timeline-badge ${ev.status}`}>
+-                        {ev.status === 'completed' ? (
+-                          <><DynamicIcon name="CheckCircle" size={14} style={{ marginRight: '4px' }} /> Completed</>
++                        {ev.status === "completed" ? (
++                          <>
++                            <DynamicIcon
++                              name="CheckCircle"
++                              size={14}
++                              style={{ marginRight: "4px" }}
++                            />{" "}
++                            Completed
++                          </>
+                         ) : (
+-                          <><DynamicIcon name="Calendar" size={14} style={{ marginRight: '4px' }} /> Upcoming</>
++                          <>
++                            <DynamicIcon
++                              name="Calendar"
++                              size={14}
++                              style={{ marginRight: "4px" }}
++                            />{" "}
++                            Upcoming
++                          </>
+                         )}
+                       </span>
+-                      {ev.tags?.map(t => (
+-                        <span key={t} style={{
+-                          fontSize: '.68rem', padding: '2px 8px', borderRadius: '10px',
+-                          background: 'var(--c2a)', color: 'var(--c2)', border: '1px solid var(--c2b)', fontWeight: 600,
+-                        }}>{t}</span>
++                      {ev.tags?.map((t) => (
++                        <span
++                          key={t}
++                          style={{
++                            fontSize: ".68rem",
++                            padding: "2px 8px",
++                            borderRadius: "10px",
++                            background: "var(--c2a)",
++                            color: "var(--c2)",
++                            border: "1px solid var(--c2b)",
++                            fontWeight: 600,
++                          }}
++                        >
++                          {t}
++                        </span>
+                       ))}
+                     </div>
+                   </div>
+@@ -221,9 +404,22 @@ export default function EventsPage({ onBack, onEventClick, events = fallbackEven
+ 
+             <div className="timeline-item">
+               <div className="timeline-dot upcoming" />
+-              <div className="timeline-card pop-in fired" style={{ textAlign: 'center', color: 'var(--t3)', animationDelay: `${sortedEvents.length * .11}s` }}>
+-                <DynamicIcon name="Rocket" size={24} style={{ color: 'var(--c1)', marginBottom: '8px' }} />
+-                <p style={{ marginTop: '6px', fontSize: '.84rem' }}>More events coming soon. Watch this space!</p>
++              <div
++                className="timeline-card pop-in fired"
++                style={{
++                  textAlign: "center",
++                  color: "var(--t3)",
++                  animationDelay: `${safeEvents.length * 0.11}s`,
++                }}
++              >
++                <DynamicIcon
++                  name="Rocket"
++                  size={24}
++                  style={{ color: "var(--c1)", marginBottom: "8px" }}
++                />
++                <p style={{ marginTop: "6px", fontSize: ".84rem" }}>
++                  More events coming soon. Watch this space!
++                </p>
+               </div>
+             </div>
+           </div>
+diff --git a/src/shared/Navbar.jsx b/src/shared/Navbar.jsx
+index 6288893e..6d1c4cfd 100644
+--- a/src/shared/Navbar.jsx
++++ b/src/shared/Navbar.jsx
+@@ -199,6 +199,19 @@ export default function Navbar({
+               <span />
+             </button>
+           </div>
++
++          <ThemeToggle />
++
++          <button
++            className={`ns-nav-menu-toggle${menuOpen ? " open" : ""}`}
++            onClick={() => compact && setMenuOpen((open) => !open)}
++            aria-label="Toggle navigation menu"
++            aria-expanded={menuOpen}
++          >
++            <span />
++            <span />
++            <span />
++          </button>
+         </div>
+       </div>
+     </nav>

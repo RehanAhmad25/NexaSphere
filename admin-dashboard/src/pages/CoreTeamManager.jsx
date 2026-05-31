@@ -15,6 +15,10 @@ export function CoreTeamManager() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState('');
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+
   useEffect(() => {
     api.coreTeam
       .getAll()
@@ -22,6 +26,15 @@ export function CoreTeamManager() {
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const filteredMembers = members.filter((member) => {
+    const matchesSearch = !searchQuery || 
+                          (member.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (member.role || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesBranch = !selectedBranch || member.branch === selectedBranch;
+    const matchesRole = !selectedRole || member.role === selectedRole;
+    return matchesSearch && matchesBranch && matchesRole;
+  });
 
   useEventListener(
     EVENTS.CORE_TEAM_MEMBER_ADDED,
@@ -90,48 +103,82 @@ export function CoreTeamManager() {
       {loading && <Skeleton height={72} count={4} />}
 
       {!loading && (
-        <div className="team-grid">
-          {members.length === 0 && <div className="empty-state">No team members yet.</div>}
-          {members.map((member) => (
-            <div key={member.id} className="team-card">
-              {member.photo ? (
-                <img src={member.photo} alt={member.name} className="team-avatar" />
-              ) : (
-                <div className="team-avatar-placeholder">{member.name?.[0]}</div>
-              )}
-              <div className="team-info">
-                <div className="item-name">{member.name}</div>
-                <div className="item-meta">{member.role}</div>
-                <div className="item-meta">
-                  {member.branch} {member.year && `· ${member.year}`}
+        <>
+          <div className="filters-row animate-fade-in" style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Search by name or role..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ flex: 2, minWidth: 200, padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}
+            />
+            <select
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              style={{ flex: 1, minWidth: 140, padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}
+              aria-label="Filter by branch"
+            >
+              <option value="">All Branches</option>
+              {[...new Set(members.map(m => m.branch).filter(Boolean))].map(branch => (
+                <option key={branch} value={branch}>{branch}</option>
+              ))}
+            </select>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              style={{ flex: 1, minWidth: 140, padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}
+              aria-label="Filter by role"
+            >
+              <option value="">All Roles</option>
+              {[...new Set(members.map(m => m.role).filter(Boolean))].map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="team-grid">
+            {filteredMembers.length === 0 && <div className="empty-state">No core team members match your criteria.</div>}
+            {filteredMembers.map((member) => (
+              <div key={member.id} className="team-card animate-fade-in">
+                {member.photo ? (
+                  <img src={member.photo} alt={member.name} className="team-avatar" />
+                ) : (
+                  <div className="team-avatar-placeholder">{member.name?.[0]}</div>
+                )}
+                <div className="team-info">
+                  <div className="item-name">{member.name}</div>
+                  <div className="item-meta">{member.role}</div>
+                  <div className="item-meta">
+                    {member.branch} {member.year && `· ${member.year}`}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    className="btn-icon"
+                    onClick={() => {
+                      setEditingMember(member);
+                      setShowForm(true);
+                    }}
+                    aria-label="Edit team member"
+                  >
+                    <AdminIcon name="Pencil" size={16} />
+                  </button>
+                  <button
+                    className="btn-icon danger"
+                    onClick={() => {
+                      setDeleteTarget(member);
+                      setDeleteError('');
+                    }}
+                    disabled={deleting === member.id}
+                    aria-label="Remove team member"
+                  >
+                    {deleting === member.id ? '...' : <AdminIcon name="Trash" size={16} />}
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <button
-                  className="btn-icon"
-                  onClick={() => {
-                    setEditingMember(member);
-                    setShowForm(true);
-                  }}
-                  aria-label="Edit team member"
-                >
-                  <AdminIcon name="Pencil" size={16} />
-                </button>
-                <button
-                  className="btn-icon danger"
-                  onClick={() => {
-                    setDeleteTarget(member);
-                    setDeleteError('');
-                  }}
-                  disabled={deleting === member.id}
-                  aria-label="Remove team member"
-                >
-                  {deleting === member.id ? '...' : <AdminIcon name="Trash" size={16} />}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {deleteTarget && (

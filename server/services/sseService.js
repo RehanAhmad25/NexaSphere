@@ -83,7 +83,7 @@ export function broadcastSSEEvent(eventName, data) {
       logger.error('Failed to send SSE event', { error: error.message });
       cleanupClient(client, 'write_error', { error: error?.message });
     }
-  }
+  });
 
   logger.debug('SSE event broadcast', { event: eventName, clientCount: adminClients.size });
 }
@@ -103,7 +103,9 @@ setInterval(() => {
       } catch {
         if (client._heartbeat) clearInterval(client._heartbeat);
         adminClients.delete(client);
-        logger.warn('SSE client evicted (health check failed)', { totalClients: adminClients.size });
+        logger.warn('SSE client evicted (health check failed)', {
+          totalClients: adminClients.size,
+        });
       }
     }
   }

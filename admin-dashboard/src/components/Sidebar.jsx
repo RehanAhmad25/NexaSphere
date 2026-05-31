@@ -18,6 +18,7 @@ const links = [
   { to: '/dashboard/membership', label: 'Membership', icon: 'FileText' },
   { to: '/dashboard/recruitment', label: 'Recruitment', icon: 'UserPlus' },
   { to: '/dashboard/certificates', label: 'Certificates', icon: 'Award' },
+  { to: '/dashboard/announcements', label: 'Announcements', icon: 'Megaphone' },
 ];
 
 export function Sidebar() {

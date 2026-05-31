@@ -32,7 +32,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => {
       socketInstance.off('connect', onConnect);
       socketInstance.off('disconnect', onDisconnect);
-      disconnectSocket();
+      // Removed disconnectSocket() to preserve singleton connection across route changes
     };
   }, []);
 

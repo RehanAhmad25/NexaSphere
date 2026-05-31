@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import EventsPage from '../pages/events/EventsPage';
 
 describe('EventsPage Component', () => {
-  const mockEvents = [
+  const mockEvents: any[] = [
     {
       id: 'kss-153',
       name: 'KSS #153 — AI Workshop',
@@ -37,11 +37,7 @@ describe('EventsPage Component', () => {
   it('renders events page with title', () => {
     render(
       <MemoryRouter>
-        <EventsPage
-          events={mockEvents}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
+        <EventsPage events={mockEvents} onBack={mockOnBack} onEventClick={mockOnEventClick} />
       </MemoryRouter>
     );
     expect(screen.getByText(/Our Events/i)).toBeInTheDocument();
@@ -50,11 +46,7 @@ describe('EventsPage Component', () => {
   it('displays all events in timeline', () => {
     render(
       <MemoryRouter>
-        <EventsPage
-          events={mockEvents}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
+        <EventsPage events={mockEvents} onBack={mockOnBack} onEventClick={mockOnEventClick} />
       </MemoryRouter>
     );
     expect(screen.getByText(/KSS #153 — AI Workshop/i)).toBeInTheDocument();
@@ -64,11 +56,7 @@ describe('EventsPage Component', () => {
   it('shows completed and upcoming status badges', () => {
     render(
       <MemoryRouter>
-        <EventsPage
-          events={mockEvents}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
+        <EventsPage events={mockEvents} onBack={mockOnBack} onEventClick={mockOnEventClick} />
       </MemoryRouter>
     );
     expect(screen.getByText(/Completed/i)).toBeInTheDocument();
@@ -78,11 +66,7 @@ describe('EventsPage Component', () => {
   it('renders back button', () => {
     render(
       <MemoryRouter>
-        <EventsPage
-          events={mockEvents}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
+        <EventsPage events={mockEvents} onBack={mockOnBack} onEventClick={mockOnEventClick} />
       </MemoryRouter>
     );
     const backBtn = screen.getByText(/← Back/);
@@ -92,11 +76,7 @@ describe('EventsPage Component', () => {
   it('renders event tags', () => {
     render(
       <MemoryRouter>
-        <EventsPage
-          events={mockEvents}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
+        <EventsPage events={mockEvents} onBack={mockOnBack} onEventClick={mockOnEventClick} />
       </MemoryRouter>
     );
     expect(screen.getByText('AI')).toBeInTheDocument();
@@ -107,11 +87,7 @@ describe('EventsPage Component', () => {
   it('renders coming soon message', () => {
     render(
       <MemoryRouter>
-        <EventsPage
-          events={mockEvents}
-          onBack={mockOnBack}
-          onEventClick={mockOnEventClick}
-        />
+        <EventsPage events={mockEvents} onBack={mockOnBack} onEventClick={mockOnEventClick} />
       </MemoryRouter>
     );
     expect(screen.getByText(/More events coming soon/i)).toBeInTheDocument();

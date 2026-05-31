@@ -94,7 +94,7 @@ class ModerationService {
   // Spam detection using regex patterns
   detectSpam(content) {
     let spamScore = 0;
-    let matchedPatterns = [];
+    const matchedPatterns = [];
 
     for (const pattern of this.spamPatterns) {
       if (pattern.test(content)) {

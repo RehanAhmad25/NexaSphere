@@ -137,9 +137,9 @@ test.describe('Prompt History & Workspace System', () => {
     await chatBtn.click();
 
     // Send initial message
-    let input = page.locator('.chat-input-container input[type="text"]');
+    const input = page.locator('.chat-input-container input[type="text"]');
     await input.fill('First conversation');
-    let sendBtn = page.locator('.send-btn');
+    const sendBtn = page.locator('.send-btn');
     await sendBtn.click();
 
     await page.waitForTimeout(2000);

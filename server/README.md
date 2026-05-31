@@ -382,26 +382,26 @@ All errors pass through `server/middleware/errorHandler.js` and return:
 
 ## 12. Testing
 
-Tests use **Jest** with coverage reporting.
+Tests use the **Node.js built-in test runner** (`node:test`).
 
 ```bash
-# Run all tests with coverage
+# Run all tests
 npm run test
 
 # Run in watch mode
 npm run test:watch
 ```
 
-Test files live in `server/test/`. Follow the naming convention: `*.test.js`.
+Test files live in `server/test/`. Follow the naming convention: `*.test.js`.  
+All `test/**/*.test.js` files are automatically discovered and executed via glob pattern.
 
 ```js
 // server/test/events.test.js
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 
-describe('Events API', () => {
-  it('GET /api/events returns array', async () => {
-    // ...
-  });
+test('GET /api/events returns array', async () => {
+  // ...
 });
 ```
 

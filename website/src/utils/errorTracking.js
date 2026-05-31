@@ -62,16 +62,16 @@ export const captureApiError = (error, context = {}) => {
  * @param {Object} metadata - Additional metadata
  */
 export const capturePerformanceMetric = (action, duration, metadata = {}) => {
-  Sentry.startSpanManual(
+  Sentry.startSpan(
     {
       name: action,
       op: action,
     },
     (span) => {
       setTimeout(() => {
-        span.setAttribute('duration', duration);
-        span.setAttribute('metadata', JSON.stringify(metadata));
-        span.end();
+        span?.setAttribute('duration', duration);
+        span?.setAttribute('metadata', JSON.stringify(metadata));
+        span?.end();
       }, duration);
     }
   );

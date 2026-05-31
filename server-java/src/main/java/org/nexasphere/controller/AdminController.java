@@ -81,6 +81,9 @@ public class AdminController {
     @GetMapping("/me")
     public Map<String, String> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
         return Collections.singletonMap("email", auth.getName());
     }
 

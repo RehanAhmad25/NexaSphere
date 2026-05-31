@@ -1,5 +1,11 @@
 import { formsService } from '../services/formsService.js';
 
+const ALLOWED_FORM_TYPES = new Set([
+  'membership',
+  'recruitment',
+  'core_team',
+]);
+
 function wrapAsync(fn) {
   return (req, res) =>
     Promise.resolve(fn(req, res)).catch((e) => {
@@ -27,6 +33,13 @@ export function makeHandleForm(formType) {
 
 export const handleFormByParam = wrapAsync(async (req, res) => {
   const formType = req.params?.formType;
+
+  if (!ALLOWED_FORM_TYPES.has(formType)) {
+    return res.status(400).json({
+      error: 'Invalid form type',
+    });
+  }
+
   const result = await formsService.handleForm(formType, req.body || {});
   return res.json(result);
 });

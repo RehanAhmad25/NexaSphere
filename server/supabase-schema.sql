@@ -22,9 +22,52 @@ create table if not exists events (
   status text not null default 'upcoming',
   icon text default '📌',
   tags jsonb not null default '[]'::jsonb,
+  capacity integer,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists event_registrations (
+  id uuid primary key default gen_random_uuid(),
+  event_id text not null references events(id) on delete cascade,
+  full_name text not null,
+  email text not null,
+  created_at timestamptz not null default now(),
+  unique(event_id, email)
+);
+
+create or replace function register_for_event(p_event_id text, p_full_name text, p_email text)
+returns json as $$
+declare
+  v_capacity int;
+  v_registered int;
+  v_registration_id uuid;
+begin
+  -- Lock the event row to prevent concurrent race conditions
+  select capacity into v_capacity from events where id = p_event_id for update;
+  
+  if not found then
+    raise exception 'Event not found.';
+  end if;
+  
+  if v_capacity is null then
+    -- No capacity limit
+    v_capacity := 9999999;
+  end if;
+
+  select count(*) into v_registered from event_registrations where event_id = p_event_id;
+
+  if v_registered >= v_capacity then
+    raise exception 'Event capacity has been reached.';
+  end if;
+
+  insert into event_registrations (event_id, full_name, email)
+  values (p_event_id, p_full_name, p_email)
+  returning id into v_registration_id;
+
+  return json_build_object('ok', true, 'registration_id', v_registration_id);
+end;
+$$ language plpgsql;
 
 create table if not exists activity_events (
   id text primary key,

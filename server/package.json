@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "node index.js",
     "build": "echo \"server build step not required\"",
-    "test": "node --test test/sanitize.test.js test/formSchemas.test.js test/adminSessions.test.js",
-    "test:watch": "node --test --watch test/sanitize.test.js test/formSchemas.test.js test/adminSessions.test.js",
+    "test": "node --test test/**/*.test.js",
+    "test:watch": "node --test --watch test/**/*.test.js",
     "migrate": "node-pg-migrate -f .postgres_migrations_config.json",
     "migrate:latest": "node-pg-migrate -f .postgres_migrations_config.json up",
     "migrate:rollback": "node-pg-migrate -f .postgres_migrations_config.json down",

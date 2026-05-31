@@ -11,9 +11,18 @@ interface TrendChartProps {
 export const TrendChart: React.FC<TrendChartProps> = ({ data, loading }) => {
   return (
     <ChartWrapper title="Platform Trends" subtitle="User growth and activity over time" loading={loading} height={350}>
-      <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-        <XAxis dataKey="name" stroke="#888" tick={{ fill: '#888' }} tickLine={false} axisLine={false} />
+        <XAxis 
+          dataKey="name" 
+          stroke="#888" 
+          tick={{ fill: '#888', fontSize: 11 }} 
+          tickLine={false} 
+          axisLine={false} 
+          angle={-45} 
+          textAnchor="end" 
+          height={50}
+        />
         <YAxis yAxisId="left" stroke="#888" tick={{ fill: '#888' }} tickLine={false} axisLine={false} />
         <YAxis yAxisId="right" orientation="right" stroke="#888" tick={{ fill: '#888' }} tickLine={false} axisLine={false} />
         <Tooltip content={<CustomTooltip />} />

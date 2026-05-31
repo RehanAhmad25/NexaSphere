@@ -25,7 +25,7 @@ jobs:
         run: rm -rf node_modules package-lock.json
 
       - name: Install dependencies
-        run: npm install --prefer-offline --no-audit
+        run: rm -rf node_modules package-lock.json && npm install
 
       - name: Build (production)
         run: npm run build --workspace=website
@@ -40,9 +40,9 @@ jobs:
           path: website/dist/
           retention-days: 3
 
-  # ── Admin Dashboard build ─────────────────────────────────────────────────
+  # ── Admin Dashboard ───────────────────────────────────────────────────────
   admin-dashboard:
-    name: Admin Dashboard — Build
+    name: Admin Dashboard — Build & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -58,7 +58,14 @@ jobs:
         run: rm -rf node_modules package-lock.json
 
       - name: Install dependencies
-        run: npm install --prefer-offline --no-audit
+        run: |
+          rm -rf package-lock.json node_modules
+          npm install --no-audit
+
+      - name: Run unit tests
+        run: npm run test --workspace=admin-dashboard
+        env:
+          NODE_ENV: test
 
       - name: Build (production)
         run: npm run build --workspace=admin-dashboard
