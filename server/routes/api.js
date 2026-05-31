@@ -3,11 +3,13 @@ import * as eventsController from '../controllers/eventsController.js';
 import * as activityEventsController from '../controllers/activityEventsController.js';
 import * as adminAuthMiddleware from '../middleware/adminAuthMiddleware.js';
 import * as coreTeamController from '../controllers/coreTeamController.js';
+import * as eventRegistrationController from '../controllers/eventRegistrationController.js';
 
 const router = Router();
 
 // Public
 router.get('/api/content/events', eventsController.listEvents);
+router.post('/api/content/events/:eventId/register', eventRegistrationController.registerForEvent);
 router.get(
   '/api/content/activity-events/:activityKey',
   activityEventsController.listActivityEvents
