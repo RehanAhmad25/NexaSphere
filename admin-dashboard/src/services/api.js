@@ -204,6 +204,28 @@ const getDb = (key, defaultVal) => {
       setDb(key, initialTeam);
       return initialTeam;
     }
+    if (key === 'announcements') {
+      const initialAnnouncements = [
+        {
+          id: '1',
+          title: 'Welcome to the NexaSphere Admin Dashboard',
+          content: 'Manage events, team members, announcements, and certificates with real-time updates.',
+          category: 'general',
+          pinned: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          title: 'Upcoming Hackathon Registration Open',
+          content: 'Registration for the national hackathon closes in 3 days. Push notifications are active.',
+          category: 'event',
+          pinned: false,
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+        }
+      ];
+      setDb(key, initialAnnouncements);
+      return initialAnnouncements;
+    }
 
     return defaultVal;
   } catch {
@@ -357,6 +379,34 @@ async function fetchWithAuth(url, options = {}) {
             },
           ],
         });
+      }
+
+      // /api/admin/announcements
+      else if (url.startsWith('/api/admin/announcements')) {
+        let announcements = getDb('announcements', []);
+        if (method === 'GET') resolve({ announcements });
+        if (method === 'POST') {
+          const newAnn = {
+            ...body,
+            id: Date.now().toString(),
+            createdAt: new Date().toISOString(),
+          };
+          announcements = [newAnn, ...announcements];
+          setDb('announcements', announcements);
+          resolve(newAnn);
+        }
+        if (method === 'PUT') {
+          const id = url.split('/').pop();
+          announcements = announcements.map((a) => (a.id === id ? { ...body, id, updatedAt: new Date().toISOString() } : a));
+          setDb('announcements', announcements);
+          resolve({ ...body, id });
+        }
+        if (method === 'DELETE') {
+          const id = url.split('/').pop();
+          announcements = announcements.filter((a) => a.id !== id);
+          setDb('announcements', announcements);
+          resolve({ success: true });
+        }
       }
     }, 300); // simulate slight network delay
   });
@@ -612,6 +662,66 @@ export const api = {
       });
       eventEmitter.emit(EVENTS.NOTIFY, { type: 'success', message: 'Certificate revoked' });
       return result;
+    },
+  },
+
+  announcements: {
+    getAll: () => fetchWithAuth('/api/admin/announcements'),
+    create: async (announcement) => {
+      if (auth.isOfflineMode()) {
+        eventEmitter.emit(EVENTS.NOTIFY, {
+          type: 'warning',
+          message: 'Offline — changes not saved to server',
+        });
+      }
+      const result = await fetchWithAuth('/api/admin/announcements', {
+        method: 'POST',
+        body: JSON.stringify(announcement),
+      });
+      eventEmitter.emit(EVENTS.ANNOUNCEMENT_CREATED, result);
+      eventEmitter.emit(EVENTS.NOTIFY, {
+        type: 'success',
+        message: 'Announcement published',
+      });
+      broadcastContentUpdate('announcements');
+      notifyContentUpdated('ns_db_announcements');
+      return result;
+    },
+    update: async (id, announcement) => {
+      if (auth.isOfflineMode()) {
+        eventEmitter.emit(EVENTS.NOTIFY, {
+          type: 'warning',
+          message: 'Offline — changes not saved to server',
+        });
+      }
+      const result = await fetchWithAuth(`/api/admin/announcements/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(announcement),
+      });
+      eventEmitter.emit(EVENTS.ANNOUNCEMENT_UPDATED, result);
+      eventEmitter.emit(EVENTS.NOTIFY, {
+        type: 'success',
+        message: 'Announcement updated',
+      });
+      broadcastContentUpdate('announcements');
+      notifyContentUpdated('ns_db_announcements');
+      return result;
+    },
+    delete: async (id) => {
+      if (auth.isOfflineMode()) {
+        eventEmitter.emit(EVENTS.NOTIFY, {
+          type: 'warning',
+          message: 'Offline — changes not saved to server',
+        });
+      }
+      await fetchWithAuth(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+      eventEmitter.emit(EVENTS.ANNOUNCEMENT_DELETED, { id });
+      eventEmitter.emit(EVENTS.NOTIFY, {
+        type: 'success',
+        message: 'Announcement deleted',
+      });
+      broadcastContentUpdate('announcements');
+      notifyContentUpdated('ns_db_announcements');
     },
   },
 };
