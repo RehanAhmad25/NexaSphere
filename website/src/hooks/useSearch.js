@@ -51,11 +51,11 @@ export function useSearch(activities, events) {
       const actRes = Object.entries(activities || {})
         .filter(
           ([key, a]) =>
-            key.toLowerCase().includes(q) ||
-            a?.title?.toLowerCase().includes(q) ||
-            a?.description?.toLowerCase().includes(q) ||
-            a?.subtitle?.toLowerCase().includes(q) ||
-            a?.tagline?.toLowerCase().includes(q)
+            matchesText(key, q) ||
+            matchesText(a?.title, q) ||
+            matchesText(a?.description, q) ||
+            matchesText(a?.subtitle, q) ||
+            matchesText(a?.tagline, q)
         )
         .map(([key, a]) => ({
           id: key,
