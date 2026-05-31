@@ -4,7 +4,11 @@ import { paginationSchema } from '../validators/eventSchemas.js';
 function wrapAsync(fn) {
   return (req, res) =>
     Promise.resolve(fn(req, res)).catch((e) => {
-      res.status(500).json({ error: e?.message || 'Internal server error' });
+      console.error('[wrapAsync error]', e);
+
+      res.status(500).json({
+        error: 'Internal server error',
+      });
     });
 }
 
